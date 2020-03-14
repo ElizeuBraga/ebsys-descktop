@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Balcao from '../views/Balcao.vue'
 import Entrega from '../views/Entrega.vue'
+import Products from '../views/Products.vue'
 
 Vue.use(VueRouter)
 
@@ -15,6 +16,11 @@ const routes = [
     path: '/orders',
     name: 'Entrega',
     component: Entrega
+  },
+  {
+    path: '/products',
+    name: 'Products',
+    component: Products
   }
 ]
 
