@@ -31,7 +31,7 @@
               <v-list-item-title>Produtos</v-list-item-title>
             </v-list-item>
 
-            <v-list-item to="/products" @click="logout">
+            <v-list-item to="" @click="logout">
               <v-list-item-icon>
                 <v-icon>mdi-account</v-icon>
               </v-list-item-icon>

@@ -82,7 +82,6 @@ export default {
   },
 
   mounted() {
-    console.log(this.items);
     this.selectProducts();
     this.testeBcrypt("12345678");
   },
@@ -102,7 +101,6 @@ export default {
     testeBcrypt(text) {
       let vm = this;
       bcrypt.hash(text, 10, function(err, hash) {
-        console.log(hash);
         vm.pwd = hash;
       });
     },

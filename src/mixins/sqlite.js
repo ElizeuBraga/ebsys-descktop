@@ -4,8 +4,8 @@ import psql from 'postgres';
 var sql = psql({
     host     : 'localhost',
     user     : 'postgres',
-    password : 'postgres',
-    database : 'ebsys'
+    password : 'psql',
+    database : 'postgres'
 });
 
 export default {

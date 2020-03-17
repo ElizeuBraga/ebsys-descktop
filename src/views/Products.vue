@@ -8,6 +8,9 @@
         <v-btn
           color="red lighten-2"
           dark
+          large
+          rounded
+          style="margin-top:300px"
           @click="loadProductsFromCloud"
         >
           Carregar produtos
@@ -66,7 +69,6 @@ export default {
 
   mounted(){
   //  this.loadProducts();
-  console.log(this.products)
   },
 
   methods:{
