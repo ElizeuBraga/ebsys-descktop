@@ -1,59 +1,76 @@
 <template>
-  <div>
-    <v-row justify="center">
-      <v-col cols="6" sm="12" md="8">
-        <v-simple-table>
-            <thead>
-              <tr>
-                <th class="text-left">Name</th>
-                <th class="text-left">Calories</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in products" :key="item.id">
-                <td>{{ item.id }}</td>
-                <td>{{ item.name }}</td>
-                <td>{{ item.price }}</td>
-              </tr>
-            </tbody>
-        </v-simple-table>
-      </v-col>
-      <v-col cols="6" sm="12" md="4">
-        <v-text-field v-model="name" label="Solo" placeholder="Nome" solo></v-text-field>
-        <v-text-field v-model="price" label="Solo" placeholder="Preço" solo></v-text-field>
-        <v-btn align="end" cols="6" sm="12" md="4" @click="saveProduct">Salvar</v-btn>
-        <v-btn align="end" cols="6" sm="12" md="4" @click="dropTables">Drop</v-btn>
-        <v-btn align="end" cols="6" sm="12" md="4" @click="loadProductsFromCloud">Load cloud</v-btn>
-        <v-btn align="end" cols="6" sm="12" md="4" @click="loadProducts">Load Local</v-btn>
-      </v-col>
-    </v-row>
+  <div class="text-center">
+    <v-dialog
+      v-model="dialog"
+      width="500"
+    >
+      <template v-slot:activator="{ on }">
+        <v-btn
+          color="red lighten-2"
+          dark
+          @click="loadProductsFromCloud"
+        >
+          Carregar produtos
+        </v-btn>
+      </template>
+
+      <v-card>
+        <v-card-title
+          class="headline grey lighten-2"
+          primary-title
+        >
+          Produtos carregados
+        </v-card-title>
+
+        <v-card-text class="text-center">
+          {{products.length}}
+        </v-card-text>
+        <v-card-text class="text-center">
+          produtos carregados
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            text
+            @click="dialog = false"
+          >
+            OK
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script>
+
 import sqlite from '../mixins/sqlite'
 import axios from 'axios'
-
 export default {
   mixins:[sqlite],
-  name: "Balcao",
   components: {},
   data() {
     return {
+      dialog: false,
       id: 1,
       name: null,
       price: null,
       alignment: "end",
-      products:[]
+      products: []
     };
   },
 
   mounted(){
-    this.selectProducts();
+  //  this.loadProducts();
+  console.log(this.products)
   },
 
   methods:{
-    loadProductsFromCloud() {
+  loadProductsFromCloud() {
       axios.defaults.headers.common["Content-Type"] = "application/json";
       axios.defaults.headers.common["Access-Control-Allow-Origin"] = "*";
       axios.defaults.headers.common["Access-Control-Allow-Headers"] = "Content-Type";
@@ -62,29 +79,16 @@ export default {
         .get("https://ebsis.herokuapp.com/api/products")
         .then(response => {
           this.products = response.data;
-          console.log(response.data)
-        })
+            this.insertProduct(response.data);
+            this.dialog = true;
+          })
         .catch(e => {
-          if (e.response.status === 401) {
-            // localStorage.clear();
-            // this.$router.go("/login");
-            console.log(e)
-          }
+          // if (e.response.status === 401) {
+          //   // localStorage.clear();
+          //   // this.$router.go("/login");
+          //   console.log(e)
+          // }
         });
-    },
-
-    saveProduct(){
-      var id = this.products.length + 1;
-      this.insertProduct(id, this.name,1, this.price);
-    },
-
-    dropTables(){
-      this.createTables();
-    },
-
-    loadProducts(){
-      this.products = []
-      this.selectProducts();
     }
   }
 };

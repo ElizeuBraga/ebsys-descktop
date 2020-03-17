@@ -1,20 +1,47 @@
 import sqlite3 from 'sqlite3';
+import psql from 'postgres';
+
+var sql = psql({
+    host     : 'localhost',
+    user     : 'postgres',
+    password : 'postgres',
+    database : 'ebsys'
+});
 
 export default {
     data(){
         return{
-            products:[]
+            localProducts:[]
         }
     },
-    methods: {
+
+    created(){
+        // console.log(this.products)
+        //$2a$10$YsoadGu/kTz9nHSqHINHAukOVgYT.ViRvKxc90SgPqffl1kWcIAve
+        // $2y$10$Sb52MpW2MnpAQreuDbuHk.IZozue2BME74sGp7Xq9E5mBtS/4LvY2
+    },
+
+    computed:{
+        location(){
+          return window.location.pathname == '/'
+        }
+      },
+
+     methods: {
+       async dropTableProducts(){
+            await sql`DROP TABLE IF EXISTS system.products`;
+
+            await sql`CREATE TABLE IF NOT EXISTS system.products(
+                id integer,
+                name varchar,
+                price float
+            )`;
+        },
+
         createTables(){
             var db = new sqlite3.Database('file.db');
-
             db.run("DROP TABLE IF EXISTS sections");
-            db.run("DROP TABLE IF EXISTS products");
             db.run("CREATE TABLE IF NOT EXISTS sections (id,name)");
-            db.run("CREATE TABLE IF NOT EXISTS products (id,name, section_id, price, FOREIGN KEY(section_id) REFERENCES sections(id))");
-
             db.close();
         },
 
@@ -30,27 +57,19 @@ export default {
             return console.log(insert);
         },
 
-        insertProduct(id, name, section_id, price) {
-            var db = new sqlite3.Database('file.db');
-
-            db.serialize(function () {
-                db.run("INSERT INTO products VALUES (?, ?, ?, ?)", [id, name, section_id, price]);
-            });
-
-            db.close();
+         async insertProduct(data) {
+            await this.dropTableProducts()
+            await sql`
+            insert into system.products ${
+              sql(data,'id','name', 'price')
+            }
+          `
         },
 
-        selectProducts(){
-            var db = new sqlite3.Database('file.db');
-            let vm = this
-            db.all("SELECT * FROM Products", function (err, rows) {
-                rows.forEach( row => vm.products.push(row));
+        async selectProducts(){
+            const products = await sql`select * from system.products`.stream(row =>{
+                this.localProducts.push(row)
             });
-
-            db.close();
-            
-            return this.products;
-
         }
     },
 

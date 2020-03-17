@@ -3,14 +3,20 @@ import VueRouter from 'vue-router'
 import Balcao from '../views/Balcao.vue'
 import Entrega from '../views/Entrega.vue'
 import Products from '../views/Products.vue'
+import Login from '../views/Login.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
   {
-    path: '/',
+    path: '/countertop',
     name: 'Balcao',
     component: Balcao
+  },
+  {
+    path: '/',
+    name: 'Login',
+    component: Login
   },
   {
     path: '/orders',
