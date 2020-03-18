@@ -19,9 +19,9 @@
                   <td>{{ p.price }}</td>
                   <td>1</td>
                   <td align="end">
-                <v-btn style="margin-left: 2px;" class="primary">+</v-btn>
-                <v-btn class="primary">-</v-btn>
-                <v-btn class="primary" @click="removeFromCart(p,i)">Remover</v-btn>
+                    <v-btn style="margin-left: 2px;" class="primary">+</v-btn>
+                    <v-btn class="primary">-</v-btn>
+                    <v-btn class="primary" @click="removeFromCart(p,i)">Remover</v-btn>
                   </td>
                 </tr>
               </tbody>
@@ -42,20 +42,39 @@
             </v-row>
           </v-card-actions>
         </v-card>
+
+        <v-dialog v-model="dialog" width="500">
+          <v-card>
+            <v-text-field placeholder="Outras Observações"></v-text-field>
+            <v-autocomplete v-model="selected" multiple :items="options"></v-autocomplete>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" text @click="dialog = false">I accept</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
         <!-- <v-btn align="end" cols="6" sm="12" md="4">Buscar</v-btn> -->
         <!-- <v-btn align="end" cols="6" sm="12" md="4" @click="dropTableProducts">Deletar produtos</v-btn> -->
       </v-col>
       <v-col cols="6" sm="12" md="4">
-        <v-text-field v-model="search" @keyup.down.native="onSubmit"></v-text-field>
-        <!-- <v-text-field ref="focusable"></v-text-field> -->
-        <v-simple-table>
-          <tbody>
-            <tr @click="insertInCart(item)" v-for="item in filterProducts" :key="item.id">
-              <td>{{ item.name }}</td>
-              <td>{{ item.price }}</td>
-            </tr>
-          </tbody>
-        </v-simple-table>
+        <v-autocomplete
+          ref="seletion"
+          v-model="aux"
+          dense
+          :items="localProducts"
+          :filter="customFilter"
+          @input="afterselection"
+          color="white"
+          item-text="name"
+          label="Selecione"
+          return-object
+          :auto-select-first="true"
+          :clearable="true"
+        ></v-autocomplete>
+        
+        <v-text-field v-model="qtd" v-on:keydown="afterselectionPrice" type="number" ref="qtd"></v-text-field>
       </v-col>
     </v-row>
   </div>
@@ -71,6 +90,11 @@ export default {
   components: {},
   data() {
     return {
+      selected:[],
+      options:["Suco", "Coca", "Sem Salada", "S/Salsicha", "Sm Calabresa", "S/Pão"],
+      dialog: false,
+      qtd: 1,
+      aux: {},
       items: [],
       value: "",
       alignment: "end",
@@ -87,17 +111,20 @@ export default {
   },
 
   methods: {
+    customFilter(item, queryText, itemText) {
+      const textOne = item.name.toLowerCase();
+      const searchText = queryText.toLowerCase();
+
+      return textOne.indexOf(searchText) > -1;
+    },
     insertInCart(p) {
-      this.search=""
+      this.search = "";
       this.cart.unshift(p);
     },
     removeFromCart(p, index) {
       this.cart.splice(index, 1);
     },
-    onSubmit() {
-      // this.$refs.focusable.$el.focus();
-      console.log("hi");
-    },
+
     testeBcrypt(text) {
       let vm = this;
       bcrypt.hash(text, 10, function(err, hash) {
@@ -111,6 +138,24 @@ export default {
       });
 
       // console.log(r)
+    },
+
+    afterselection(item) {
+      this.cart.push(item);
+      this.$nextTick(() => {
+        this.aux = null;
+        this.$refs.qtd.focus();
+      });
+    },
+
+    afterselectionPrice(event) {
+      if (event.key == "Enter") {
+          this.dialog = true;
+      }
+    },
+
+    fazerAlgumaCoisa() {
+      console.log("Oi");
     }
   },
 
