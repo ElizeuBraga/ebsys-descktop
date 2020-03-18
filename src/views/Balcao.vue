@@ -45,12 +45,12 @@
 
         <v-dialog v-model="dialog" width="500">
           <v-card>
-            <v-text-field placeholder="Outras Observações"></v-text-field>
-            <v-autocomplete v-model="selected" multiple :items="options"></v-autocomplete>
+            <v-autocomplete ref="selectObs" v-model="selected" multiple :items="options"></v-autocomplete>
+            <v-text-field ref="obs" v-on:keydown="afterObs" placeholder="Outras Observações"></v-text-field>
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="primary" text @click="dialog = false">I accept</v-btn>
+              <v-btn color="primary" ref="btnDialog" text @click="submitOptions">Ok</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -73,7 +73,7 @@
           :auto-select-first="true"
           :clearable="true"
         ></v-autocomplete>
-        
+
         <v-text-field v-model="qtd" v-on:keydown="afterselectionPrice" type="number" ref="qtd"></v-text-field>
       </v-col>
     </v-row>
@@ -90,8 +90,24 @@ export default {
   components: {},
   data() {
     return {
-      selected:[],
-      options:["Suco", "Coca", "Sem Salada", "S/Salsicha", "Sm Calabresa", "S/Pão"],
+      selected: [],
+      options: [
+        "Suco",
+        "Coca",
+        "Sem Salada",
+        "S/Salsicha",
+        "Sm Calabresa",
+        "Sm Calabresa",
+        "Sm Calabresa",
+        "Sm Calabresa",
+        "Sm Calabresa",
+        "Sm Calabresa",
+        "Sm Calabresa",
+        "Sm Calabresa",
+        "Sm Calabresa",
+        "Sm Calabresa",
+        "S/Pão"
+      ],
       dialog: false,
       qtd: 1,
       aux: {},
@@ -140,6 +156,18 @@ export default {
       // console.log(r)
     },
 
+    submitOptions(){
+      this.dialog = false
+    },
+
+    afterObs() {
+      if (event.key == "Enter") {
+        this.$nextTick(() => {
+          this.$refs.btnDialog.$el.focus();
+        });
+      }
+    },
+
     afterselection(item) {
       this.cart.push(item);
       this.$nextTick(() => {
@@ -150,7 +178,11 @@ export default {
 
     afterselectionPrice(event) {
       if (event.key == "Enter") {
-          this.dialog = true;
+        this.dialog = true;
+
+        setTimeout(() => {
+          this.$refs.selectObs.focus();
+        }, 200);
       }
     },
 
