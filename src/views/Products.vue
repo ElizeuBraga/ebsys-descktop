@@ -1,10 +1,8 @@
 <template>
   <div class="text-center">
-    <v-dialog
-      v-model="dialog"
-      width="500"
-    >
+    <v-dialog v-model="dialog" width="500">
       <template v-slot:activator="{ on }">
+        <v-progress-linear v-show="loading" indeterminate color="orange" style="margin-top:3px"></v-progress-linear>
         <v-btn
           color="red lighten-2"
           dark
@@ -12,37 +10,29 @@
           rounded
           style="margin-top:300px"
           @click="loadProductsFromCloud"
-        >
-          Carregar produtos
-        </v-btn>
+        >Carregar produtos</v-btn>
+
+        <v-btn
+          color="red lighten-2"
+          dark
+          large
+          rounded
+          style="margin-top:300px"
+          @click="loadOptionsFromCloud"
+        >Carregar Opções</v-btn>
       </template>
 
       <v-card>
-        <v-card-title
-          class="headline grey lighten-2"
-          primary-title
-        >
-          Produtos carregados
-        </v-card-title>
+        <v-card-title class="headline grey lighten-2" primary-title>Produtos carregados</v-card-title>
 
-        <v-card-text class="text-center">
-          {{products.length}}
-        </v-card-text>
-        <v-card-text class="text-center">
-          produtos carregados
-        </v-card-text>
+        <v-card-text class="text-center">{{qtdDataReturned}}</v-card-text>
+        <v-card-text class="text-center">produtos carregados</v-card-text>
 
         <v-divider></v-divider>
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            color="primary"
-            text
-            @click="dialog = false"
-          >
-            OK
-          </v-btn>
+          <v-btn color="primary" text @click="dialog = false">OK</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -50,40 +40,57 @@
 </template>
 
 <script>
-
-import sqlite from '../mixins/sqlite'
-import axios from 'axios'
+import sqlite from "../mixins/sqlite";
+import axios from "axios";
 export default {
-  mixins:[sqlite],
+  mixins: [sqlite],
   components: {},
   data() {
     return {
+      loading: false,
       dialog: false,
       id: 1,
       name: null,
       price: null,
       alignment: "end",
-      products: []
+      qtdDataReturned:0
     };
   },
 
-  mounted(){
-  //  this.loadProducts();
+  mounted() {
+    //  this.loadProducts();
   },
 
-  methods:{
-  loadProductsFromCloud() {
-      axios.defaults.headers.common["Content-Type"] = "application/json";
-      axios.defaults.headers.common["Access-Control-Allow-Origin"] = "*";
-      axios.defaults.headers.common["Access-Control-Allow-Headers"] = "Content-Type";
-      axios.defaults.headers.common["Authorization"] = "Bearer fHVgJ82pS2AufhNM1Um4FwAZsqEKHtLRKRYq0uhy7hOf8pHUL8wNY6qRTKmf";
+  methods: {
+    loadProductsFromCloud() {
+      this.loading = true;
       axios
-        .get("https://ebsis.herokuapp.com/api/products")
+        .get(this.host + "products")
         .then(response => {
-          this.products = response.data;
-            this.insertProduct(response.data);
+          let result = this.manageProducts(response.data);
+          result.then((v)=>{
+            this.qtdDataReturned = v
             this.dialog = true;
           })
+          this.loading = false;
+        })
+        .catch(e => {
+          // console.log(e)
+        });
+    },
+
+    loadOptionsFromCloud() {
+      this.loading = true;
+      axios
+        .get(this.host + "options")
+        .then(response => {
+          let result = this.manageOptions(response.data);
+          result.then((v)=>{
+            this.qtdDataReturned = v
+            this.dialog = true;
+          })
+          this.loading = false;
+        })
         .catch(e => {
           // if (e.response.status === 401) {
           //   // localStorage.clear();

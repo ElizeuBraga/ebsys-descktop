@@ -1,76 +1,74 @@
-import sqlite3 from 'sqlite3';
 import psql from 'postgres';
-
+import axios from 'axios';
 var sql = psql({
-    host     : 'localhost',
-    user     : 'postgres',
-    password : 'psql',
-    database : 'postgres'
+    host: 'localhost',
+    user: 'postgres',
+    password: 'postgres',
+    database: 'postgres'
 });
 
 export default {
-    data(){
-        return{
-            localProducts:[]
+    data() {
+        return {
+            host: 'http://127.0.0.1:8000/api/',
         }
     },
 
-    created(){
+    created() {
+        axios.defaults.headers.common["Content-Type"] = "application/json";
+        axios.defaults.headers.common["Access-Control-Allow-Origin"] = "*";
+        axios.defaults.headers.common["Access-Control-Allow-Headers"] =
+            "Content-Type";
+        axios.defaults.headers.common["Authorization"] =
+            "Bearer j2MFvmcsZ5RQY6Wn33q5VdRcafIm8lb2iko8zEeVvkyBNwl67gSdpjI31F9f";
         // console.log(this.products)
         //$2a$10$YsoadGu/kTz9nHSqHINHAukOVgYT.ViRvKxc90SgPqffl1kWcIAve
         // $2y$10$Sb52MpW2MnpAQreuDbuHk.IZozue2BME74sGp7Xq9E5mBtS/4LvY2
     },
 
-    computed:{
-        location(){
-          return window.location.pathname == '/'
+    computed: {
+        location() {
+            return window.location.pathname == '/'
         }
-      },
+    },
 
-     methods: {
-       async dropTableProducts(){
-            await sql`DROP TABLE IF EXISTS system.products`;
+    methods: {
+        async manageProducts(data){
+            console.log(data)
+            await sql`DROP TABLE IF EXISTS snackbar.products`;
+            await sql`CREATE TABLE IF NOT EXISTS snackbar.products(id integer, name varchar, price float, status char, auxQtd char, auxObs char)`;
+            if (data.length > 0) {
+                await sql`insert into snackbar.products ${sql(data, 'id', 'name', 'price', 'status', 'auxQtd', 'auxObs')}`
 
-            await sql`CREATE TABLE IF NOT EXISTS system.products(
-                id integer,
-                name varchar,
-                price float
-            )`;
-        },
-
-        createTables(){
-            var db = new sqlite3.Database('file.db');
-            db.run("DROP TABLE IF EXISTS sections");
-            db.run("CREATE TABLE IF NOT EXISTS sections (id,name)");
-            db.close();
-        },
-
-        insertSection(id, name) {
-            var db = new sqlite3.Database('file.db');
-
-            var insert = db.serialize(function () {
-                db.run("INSERT INTO sections VALUES (?, ?)", [id, name]);
-            });
-
-            db.close();
-
-            return console.log(insert);
-        },
-
-         async insertProduct(data) {
-            await this.dropTableProducts()
-            await sql`
-            insert into system.products ${
-              sql(data,'id','name', 'price')
+                return data.length;
             }
-          `
+
+            return data.length;
         },
 
-        async selectProducts(){
-            const products = await sql`select * from system.products`.stream(row =>{
-                this.localProducts.push(row)
-            });
-        }
+        async manageOptions(data){
+            await sql`DROP TABLE IF EXISTS snackbar.options`;
+            await sql`CREATE TABLE IF NOT EXISTS snackbar.options(id integer, name varchar, status char)`;
+            if (data.length > 0) {
+                await sql`insert into snackbar.options ${sql(data, 'id', 'name', 'status')}`
+
+                return data.length;
+            }
+
+            return data.length;
+        },
+
+        async selectProducts() {
+            let products = await sql`select * from snackbar.products`;
+
+            return products;
+        },
+
+        async selectOptions() {
+            let options = await sql`select * from snackbar.options`;
+
+            return options;
+        },
     },
 
 }

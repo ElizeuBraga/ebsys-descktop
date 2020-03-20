@@ -19,7 +19,8 @@
                   <td>{{ p.price }}</td>
                   <td>1</td>
                   <td align="end">
-                    <v-btn style="margin-left: 2px;" class="primary">+</v-btn>
+                    <v-btn class="primary" @click="showOptions(p, i)">Ver</v-btn>
+                    <v-btn class="primary">+</v-btn>
                     <v-btn class="primary">-</v-btn>
                     <v-btn class="primary" @click="removeFromCart(p,i)">Remover</v-btn>
                   </td>
@@ -45,25 +46,32 @@
 
         <v-dialog v-model="dialog" width="500">
           <v-card>
-            <v-autocomplete ref="selectObs" v-model="selected" multiple :items="options"></v-autocomplete>
-            <v-text-field ref="obs" v-on:keydown="afterObs" placeholder="Outras Observações"></v-text-field>
-
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="primary" ref="btnDialog" text @click="submitOptions">Ok</v-btn>
-            </v-card-actions>
+            {{obj.name}}
+            <v-chip
+              v-for="(obs,i) in obj.aux"
+              :key="i"
+              class="ma-2"
+              close
+              color="teal"
+              text-color="white"
+              @click:close="removeObservation(obj, i)"
+            >{{obs}}</v-chip>
+            <v-text-field
+              v-model="moreOption"
+              ref="obs"
+              v-on:keydown="afterObs"
+              placeholder="Outras Observações"
+            ></v-text-field>
+            {{moreOption}}
           </v-card>
         </v-dialog>
-
-        <!-- <v-btn align="end" cols="6" sm="12" md="4">Buscar</v-btn> -->
-        <!-- <v-btn align="end" cols="6" sm="12" md="4" @click="dropTableProducts">Deletar produtos</v-btn> -->
       </v-col>
       <v-col cols="6" sm="12" md="4">
         <v-autocomplete
           ref="seletion"
           v-model="aux"
           dense
-          :items="localProducts"
+          :items="products"
           :filter="customFilter"
           @input="afterselection"
           color="white"
@@ -73,8 +81,13 @@
           :auto-select-first="true"
           :clearable="true"
         ></v-autocomplete>
-
         <v-text-field v-model="qtd" v-on:keydown="afterselectionPrice" type="number" ref="qtd"></v-text-field>
+        <v-card height="200">
+          <v-row style="margin-left:3px margin-top:4px" v-for="(c, i) in cart" :key="i">
+              <div md="12"><b>{{c.name}}-</b></div>
+              <div class="float-sm-left" margin v-for="(ca, j) in c.aux" :key="j">{{ca}} ,</div>
+            </v-row>
+        </v-card>
       </v-col>
     </v-row>
   </div>
@@ -90,53 +103,58 @@ export default {
   components: {},
   data() {
     return {
+      obj: {},
+      moreOption: "",
       selected: [],
-      options: [
-        "Suco",
-        "Coca",
-        "Sem Salada",
-        "S/Salsicha",
-        "Sm Calabresa",
-        "Sm Calabresa",
-        "Sm Calabresa",
-        "Sm Calabresa",
-        "Sm Calabresa",
-        "Sm Calabresa",
-        "Sm Calabresa",
-        "Sm Calabresa",
-        "Sm Calabresa",
-        "Sm Calabresa",
-        "S/Pão"
-      ],
       dialog: false,
       qtd: 1,
+      options: [],
+      products: [],
       aux: {},
       items: [],
       value: "",
       alignment: "end",
       cart: [],
+      index: 0,
       search: "",
       searchInput: "",
-      pwd: ""
+      pwd: "",
+      dialogOptions: false,
+      arrDialogOptions: []
     };
   },
 
   mounted() {
-    this.selectProducts();
-    this.testeBcrypt("12345678");
+    let products = this.selectProducts();
+    products.then(p => {
+      this.products = p;
+    });
+
+    let options = this.selectOptions();
+    options.then(o => {
+      this.options = o;
+    });
   },
 
   methods: {
+    removeObservation(obj, i) {
+      obj.aux.splice(i, 1);
+      this.obj.aux.splice(i, 1);
+      // arrDial.splice(i, 1)
+    },
+
+    showOptions(p, i) {
+      this.obj = p;
+      this.dialog = true;
+    },
+
     customFilter(item, queryText, itemText) {
       const textOne = item.name.toLowerCase();
       const searchText = queryText.toLowerCase();
 
       return textOne.indexOf(searchText) > -1;
     },
-    insertInCart(p) {
-      this.search = "";
-      this.cart.unshift(p);
-    },
+
     removeFromCart(p, index) {
       this.cart.splice(index, 1);
     },
@@ -156,20 +174,23 @@ export default {
       // console.log(r)
     },
 
-    submitOptions(){
-      this.dialog = false
+    submitOptions() {
+      this.dialog = false;
     },
 
-    afterObs() {
+    afterObs(event) {
       if (event.key == "Enter") {
-        this.$nextTick(() => {
-          this.$refs.btnDialog.$el.focus();
-        });
+        let i = this.index;
+        console.log(this.cart[i].aux);
+        this.cart[i].aux.push(this.moreOption);
+        this.moreOption = "";
+        this.arrDialogOptions = this.cart[i].aux;
       }
     },
 
     afterselection(item) {
-      this.cart.push(item);
+      item.aux = [];
+      this.cart.unshift(item);
       this.$nextTick(() => {
         this.aux = null;
         this.$refs.qtd.focus();
@@ -181,13 +202,19 @@ export default {
         this.dialog = true;
 
         setTimeout(() => {
-          this.$refs.selectObs.focus();
+          this.obj = this.cart[0];
+          this.$refs.obs.focus();
         }, 200);
       }
     },
 
     fazerAlgumaCoisa() {
       console.log("Oi");
+    },
+
+    saveObservation() {
+      this.cart[0].aux = this.aux;
+      this.dialog = false;
     }
   },
 
@@ -204,7 +231,7 @@ export default {
     filterProducts: function() {
       let filtered = [];
       if (this.search) {
-        filtered = this.localProducts.filter(
+        filtered = this.products.filter(
           m => m.name.toLowerCase().indexOf(this.search) > -1
         );
       }
