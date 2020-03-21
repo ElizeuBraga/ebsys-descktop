@@ -10,6 +10,7 @@ var sql = psql({
 export default {
     data() {
         return {
+            myColor: "orange",
             host: 'http://127.0.0.1:8000/api/',
         }
     },
@@ -33,7 +34,7 @@ export default {
     },
 
     methods: {
-        async manageProducts(data){
+        async manageProducts(data) {
             console.log(data)
             await sql`DROP TABLE IF EXISTS snackbar.products`;
             await sql`CREATE TABLE IF NOT EXISTS snackbar.products(id integer, name varchar, price float, status char, auxQtd char, auxObs char)`;
@@ -46,7 +47,7 @@ export default {
             return data.length;
         },
 
-        async manageOptions(data){
+        async manageOptions(data) {
             await sql`DROP TABLE IF EXISTS snackbar.options`;
             await sql`CREATE TABLE IF NOT EXISTS snackbar.options(id integer, name varchar, status char)`;
             if (data.length > 0) {

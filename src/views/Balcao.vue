@@ -9,20 +9,21 @@
                 <tr>
                   <th class="text-left">Produto</th>
                   <th class="text-left">Valor</th>
-                  <th class="text-left">qtd</th>
+                  <th class="text-left">Qtd</th>
+                  <th class="text-left">Parcial</th>
                   <th class="text-center">Opções</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(p, i) in cart" :key="i">
                   <td>{{ p.name }}</td>
-                  <td>{{ p.price }}</td>
-                  <td>1</td>
+                  <td>{{ p.price.toFixed(2) }}</td>
+                  <td>{{p.qtd}}</td>
+                  <td>{{p.parcial.toFixed(2)}}</td>
                   <td align="end">
-                    <v-btn class="primary" @click="showOptions(p, i)">Ver</v-btn>
-                    <v-btn class="primary">+</v-btn>
-                    <v-btn class="primary">-</v-btn>
-                    <v-btn class="primary" @click="removeFromCart(p,i)">Remover</v-btn>
+                    <v-btn class="primary" @click="removeFromCart(p,i)" rounded>Excluir</v-btn>
+                    <v-btn class="primary" @click="show(p)" rounded>Ver</v-btn>
+                    
                   </td>
                 </tr>
               </tbody>
@@ -32,10 +33,10 @@
           <v-card-actions>
             <v-row>
               <v-col>
-                <v-btn class="primary">Receber</v-btn>
+                <v-btn class="white--text" :color="myColor" rounded>Receber</v-btn>
               </v-col>
               <v-col>
-                <v-btn class="danger">Cancelar</v-btn>
+                <v-btn class="white--text" color="red" rounded>Cancelar</v-btn>
               </v-col>
               <v-col>
                 <v-label align="end">{{total.toFixed(2)}}</v-label>
@@ -44,17 +45,18 @@
           </v-card-actions>
         </v-card>
 
-        <v-dialog v-model="dialog" width="500">
+        <v-dialog v-model="dialog" width="500" persistent>
           <v-card>
             {{obj.name}}
             <v-chip
-              v-for="(obs,i) in obj.aux"
+              v-for="(obs,i) in obj.arrObs"
               :key="i"
               class="ma-2"
               close
               color="teal"
               text-color="white"
-              @click:close="removeObservation(obj, i)"
+              @click:close="removeObservation(i)"
+              
             >{{obs}}</v-chip>
             <v-text-field
               v-model="moreOption"
@@ -62,14 +64,37 @@
               v-on:keydown="afterObs"
               placeholder="Outras Observações"
             ></v-text-field>
-            {{moreOption}}
+            <v-btn @click="insertInCart" :disabled="moreOption != ''">Ok</v-btn>
+          </v-card>
+        </v-dialog>
+
+        <v-dialog v-model="dialogEdit" width="500" persistent>
+          <v-card>
+            {{obj.name}}
+            <v-chip
+              v-for="(obs,i) in obj.arrObs"
+              :key="i"
+              class="ma-2"
+              close
+              color="teal"
+              text-color="white"
+              @click:close="removeObservation(i)"
+              
+            >{{obs}}</v-chip>
+            <v-text-field
+              v-model="moreOption"
+              ref="obs"
+              v-on:keydown="afterObs"
+              placeholder="Outras Observações"
+            ></v-text-field>
+            <v-btn @click="dialogEdit = false" :disabled="moreOption != ''">Ok</v-btn>
           </v-card>
         </v-dialog>
       </v-col>
       <v-col cols="6" sm="12" md="4">
         <v-autocomplete
           ref="seletion"
-          v-model="aux"
+          v-model="produto"
           dense
           :items="products"
           :filter="customFilter"
@@ -103,6 +128,7 @@ export default {
   components: {},
   data() {
     return {
+      dialogEdit: false,
       obj: {},
       moreOption: "",
       selected: [],
@@ -110,7 +136,7 @@ export default {
       qtd: 1,
       options: [],
       products: [],
-      aux: {},
+      produto: {},
       items: [],
       value: "",
       alignment: "end",
@@ -137,15 +163,25 @@ export default {
   },
 
   methods: {
-    removeObservation(obj, i) {
-      obj.aux.splice(i, 1);
-      this.obj.aux.splice(i, 1);
-      // arrDial.splice(i, 1)
+    removeObservation(i){
+      this.obj.arrObs.splice(i, 1)
     },
 
-    showOptions(p, i) {
+    show(p){
+      this.dialogEdit = true
       this.obj = p;
-      this.dialog = true;
+    },
+    
+    insertInCart(){
+      this.produto = {}
+      this.qtd = 1
+      this.obj.parcial = this.obj.qtd * this.obj.price
+      this.cart.unshift(this.obj)
+      this.obj = {}
+      this.dialog = !this.dialog
+      setTimeout(() => {
+        this.$refs.seletion.focus();
+        }, 200);
     },
 
     customFilter(item, queryText, itemText) {
@@ -174,73 +210,40 @@ export default {
       // console.log(r)
     },
 
-    submitOptions() {
-      this.dialog = false;
-    },
-
     afterObs(event) {
       if (event.key == "Enter") {
-        let i = this.index;
-        console.log(this.cart[i].aux);
-        this.cart[i].aux.push(this.moreOption);
-        this.moreOption = "";
-        this.arrDialogOptions = this.cart[i].aux;
+          this.obj.arrObs.push(this.moreOption)
+          this.moreOption = "";
       }
     },
 
     afterselection(item) {
-      item.aux = [];
-      this.cart.unshift(item);
+      this.obj =  Object.assign({}, item);
+      this.obj.arrObs = []
       this.$nextTick(() => {
-        this.aux = null;
         this.$refs.qtd.focus();
       });
     },
 
     afterselectionPrice(event) {
+      this.obj.qtd = this.qtd
       if (event.key == "Enter") {
         this.dialog = true;
-
         setTimeout(() => {
-          this.obj = this.cart[0];
           this.$refs.obs.focus();
         }, 200);
       }
     },
-
-    fazerAlgumaCoisa() {
-      console.log("Oi");
-    },
-
-    saveObservation() {
-      this.cart[0].aux = this.aux;
-      this.dialog = false;
-    }
   },
 
   computed: {
     total() {
       let total = 0;
       this.cart.forEach(element => {
-        total += element.price;
+        total += element.parcial;
       });
 
       return total;
-    },
-
-    filterProducts: function() {
-      let filtered = [];
-      if (this.search) {
-        filtered = this.products.filter(
-          m => m.name.toLowerCase().indexOf(this.search) > -1
-        );
-      }
-      // if (this.select) {
-      //   filtered = filtered.filter(
-      //     m => m.gender.toLowerCase() === this.select.toLowerCase()
-      //   );
-      // }
-      return filtered;
     }
   }
 };

@@ -32,7 +32,7 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="dialog = false">OK</v-btn>
+          <v-btn  :color="myColor" text @click="dialog = false">OK</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
