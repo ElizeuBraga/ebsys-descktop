@@ -4,6 +4,8 @@ import Balcao from '../views/Balcao.vue'
 import Entrega from '../views/Entrega.vue'
 import Products from '../views/Products.vue'
 import Login from '../views/Login.vue'
+import FirstAccess from "../views/FirstAccess.vue"
+import ForgotPassword from '../views/ForgotPassword.vue'
 
 Vue.use(VueRouter)
 
@@ -12,6 +14,11 @@ const routes = [
     path: '/countertop',
     name: 'Balcao',
     component: Balcao
+  },
+  {
+    path: '/firstaccess',
+    name: 'FirstAccess',
+    component: FirstAccess
   },
   {
     path: '/',
@@ -24,9 +31,10 @@ const routes = [
     component: Entrega
   },
   {
-    path: '/products',
-    name: 'Products',
-    component: Products
+    path: '/forgotpassword',
+    name: 'Forgot',
+    component: ForgotPassword,
+    props:true
   }
 ]
 

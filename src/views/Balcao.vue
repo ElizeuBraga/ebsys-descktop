@@ -2,8 +2,8 @@
   <div>
     <v-row justify="center">
       <v-col cols="6" sm="12" md="8">
-        <v-card style="max-height:600px;" class="mx-auto" outlined>
-          <v-simple-table height="500px">
+        <v-card height="90vh" class="mx-auto" outlined>
+          <v-simple-table height="80vh">
             <template v-slot:default>
               <thead>
                 <tr>
@@ -23,7 +23,6 @@
                   <td align="end">
                     <v-btn class="primary" @click="removeFromCart(p,i)" rounded>Excluir</v-btn>
                     <v-btn class="primary" @click="show(p)" rounded>Ver</v-btn>
-                    
                   </td>
                 </tr>
               </tbody>
@@ -33,13 +32,20 @@
           <v-card-actions>
             <v-row>
               <v-col>
-                <v-btn class="white--text" :color="myColor" rounded>Receber</v-btn>
+                <v-btn
+                  :disabled="cartEmpty"
+                  width="100%"
+                  class="white--text"
+                  @click="receive"
+                  :color="user.my_color"
+                  rounded
+                >Receber</v-btn>
               </v-col>
               <v-col>
-                <v-btn class="white--text" color="red" rounded>Cancelar</v-btn>
+                <v-btn class="white--text" width="100%" color="red" rounded>Cancelar</v-btn>
               </v-col>
-              <v-col>
-                <v-label align="end">{{total.toFixed(2)}}</v-label>
+              <v-col class="text-center">
+                <v-label width="100%">{{total.toFixed(2)}}</v-label>
               </v-col>
             </v-row>
           </v-card-actions>
@@ -56,7 +62,6 @@
               color="teal"
               text-color="white"
               @click:close="removeObservation(i)"
-              
             >{{obs}}</v-chip>
             <v-text-field
               v-model="moreOption"
@@ -79,7 +84,6 @@
               color="teal"
               text-color="white"
               @click:close="removeObservation(i)"
-              
             >{{obs}}</v-chip>
             <v-text-field
               v-model="moreOption"
@@ -107,12 +111,6 @@
           :clearable="true"
         ></v-autocomplete>
         <v-text-field v-model="qtd" v-on:keydown="afterselectionPrice" type="number" ref="qtd"></v-text-field>
-        <v-card height="200">
-          <v-row style="margin-left:3px margin-top:4px" v-for="(c, i) in cart" :key="i">
-              <div md="12"><b>{{c.name}}-</b></div>
-              <div class="float-sm-left" margin v-for="(ca, j) in c.aux" :key="j">{{ca}} ,</div>
-            </v-row>
-        </v-card>
       </v-col>
     </v-row>
   </div>
@@ -120,11 +118,13 @@
 
 <script>
 // @ is an alias to /src
-import sqlite from "../mixins/sqlite";
+import mixins from "../mixins/mixins";
 import bcrypt from "bcrypt";
+import axios from "axios";
+import EventBus from "./../EventBus";
 
 export default {
-  mixins: [sqlite],
+  mixins: [mixins],
   components: {},
   data() {
     return {
@@ -151,37 +151,33 @@ export default {
   },
 
   mounted() {
-    let products = this.selectProducts();
-    products.then(p => {
-      this.products = p;
-    });
-
-    let options = this.selectOptions();
-    options.then(o => {
-      this.options = o;
-    });
+    EventBus.$emit('changetitle', 'Balcão');
+    EventBus.$emit("logged", true);
+    if (localStorage.products) {
+      this.products = JSON.parse(localStorage.products);
+    }
   },
 
   methods: {
-    removeObservation(i){
-      this.obj.arrObs.splice(i, 1)
+    removeObservation(i) {
+      this.obj.arrObs.splice(i, 1);
     },
 
-    show(p){
-      this.dialogEdit = true
+    show(p) {
+      this.dialogEdit = true;
       this.obj = p;
     },
-    
-    insertInCart(){
-      this.produto = {}
-      this.qtd = 1
-      this.obj.parcial = this.obj.qtd * this.obj.price
-      this.cart.unshift(this.obj)
-      this.obj = {}
-      this.dialog = !this.dialog
+
+    insertInCart() {
+      this.produto = {};
+      this.qtd = 1;
+      this.obj.parcial = this.obj.qtd * this.obj.price;
+      this.cart.unshift(this.obj);
+      this.obj = {};
+      this.dialog = !this.dialog;
       setTimeout(() => {
         this.$refs.seletion.focus();
-        }, 200);
+      }, 200);
     },
 
     customFilter(item, queryText, itemText) {
@@ -212,21 +208,21 @@ export default {
 
     afterObs(event) {
       if (event.key == "Enter") {
-          this.obj.arrObs.push(this.moreOption)
-          this.moreOption = "";
+        this.obj.arrObs.push(this.moreOption);
+        this.moreOption = "";
       }
     },
 
     afterselection(item) {
-      this.obj =  Object.assign({}, item);
-      this.obj.arrObs = []
+      this.obj = Object.assign({}, item);
+      this.obj.arrObs = [];
       this.$nextTick(() => {
         this.$refs.qtd.focus();
       });
     },
 
     afterselectionPrice(event) {
-      this.obj.qtd = this.qtd
+      this.obj.qtd = this.qtd;
       if (event.key == "Enter") {
         this.dialog = true;
         setTimeout(() => {
@@ -234,9 +230,17 @@ export default {
         }, 200);
       }
     },
+
+    receive() {
+      alert("REceber");
+    }
   },
 
   computed: {
+    cartEmpty() {
+      return this.cart == 0;
+    },
+
     total() {
       let total = 0;
       this.cart.forEach(element => {

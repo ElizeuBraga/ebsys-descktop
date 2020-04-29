@@ -2,9 +2,8 @@
   <v-app>
     <v-card height="100vh">
       <v-app-bar :color="myColor" dark>
-        <v-app-bar-nav-icon @click="drawer = true"></v-app-bar-nav-icon>
-
-        <!-- <v-toolbar-title>{{pageTitle}}</v-toolbar-title> -->
+        <v-app-bar-nav-icon v-show="logged" @click="drawer = true"></v-app-bar-nav-icon>
+        <v-toolbar-title v-on:logged="teste($event)">{{pageTitle}}</v-toolbar-title>
       </v-app-bar>
 
       <v-navigation-drawer v-model="drawer" absolute temporary>
@@ -23,15 +22,7 @@
               </v-list-item-icon>
               <v-list-item-title>Balcão</v-list-item-title>
             </v-list-item>
-
-            <v-list-item to="/products" @click="drawer = false">
-              <v-list-item-icon>
-                <v-icon>mdi-account</v-icon>
-              </v-list-item-icon>
-              <v-list-item-title>Produtos</v-list-item-title>
-            </v-list-item>
-
-            <v-list-item to="" @click="logout">
+            <v-list-item to @click="logout">
               <v-list-item-icon>
                 <v-icon>mdi-account</v-icon>
               </v-list-item-icon>
@@ -46,20 +37,39 @@
 </template>
 
 <script>
-import mixins from "./mixins/sqlite";
+import mixins from "./mixins/mixins";
+import EventBus from "./EventBus";
+import Login from "./views/Login";
 export default {
   mixins: [mixins],
+  components: {
+    Login: Login
+  },
   data() {
     return {
-      pageTitle: "Balcão",
-      drawer: false,
+      pageTitle: "",
+      drawer: false
     };
   },
 
-  created() {},
+  created() {
+    // Listen event logged and deslogged
+    EventBus.$on('changetitle', (payLoad) =>{
+      this.pageTitle = payLoad
+    });
+    EventBus.$on("logged", (payLoad) => {
+      if(payLoad){
+        this.logged = true;
+      }else{
+        this.logged = false;
+        this.pageTitle = 'Ebsys'
+      }
+    });
+  },
 
   methods: {
     logout() {
+      EventBus.$emit("logged", false);
       this.$router.push("/");
     },
     returnPageTitle(e) {

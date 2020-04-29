@@ -1,49 +1,14 @@
 <template>
-  <div class="text-center">
-    <v-dialog v-model="dialog" width="500">
-      <template v-slot:activator="{ on }">
-        <v-progress-linear v-show="loading" indeterminate color="orange" style="margin-top:3px"></v-progress-linear>
-        <v-btn
-          color="red lighten-2"
-          dark
-          large
-          rounded
-          style="margin-top:300px"
-          @click="loadProductsFromCloud"
-        >Carregar produtos</v-btn>
+  <v-container :style="{background:'red'}">
 
-        <v-btn
-          color="red lighten-2"
-          dark
-          large
-          rounded
-          style="margin-top:300px"
-          @click="loadOptionsFromCloud"
-        >Carregar Opções</v-btn>
-      </template>
-
-      <v-card>
-        <v-card-title class="headline grey lighten-2" primary-title>Produtos carregados</v-card-title>
-
-        <v-card-text class="text-center">{{qtdDataReturned}}</v-card-text>
-        <v-card-text class="text-center">produtos carregados</v-card-text>
-
-        <v-divider></v-divider>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn  :color="myColor" text @click="dialog = false">OK</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </div>
+  </v-container>
 </template>
 
 <script>
-import sqlite from "../mixins/sqlite";
 import axios from "axios";
+import mixins from '../mixins/mixins';
 export default {
-  mixins: [sqlite],
+  mixins: [mixins],
   components: {},
   data() {
     return {
@@ -58,11 +23,21 @@ export default {
   },
 
   mounted() {
-    //  this.loadProducts();
+    axios
+        .get(this.host + "products")
+        .then(response => {
+          console.log(response.data)
+          localStorage.setItem('products', JSON.stringify(response.data))
+          this.loading = false;
+        })
+        .catch(e => {
+          // console.log(e)
+        });
   },
 
   methods: {
     loadProductsFromCloud() {
+      return console.log(JSON.parse(localStorage.products));
       this.loading = true;
       axios
         .get(this.host + "products")
