@@ -20,11 +20,16 @@ const routes = [
     name: 'FirstAccess',
     component: FirstAccess
   },
+  // {
+  //   path: '/',
+  //   name: 'Login',
+  //   component: Login
+  // },
   {
-    path: '/',
-    name: 'Login',
-    component: Login
-  },
+      path: '/',
+      name: 'Login',
+      component: Products
+    },
   {
     path: '/orders',
     name: 'Entrega',

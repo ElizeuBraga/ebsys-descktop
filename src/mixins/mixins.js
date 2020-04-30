@@ -48,7 +48,7 @@ export default {
                 
                 //products table
                 this.db.run("DROP TABLE IF EXISTS products");
-                this.db.run("CREATE TABLE products(name, price REAL, section_id)");
+                this.db.run("CREATE TABLE products(name, price REAL)");
 
                 //system table
                 this.db.run("DROP TABLE IF EXISTS system");
