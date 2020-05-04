@@ -1,7 +1,7 @@
 <template>
   <!-- <v-container min-width="100%" :style="{background:'red'}"> -->
   <v-row justify="center" :style="{background:'',  margin:'0px 4px 0px 4px'}">
-    <v-col cols="8" :style="{background:''}">
+    <v-col cols="8" :style="{background:'red'}">
       <v-simple-table height="89vh">
         <v-progress-linear indeterminate :color="myColor" v-show="loading"></v-progress-linear>
         <template v-slot:default>
@@ -13,10 +13,10 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="p in products" :key="p.rowid">
-              <td>{{ p.rowid }}</td>
-              <td>{{ p.name }}</td>
-              <td>{{ p.price }}</td>
+            <tr v-for="o in orders" :key="o.id" @click="show(o)">
+              <td>{{ o.id }}</td>
+              <td>{{ o.user.name }}</td>
+              <td>{{ 'R$' + formatPrice(o.total)}}</td>
             </tr>
           </tbody>
         </template>
@@ -26,32 +26,11 @@
       <v-card>
         <v-row justify="center">
           <v-col cols="10">
-            <p :style="{'text-decoration':'underline'}" class="text-center">Novo Produto</p>
-          </v-col>
-          <v-col cols="10">
-            <v-text-field outlined label="Nome" v-model="name" rounded></v-text-field>
-          </v-col>
-          <v-col cols="10">
-            <v-text-field outlined label="Preço" rounded v-model.lazy="price" v-money="money"></v-text-field>
-          </v-col>
-          <v-col cols="10">
-            <v-text-field outlined label="Breve descrição" rounded v-model="dsc"></v-text-field>
-          </v-col>
-          <v-col cols="10">
-            <v-text-field outlined label="URL da imagem para o produto" rounded v-model="img"></v-text-field>
-          </v-col>
-          <v-col cols="10">
-            <v-select
-              item-text="name"
-              item-value="id"
-              v-model="selected"
-              return-object
-              :items="sections"
-              label="Seção do produto"
-              dense
-              outlined
-              rounded
-            ></v-select>
+            <p><b>Id: </b>{{order.id}}</p>
+            <p><b>Cliente: </b>{{order.user.name}}</p>
+            <p><b>Produtos:</b></p>
+            <p v-for="p in order.products" :key="p.id">{{p.name}}</p>
+            <p><b>R$ {{formatPrice(order.total)}}</b></p>
           </v-col>
           <v-col cols="10">
             <v-btn
@@ -110,22 +89,29 @@ export default {
       name: "",
       price: "",
       alignment: "end",
-      qtdDataReturned: 0
+      qtdDataReturned: 0,
+      orders: [],
+      order:{
+        user:{}
+      }
     };
   },
 
   mounted() {
     var channel = pusher.subscribe("new-order");
     channel.bind("App\\Events\\NewOrder", (data) => {
-      console.log(data);
+      // this.orders = data
+      // console.log(data.order.original[0]);
+      this.orders.unshift(data.order.original[0]);
     });
     axios
-        .get(this.host + "products")
+        .get(this.host + "orders")
         .then(response => {
           // handle success
-          this.products = response.data
+          this.order = response.data[0]
+          this.orders = response.data
           // response.data.forEach(element => {
-          //   element.section_id == 1
+            //   element.section_id == 1
           //     ? this.drinks.push(element)
           //     : this.plates.push(element);
           // });
@@ -147,6 +133,11 @@ export default {
   },
 
   methods: {
+    formatPrice(value) {
+        let val = (value/1).toFixed(2).replace('.', ',')
+        return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+    },
+
     save() {
       axios
         .post(this.host + "products", {
@@ -162,6 +153,10 @@ export default {
         .catch(function(error) {
           console.log(error);
         });
+    },
+
+    show(p){
+      this.order = p
     }
   }
 };

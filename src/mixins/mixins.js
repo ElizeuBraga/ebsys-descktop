@@ -10,7 +10,8 @@ export default {
             logged: false,
             employees: [],
             user: (localStorage.user)?JSON.parse(localStorage.user):{my_color:'orange'},
-            host: 'http://192.168.43.209:8000/api/',
+            host: 'http://192.168.15.7:8000/api/',
+            // host: 'http://localhost:8000/api/',
         }
     },
 
@@ -18,6 +19,7 @@ export default {
         if(localStorage.employees){
             this.employees = localStorage.employees
         }
+        // axios.defaults.headers.common["Host"] = "http://192.168.15.7:8000/api/";
         axios.defaults.headers.common["Content-Type"] = "application/json";
         axios.defaults.headers.common["Access-Control-Allow-Origin"] = "*";
         axios.defaults.headers.common["Access-Control-Allow-Headers"] =

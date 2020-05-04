@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Balcao from '../views/Balcao.vue'
 import Entrega from '../views/Entrega.vue'
 import Products from '../views/Products.vue'
+import Orders from '../views/Orders.vue'
 import Login from '../views/Login.vue'
 import FirstAccess from "../views/FirstAccess.vue"
 import ForgotPassword from '../views/ForgotPassword.vue'
@@ -28,7 +29,7 @@ const routes = [
   {
       path: '/',
       name: 'Login',
-      component: Products
+      component: Orders
     },
   {
     path: '/orders',
