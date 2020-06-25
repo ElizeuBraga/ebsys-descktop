@@ -1,10 +1,10 @@
 import axios from 'axios';
 import sqlite3  from 'sqlite3';
+let db =  new sqlite3.Database('/home/basis/Downloads/app-descktop/src/database/database.db')
 
 export default {
     data() {
         return {
-            db: new sqlite3.Database('/home/basis/Downloads/app-descktop/src/database/database.db'),
             alertBd:false,
             myColor: "blue",
             logged: false,
@@ -38,39 +38,10 @@ export default {
     },
 
     methods: {
-        createDataBaseStructure(){
-            this.db.serialize(()=>{
-                // table users
-                this.db.run("DROP TABLE IF EXISTS users");
-                this.db.run("CREATE TABLE users(name, email UNIQUE, phone, password, profile)");
-                
-                //sections
-                this.db.run("DROP TABLE IF EXISTS sections");
-                this.db.run("CREATE TABLE sections(name)");
-                
-                //products table
-                this.db.run("DROP TABLE IF EXISTS products");
-                this.db.run("CREATE TABLE products(name, price REAL)");
-
-                //system table
-                this.db.run("DROP TABLE IF EXISTS system");
-                this.db.run("CREATE TABLE system(status INTEGER)");
-
-                this.db.run("INSERT INTO system VALUES (?)", (0));
-
-
-                this.alertBd = true;
-                this.database = false
-                this.admin = true;
-                this.title = 'Criar administrador do sistema'
-            });
-        },
-
         showAlert(type, msg, timer=2000){
             this.alert = true
             this.typeAlert = type
             this.message = msg
-
             setTimeout(()=>{
                 this.alert = false
             }, timer);
