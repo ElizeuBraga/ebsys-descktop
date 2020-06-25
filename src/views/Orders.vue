@@ -51,7 +51,7 @@
               v-model="phone"
               label="Telefone"
             />
-            <a @click="newCustomer = !newCustomer">Novo cliente</a>
+            <p class="inform">Digite um numero de telefone para iniciar um novo pedido</p>
           </v-col>
           <v-col v-if="newCustomer" cols="10">
             <v-btn
@@ -293,3 +293,10 @@ export default {
   }
 };
 </script>
+<style scoped>
+  .inform{
+    font-size: 12px;
+    text-align: center;
+    color: red;
+  }
+</style>
