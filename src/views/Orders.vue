@@ -26,88 +26,11 @@
       </v-row>
     </v-col>
     <v-col cols="4" :style="{background:''}">
-      <v-card v-if="delivery">
-        <v-row justify="center">
-          <v-col v-if="newCustomer || updatingCustomer" cols="10">
-            <p class="text-center bold">Novo cliente</p>
-            <p class="text-center bold">{{message}}</p>
-            <v-text-field :disabled="updatingCustomer" v-model="customer.phone" label="Telefone" />
-            <v-text-field :disabled="blockInputs" v-model="customer.name" label="Nome" />
-            <v-text-field :disabled="blockInputs" v-model="customer.address" label="Endereço" />
-            <v-select
-              :items="locality"
-              return-object
-              :disabled="blockInputs"
-              item-text="name"
-              item-value="rowId"
-              v-model="locObj"
-              label="Localidades"
-            ></v-select>
-            <v-row align="center">
-              <v-col align="center" cols="6">
-                <u>
-                  <a @click="cancelarForm">Cancelar</a>
-                </u>
-              </v-col>
-              <v-col align="center" cols="6">
-                <u>
-                  <a @click="blockInputs = !blockInputs">Editar</a>
-                </u>
-              </v-col>
-            </v-row>
-          </v-col>
-          <v-col v-else cols="10">
-            <p class="text-center bold">Novo pedido</p>
-            <v-text-field
-              type="phone"
-              counter="11"
-              max-length="11"
-              clearable
-              v-model="customer.phone"
-              label="Telefone"
-            />
-            <p class="inform">Digite um numero de telefone para iniciar um novo pedido</p>
-          </v-col>
-          <v-col v-if="newCustomer" cols="10">
-            <v-btn
-              :style="{background:myColor, color:'white'}"
-              rounded
-              @click="saveCustomer"
-              label="Preço"
-              width="100%"
-              :disabled="inputs"
-            >Salvar</v-btn>
-          </v-col>
-
-          <v-col v-if="updatingCustomer" cols="10">
-            <v-btn
-              :style="{background:myColor, color:'white'}"
-              rounded
-              @click="updateCustomer"
-              label="Preço"
-              width="100%"
-              :disabled="inputs"
-            >Atualizar</v-btn>
-          </v-col>
-
-          <v-col v-if="findingCustomer" cols="10">
-            <v-btn
-              :style="{background:myColor, color:'white'}"
-              rounded
-              @click="findCustomer"
-              label="Preço"
-              width="100%"
-              :disabled="!customer.phone"
-            >Buscar</v-btn>
-          </v-col>
-        </v-row>
-      </v-card>
-      <hr />
       <v-card :style="{'max-height': '870px', height:'870px'}" class="overflow-y-auto">
         <p align="center">Pedido</p>
         <u>
           <p
-            v-if="updatingCustomer || newCustomer"
+            v-if="delivery"
             align="center"
           >{{customer.name}} - {{customer.address}} - {{customer.phone}}</p>
         </u>
@@ -122,19 +45,159 @@
         </v-row>
       </v-card>
       <!-- menu -->
-        <v-footer absolute class="font-weight-medium">
-          <v-col class="text-center" cols="12">
-            <v-row align="center">
-              <v-col align="center" cols="6">
-                <v-btn>Fechar</v-btn>
-              </v-col>
-              <v-col align="center" cols="6">
-                <v-btn @click="cancelOrder">Cancelar</v-btn>
-              </v-col>
-            </v-row>
-          </v-col>
-        </v-footer>
+      <v-footer absolute class="font-weight-medium">
+        <v-col class="text-center" cols="12">
+          <v-row align="center">
+            <v-col align="center" cols="4">
+              <v-btn color="primary">Receber</v-btn>
+            </v-col>
+            <v-col align="center" cols="4">
+              <v-btn @click="cancelOrder" color="error">Cancelar</v-btn>
+            </v-col>
+            <v-col align="center" cols="4">
+              <v-btn @click="typeOrder">{{btnDesc}}</v-btn>
+            </v-col>
+          </v-row>
+        </v-col>
+      </v-footer>
     </v-col>
+
+    
+  <v-dialog
+      v-model="dialogObs"
+      width="500"
+    >
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn
+          color="red lighten-2"
+          dark
+          v-bind="attrs"
+          v-on="on"
+        >
+          Click Me
+        </v-btn>
+      </template>
+
+      <v-card>
+        <v-card-title
+          class="headline grey lighten-2"
+          primary-title
+        >
+          Privacy Policy
+        </v-card-title>
+
+        <v-card-text>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            text
+            @click="dialog = false"
+          >
+            I accept
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+
+
+
+    <!-- modal cliente -->
+    <v-dialog v-model="dialog" width="500" :persistent="true">
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn color="red lighten-2" dark v-bind="attrs" v-on="on">Click Me</v-btn>
+      </template>
+
+      <v-card>
+        <v-card-title class="headline grey lighten-2" primary-title>{{formTitle}}</v-card-title>
+
+        <v-card-text>
+          <v-row justify="center">
+            <v-col v-if="newCustomer || updatingCustomer" cols="10">
+              <p class="text-center bold">Novo cliente</p>
+              <p class="text-center bold">{{message}}</p>
+              <v-text-field :disabled="updatingCustomer" v-model="customer.phone" label="Telefone" />
+              <v-text-field :disabled="blockInputs" v-model="customer.name" label="Nome" />
+              <v-text-field :disabled="blockInputs" v-model="customer.address" label="Endereço" />
+              <v-select
+                :items="locality"
+                return-object
+                :disabled="blockInputs"
+                item-text="name"
+                item-value="rowId"
+                v-model="locObj"
+                label="Localidades"
+              ></v-select>
+              <v-row align="center">
+                <v-col align="center" cols="6">
+                  <u>
+                    <a @click="cancelarForm">Cancelar</a>
+                  </u>
+                </v-col>
+                <v-col align="center" cols="6">
+                  <u>
+                    <a @click="blockInputs = !blockInputs">Editar</a>
+                  </u>
+                </v-col>
+              </v-row>
+            </v-col>
+            <v-col v-else cols="10">
+              <v-text-field
+                type="phone"
+                counter="11"
+                max-length="11"
+                clearable
+                v-model="customer.phone"
+                label="Telefone"
+              />
+            </v-col>
+            <v-col v-if="newCustomer" cols="10">
+              <v-btn
+                :style="{background:myColor, color:'white'}"
+                rounded
+                @click="saveCustomer"
+                label="Preço"
+                width="100%"
+                :disabled="inputs"
+              >Salvar</v-btn>
+            </v-col>
+            <v-col v-if="updatingCustomer" cols="10">
+              <v-btn
+                :style="{background:myColor, color:'white'}"
+                rounded
+                @click="updateCustomer"
+                label="Preço"
+                width="100%"
+                :disabled="inputs"
+              >Atualizar</v-btn>
+            </v-col>
+            <v-col v-if="findingCustomer" cols="10">
+              <v-btn
+                :style="{background:myColor, color:'white'}"
+                rounded
+                @click="findCustomer"
+                label="Preço"
+                width="100%"
+                :disabled="!customer.phone"
+              >Buscar</v-btn>
+            </v-col>
+          </v-row>
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" text @click="dialog = false">Ok</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 
   <!-- </v-container> -->
@@ -165,6 +228,9 @@ export default {
   directives: { money: VMoney },
   data() {
     return {
+      dialogObs:false,
+      formTitle:"Pesquisar um cliente",
+      dialog: false,
       delivery: false,
       quantity: 0,
       product: {},
@@ -184,6 +250,7 @@ export default {
         { id: 2, name: "Pratos" }
       ],
 
+      btnDesc: "Delivery",
       cart: [],
       newCustomer: false,
       updatingCustomer: false,
@@ -230,6 +297,7 @@ export default {
     window.addEventListener("keypress", e => {
       if (this.quantity > 0) {
         if (e.keyCode == 13) {
+          this.dialogObs = true
           console.log("Enter");
           this.insertInCart();
           this.$nextTick(() => this.$refs.product.focus());
@@ -267,14 +335,22 @@ export default {
   },
 
   methods: {
-    cancelOrder(){
-      this.cart = []
+    typeOrder() {
+      this.dialog = true;
+      this.delivery = !this.delivery;
+      if (!this.delivery) {
+        this.customer = {};
+      }
+    },
+    cancelOrder() {
+      this.cart = [];
     },
     cancelarForm() {
       this.locObj = {};
       this.customer = {};
       this.updatingCustomer = false;
       this.newCustomer = false;
+      this.findingCustomer = true;
     },
     formatPrice(value) {
       let val = (value / 1).toFixed(2).replace(".", ",");
@@ -399,6 +475,7 @@ export default {
         } else {
           console.log("Não encontrei");
           this.newCustomer = !this.newCustomer;
+          this.blockInputs = false;
         }
         this.findingCustomer = false;
       });
