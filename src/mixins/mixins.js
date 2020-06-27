@@ -1,10 +1,11 @@
 import axios from 'axios';
-import sqlite3  from 'sqlite3';
-let db =  new sqlite3.Database('/home/basis/Downloads/app-descktop/src/database/database.db')
+// import sqlite3  from 'sqlite3';
+// let db =  new sqlite3.Database('/home/basis/Downloads/app-descktop/src/database/database.db')
 
 export default {
     data() {
         return {
+            orderColor:"blue",
             alertBd:false,
             myColor: "blue",
             logged: false,

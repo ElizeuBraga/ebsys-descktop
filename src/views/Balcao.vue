@@ -119,7 +119,6 @@
 <script>
 // @ is an alias to /src
 import mixins from "../mixins/mixins";
-import bcrypt from "bcrypt";
 import axios from "axios";
 import EventBus from "./../EventBus";
 

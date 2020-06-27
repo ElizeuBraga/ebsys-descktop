@@ -13,11 +13,11 @@
   "main": "background.js",
   "dependencies": {
     "axios": "^0.19.2",
-    "bcrypt": "^4.0.1",
     "bcryptjs": "^2.4.3",
+    "pg": "^8.2.1",
     "pusher": "^3.0.1",
     "pusher-js": "^6.0.0",
-    "sqlite3": "^4.1.1",
+    "sqlite3": "^4.2.0",
     "v-money": "^0.8.1",
     "vue": "^2.6.11",
     "vue-router": "^3.1.5",

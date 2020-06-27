@@ -25,24 +25,52 @@
         </v-col>
       </v-row>
     </v-col>
+
+    <!-- coluna do Pedido -->
     <v-col cols="4" :style="{background:''}">
-      <v-card :style="{'max-height': '870px', height:'870px'}" class="overflow-y-auto">
-        <p align="center">Pedido</p>
+      <v-card :style="{'max-height': '870px', height:'870px', background: orderColor}" class="overflow-y-auto">
+        <v-card-title class="justify-center">{{deliveryTitle}}</v-card-title>
         <u>
           <p
             v-if="delivery"
             align="center"
           >{{customer.name}} - {{customer.address}} - {{customer.phone}}</p>
         </u>
-        <v-row class="pl-4 pr-4" v-for="(c, i) in cart" :key="i">
-          <v-col cols="6">{{c.name}}</v-col>
-          <v-col cols="2">{{c.quantity}}</v-col>
-          <v-col cols="2">{{c.price}}</v-col>
-          <v-col cols="2">{{c.price * c.quantity}}</v-col>
+        <v-row class="pl-4 pr-4 text-center" v-for="(c, i) in cart" :key="i">
+          <v-col cols="6" class="text-left pt-0 pb-0">{{c.name}}</v-col>
+          <v-tooltip top>
+            <template v-slot:activator="{ on, attrs }">
+              <v-col v-bind="attrs" v-on="on" cols="2" class="pt-0 pb-0">{{c.quantity}}</v-col>
+            </template>
+            <span>Quantidade</span>
+          </v-tooltip>
+          <v-tooltip top>
+            <template v-slot:activator="{ on, attrs }">
+              <v-col v-bind="attrs" v-on="on" cols="2" class="pt-0 pb-0">{{String(c.price).replace('.', ',')}}</v-col>
+            </template>
+            <span>Preço unitario</span>
+          </v-tooltip>
+          <v-tooltip top>
+            <template v-slot:activator="{ on, attrs }">
+              <v-col v-bind="attrs" v-on="on" cols="2" class="pt-0 pb-0">{{String(c.price * c.quantity).replace('.', ',')}}</v-col>
+            </template>
+            <span>Total parcial</span>
+          </v-tooltip>
+          <v-col cols="12" class="text-left pt-0 pb-0">
+            <span :style="{'font-size':'12px'}" v-for="(o, i) in c.observations" :key="i">
+              <span v-if="i > 0">,</span>
+              {{o}}
+            </span>
+          </v-col>
           <v-col cols="12">
             <hr />
           </v-col>
         </v-row>
+
+        <v-card-actions :style="{position:'absolute', bottom:0, width:'100%'}">
+            <v-col cols="6" class="text-center">Total</v-col>
+            <v-col cols="6" class="text-center">{{total.toFixed(2).replace('.', ',')}}</v-col>
+        </v-card-actions>
       </v-card>
       <!-- menu -->
       <v-footer absolute class="font-weight-medium">
@@ -55,58 +83,61 @@
               <v-btn @click="cancelOrder" color="error">Cancelar</v-btn>
             </v-col>
             <v-col align="center" cols="4">
-              <v-btn @click="typeOrder">{{btnDesc}}</v-btn>
+              <v-btn v-if="delivery" @click="typeOrderBalcao">{{btnDesc}}</v-btn>
+              <v-btn v-else @click="typeOrderDelivery">{{btnDesc}}</v-btn>
             </v-col>
           </v-row>
         </v-col>
       </v-footer>
     </v-col>
+    <!-- coluna do Pedido -->
 
-    
-  <v-dialog
-      v-model="dialogObs"
-      width="500"
-    >
+    <!-- observações -->
+    <v-dialog v-model="dialogObs" width="500" :persistent="true">
       <template v-slot:activator="{ on, attrs }">
-        <v-btn
-          color="red lighten-2"
-          dark
-          v-bind="attrs"
-          v-on="on"
-        >
-          Click Me
-        </v-btn>
+        <v-btn color="red lighten-2" dark v-bind="attrs" v-on="on">Click Me</v-btn>
       </template>
 
       <v-card>
-        <v-card-title
-          class="headline grey lighten-2"
-          primary-title
-        >
-          Privacy Policy
-        </v-card-title>
+        <v-card-title class="headline grey lighten-2" primary-title>Observações</v-card-title>
 
         <v-card-text>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+          <!-- <v-select
+                ref="observation"
+                :items="observations"
+                return-object
+                placeholder="Selecione um item"
+                :disabled="blockInputs"
+                item-text="name"
+                item-value="rowId"
+                v-model="observation"
+                label="Observações"
+          ></v-select>-->
+          <v-autocomplete
+            ref="observation"
+            v-model="observation"
+            :items="obs"
+            :loading="isLoading"
+            color="black"
+            hide-no-data
+            hide-selected
+            item-text="Description"
+            item-value="API"
+            placeholder="Selecione uma observação"
+            prepend-icon="mdi-database-search"
+            return-object
+          ></v-autocomplete>
+          <v-text-field ref="observationSecond" v-model="observationSecond" label="Observação"></v-text-field>
         </v-card-text>
 
         <v-divider></v-divider>
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            color="primary"
-            text
-            @click="dialog = false"
-          >
-            I accept
-          </v-btn>
+          <v-btn color="primary" text @click="saveObs">Ok</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-
-
 
     <!-- modal cliente -->
     <v-dialog v-model="dialog" width="500" :persistent="true">
@@ -115,7 +146,7 @@
       </template>
 
       <v-card>
-        <v-card-title class="headline grey lighten-2" primary-title>{{formTitle}}</v-card-title>
+        <v-card-title class="headline grey lighten-2 text-center" primary-title>{{formTitle}}</v-card-title>
 
         <v-card-text>
           <v-row justify="center">
@@ -194,7 +225,7 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="dialog = false">Ok</v-btn>
+          <v-btn color="primary" ref="btnOk" text @click="dialog = false">Ok</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -209,10 +240,20 @@ import axios from "axios";
 import { VMoney } from "v-money";
 import sqlite3 from "sqlite3";
 import globalShortcut from "electron";
+// const { Client } = require("pg");
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
 );
+
+// const client = new Client({
+//   user: "postgres",
+//   host: "localhost",
+//   database: "postgres",
+//   password: "postgres",
+//   port: 5432
+// });
+
 var Pusher = require("pusher-js");
 
 // Enable pusher logging - don't include this in production
@@ -228,8 +269,18 @@ export default {
   directives: { money: VMoney },
   data() {
     return {
-      dialogObs:false,
-      formTitle:"Pesquisar um cliente",
+      deliveryTitle: "Balcão",
+      total: 0,
+      keyPressed: 0,
+      observationSecond: "",
+      obsSelected: false,
+      observation: {},
+      observations: [
+        { name: "Suco", rowid: 1 },
+        { name: "Coca", rowid: 2 }
+      ],
+      dialogObs: false,
+      formTitle: "Buscar um cliente",
       dialog: false,
       delivery: false,
       quantity: 0,
@@ -293,18 +344,26 @@ export default {
     };
   },
 
-  mounted() {
+  async mounted() {
     window.addEventListener("keypress", e => {
       if (this.quantity > 0) {
         if (e.keyCode == 13) {
-          this.dialogObs = true
+          this.dialogObs = true;
           console.log("Enter");
-          this.insertInCart();
-          this.$nextTick(() => this.$refs.product.focus());
+          // if (this.keyPressed == 1) {
+          //   console.log('ioooo')
+          //   return this.$nextTick(() => this.$refs.btnOk.focus());
+          // }
+          setTimeout(() => {
+            this.$nextTick(() => {
+              // this.keyPressed = 1
+              this.$refs.observation.focus();
+            });
+          }, 100);
         }
       }
     });
-    this.loadLocality();
+    // this.loadLocality();
     this.loadProducts();
   },
 
@@ -326,22 +385,64 @@ export default {
 
         return Object.assign({}, product, { Description });
       });
+    },
+
+    obs() {
+      return this.observations.map(obs => {
+        const Description =
+          obs.name.length > this.descriptionLimit
+            ? obs.name.slice(0, this.descriptionLimit) + "..."
+            : obs.name;
+
+        return Object.assign({}, obs, { Description });
+      });
     }
   },
   watch: {
     product(e) {
       this.$refs.quantity.focus();
+    },
+
+    observation(e) {
+      this.obsSelected = true;
     }
   },
 
   methods: {
-    typeOrder() {
-      this.dialog = true;
-      this.delivery = !this.delivery;
-      if (!this.delivery) {
-        this.customer = {};
-      }
+    updateCart(item) {
+      console.log(item);
     },
+    saveObs() {
+      this.product.observations = [];
+      this.product.observations.push(this.observation.name);
+      if (this.observationSecond != "") {
+        this.product.observations.push(this.observationSecond);
+      }
+
+      this.insertInCart();
+
+      this.dialogObs = false;
+    },
+    typeOrderDelivery() {
+      this.dialog = true;
+      this.delivery = true;
+      this.deliveryTitle = "Delivery"
+      this.btnDesc = "Balcão"
+      this.orderColor = 'red'
+
+      this.$root.$emit('change_color', this.orderColor)
+    },
+
+    typeOrderBalcao(){
+      this.customer = {}
+      this.dialog = false;
+      this.delivery = false;
+      this.deliveryTitle = "Balcão"
+      this.btnDesc = "Delivery"
+      this.orderColor = 'blue'
+      this.$root.$emit('change_color', this.orderColor)
+    },
+
     cancelOrder() {
       this.cart = [];
     },
@@ -430,8 +531,24 @@ export default {
       let prod = JSON.stringify(this.product);
       this.cart.push(JSON.parse(prod));
 
+      this.total = 0
       this.product = {};
       this.quantity = 0;
+      let parcial = []
+
+      this.cart.forEach(element => {
+          this.total += element.price * parseInt(element.quantity)
+      });
+
+      // this.cart.forEach(element => {
+      //   parcial.push(element.price * parseInt(element.quantity));
+      // });
+
+      // parcial.forEach(element => {
+      //   this.total += element 
+      // });
+
+      // console.log(parcial)
     },
 
     async loadProducts() {

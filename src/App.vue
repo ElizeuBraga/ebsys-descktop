@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-card height="100vh">
-      <v-app-bar :color="myColor" dark>
+      <v-app-bar :style="{background: barColor}">
         <v-app-bar-nav-icon v-show="logged" @click="drawer = true"></v-app-bar-nav-icon>
         <v-toolbar-title v-on:logged="teste($event)">{{pageTitle}}</v-toolbar-title>
       </v-app-bar>
@@ -47,12 +47,16 @@ export default {
   },
   data() {
     return {
+      barColor: 'blue',
       pageTitle: "",
       drawer: false
     };
   },
 
   created() {
+    this.$root.$on('change_color', (e) =>{
+      this.barColor = e
+    })
     // Listen event logged and deslogged
     EventBus.$on('changetitle', (payLoad) =>{
       this.pageTitle = payLoad
