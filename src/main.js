@@ -5,6 +5,7 @@ import vuetify from './plugins/vuetify';
 import router from './router'
 import mixins from './mixins/mixins';
 import Countertop from './views/Balcao';
+var server = require("./server");
 
 Vue.config.productionTip = false
 

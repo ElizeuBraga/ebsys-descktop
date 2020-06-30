@@ -1,4 +1,6 @@
 --begin transaction;
+insert into locality (name, price) values('Sobradinho', 3.00);
+INSERT INTO customers (name, address, phone, locality_id)values('Skiltys', 'Q6 CL 17/19', 34531008, 1);
 INSERT
 	into
 	sections (name)
@@ -107,4 +109,8 @@ values
 	('Fritas com bacon(queijo ou cheddar)', 12.50, 13),
 	('Fritas com calabresa(catupiry ou cheddar)', 12.50, 13);
 	--Extras
+	
+INSERT into locality(name, price)values('Sobradinho', 3.00);
+INSERT into locality(name, price)values('Sobradinho II', 6.00);
+INSERT into locality(name, price)values('Setor de Mansões', 7.00);
 --commit;

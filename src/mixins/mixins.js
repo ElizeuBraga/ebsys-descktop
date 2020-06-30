@@ -5,7 +5,8 @@ import axios from 'axios';
 export default {
     data() {
         return {
-            orderColor:"blue",
+            backgroundColor:"white",
+            orderColor:"#0F8DB8",
             alertBd:false,
             myColor: "blue",
             logged: false,

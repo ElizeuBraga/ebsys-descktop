@@ -3,7 +3,7 @@
     <v-card height="100vh">
       <v-app-bar :style="{background: barColor}">
         <v-app-bar-nav-icon v-show="logged" @click="drawer = true"></v-app-bar-nav-icon>
-        <v-toolbar-title v-on:logged="teste($event)">{{pageTitle}}</v-toolbar-title>
+        <v-toolbar-title :style="{color:'white'}" v-on:logged="teste($event)">{{pageTitle}}</v-toolbar-title>
       </v-app-bar>
 
       <v-navigation-drawer v-model="drawer" absolute temporary>
@@ -47,8 +47,8 @@ export default {
   },
   data() {
     return {
-      barColor: 'blue',
-      pageTitle: "",
+      barColor: '#0F8DB8',
+      pageTitle: "Skiltys FastFood",
       drawer: false
     };
   },
