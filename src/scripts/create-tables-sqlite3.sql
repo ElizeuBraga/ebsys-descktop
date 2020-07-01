@@ -1,8 +1,11 @@
 --begin;
+drop table if exists itemsorders;
+drop table if exists itemsdeliveries ;
 drop table if exists orders;
+drop table if exists deliveries ;
 drop table if exists products;
 drop table if exists customers;
-drop table if exists items;
+
 DROP table if exists sections;
 DROP table if exists locality;
 DROP table if exists cashiers;
@@ -13,12 +16,21 @@ create table cashiers(
 	closed_at datetime
 );
 
-create table items(
-	id integer,
+create table itemsorders(
+	id integer primary key,
 	quantity integer not null,
 	product_id integer not null,
 	order_id integer not null,
-	foreign key (order_id) references orders (id)
+	foreign key (order_id) references orders (id),
+	foreign key (product_id) references products (id)
+);
+
+create table itemsdeliveries(
+	id integer primary key,
+	quantity integer not null,
+	product_id integer not null,
+	delivery_id integer,
+	foreign key (delivery_id) references deliveries (id),
 	foreign key (product_id) references products (id)
 );
 
@@ -37,10 +49,17 @@ CREATE table sections(
 
 CREATE table orders(
 	id integer primary key,
-	total real not null,
 	payment char(1) not null,
 	created_at datetime not null,
-	customer_id integer default 1,
+	cashier_id integer not null,
+	foreign key (cashier_id) references cashiers (id)
+);
+
+CREATE table deliveries(
+	id integer primary key,
+	payment char(1) not null,
+	created_at datetime not null,
+	customer_id integer not null,
 	cashier_id integer not null,
 	foreign key (customer_id) references customers (id),
 	foreign key (cashier_id) references cashiers (id)

@@ -450,22 +450,14 @@ export default {
 
   async mounted() {
     window.addEventListener("keypress", e => {
-      if (this.quantity > 0) {
-        if (e.keyCode == 13) {
-          console.log("Enter");
-          this.dialogObs = true;
-          // if (this.keyPressed == 1) {
-          //   console.log('ioooo')
-          //   return this.$nextTick(() => this.$refs.btnOk.focus());
-          // }
-          setTimeout(() => {
-            this.$nextTick(() => {
-              // this.keyPressed = 1
-              this.$refs.observation.focus();
-            });
-          }, 100);
-        }
+      if (e.keyCode == 13) {
+        this.dialogObs = true;
       }
+    });
+    setTimeout(() => {
+      this.$nextTick(() => {
+        this.$refs.product.focus();
+      }, 200);
     });
     this.loadLocality();
     this.loadProducts();
@@ -514,62 +506,82 @@ export default {
     }
   },
   watch: {
+    quantity(e) {},
+
     product(e) {
       this.$refs.quantity.focus();
+      // window.addEventListener("keypress", e => {
+      //   if(e.keyCode == 13){
+      //     this.openModalObs()
+      //     console.log('oi')
+      //   }
+      // });
     },
 
     observation(e) {
-      this.obsSelected = true;
+      // this.obsSelected = true;
     },
 
     typePayment(e) {
-      window.addEventListener("keypress", e => {
-        this.$nextTick(() => {
-          this.$refs.endOrder.focus();
-        });
-      });
+      // window.addEventListener("keypress", e => {
+      //   this.$nextTick(() => {
+      //     this.$refs.endOrder.focus();
+      //   });
+      // });
     }
   },
 
   methods: {
+    focusChanged(e) {
+      console.log(e);
+    },
+
     endOrder() {
-      this.order.total = this.total;
-      this.order.payment = this.typePayment.id;
-      this.order.cashier_id = 1;
-      this.order.customer_id = 1;
-      if (this.delivery) {
-        this.order.customer_id = this.customer.id;
-      }
+      if (!this.delivery) {
+        let rowid = null;
+        this.order.payment = this.typePayment.id;
+        this.order.cashier_id = 1;
 
-      let sql =
-        "insert into orders (total, payment, created_at, cashier_id, customer_id) values(?,?,datetime('now'),?,?)";
+        db.run("BEGIN TRANSACTION;");
+        let sql =
+          "insert into orders (payment, created_at, cashier_id) values(?,datetime('now'),?);";
 
-      db.run(
-        sql,
-        [
-          this.order.total,
-          this.order.payment,
-          this.order.cashier_id,
-          this.order.customer_id
-        ],
-        err => {
+        db.run(sql, [this.order.payment, this.order.cashier_id], err => {
           if (err) {
             return console.log(err.message);
           }
-          alert("Pedido realizado");
-        }
-      );
+
+          console.log("Inseri o pedido");
+        });
+
+        let sql2 = "select last_insert_rowid() as rowid";
+        db.get(sql2, (err, row) => {
+          if (err) {
+            return console.log(err);
+          }
+          let sql3 =
+            "INSERT INTO itemsorders(quantity, product_id, order_id)values(?,?,?);";
+
+          setTimeout(() => {
+            this.cart.forEach(element => {
+              db.run(sql3, [element.quantity, element.id, row.rowid], err => {
+                if (err) {
+                  return console.log(err);
+                }
+                console.log("Inseri os itens");
+              });
+            });
+          }, 200);
+        });
+
+        db.run("COMMIT;");
+      }
     },
     receive() {
-      window.addEventListener("keypress", e => {
-        this.$refs.typePayment.focus();
-      });
-      setTimeout(() => {
-        this.$refs.receive.focus();
-      }, 100);
       if (this.total > 0) {
         this.dialogReceive = true;
       }
+
       this.formTitle = "Receber";
     },
 
@@ -587,6 +599,7 @@ export default {
 
       this.dialogObs = false;
     },
+
     typeOrderDelivery() {
       this.findingCustomer = true;
       this.updatingCustomer = false;
@@ -700,22 +713,12 @@ export default {
 
       this.total = 0;
       this.product = {};
-      this.quantity = 0;
-      let parcial = [];
-
       this.cart.forEach(element => {
         this.total += element.price * parseInt(element.quantity);
       });
 
-      // this.cart.forEach(element => {
-      //   parcial.push(element.price * parseInt(element.quantity));
-      // });
-
-      // parcial.forEach(element => {
-      //   this.total += element
-      // });
-
-      // console.log(parcial)
+      this.quantity = 0;
+      this.$refs.product.focus();
     },
 
     async loadProducts() {
