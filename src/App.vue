@@ -1,11 +1,10 @@
 <template>
   <v-app>
-    <v-card height="100vh">
-      <v-app-bar :style="{background: barColor}">
+      <v-app-bar :style="{background: color}">
         <v-app-bar-nav-icon v-show="logged" @click="drawer = true"></v-app-bar-nav-icon>
-        <v-toolbar-title :style="{color:'white'}" v-on:logged="teste($event)">{{pageTitle}}</v-toolbar-title>
+        <v-toolbar-title :style="{color:textColor}" v-on:logged="teste($event)">{{pageTitle}}</v-toolbar-title>
       </v-app-bar>
-
+      <v-container fill-height fluid :style="{width:'1800px', background:''}">
       <v-navigation-drawer v-model="drawer" absolute temporary>
         <v-list nav dense>
           <v-list-item-group :color="myColor">
@@ -32,7 +31,7 @@
         </v-list>
       </v-navigation-drawer>
       <router-view></router-view>
-    </v-card>
+      </v-container>
   </v-app>
 </template>
 
@@ -47,7 +46,6 @@ export default {
   },
   data() {
     return {
-      barColor: '#0F8DB8',
       pageTitle: "Skiltys FastFood",
       drawer: false
     };
@@ -55,7 +53,7 @@ export default {
 
   created() {
     this.$root.$on('change_color', (e) =>{
-      this.barColor = e
+      this.color = e
     })
     // Listen event logged and deslogged
     EventBus.$on('changetitle', (payLoad) =>{

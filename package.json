@@ -12,6 +12,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "aws-sdk": "^2.708.0",
     "axios": "^0.19.2",
     "bcryptjs": "^2.4.3",
     "pg": "^8.2.1",

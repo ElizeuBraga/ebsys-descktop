@@ -6,8 +6,13 @@ export default {
     data() {
         return {
             backgroundColor:"white",
-            orderColor:"#0F8DB8",
+            colorPrimary:'#f5d019',
+            colorSecondary:'#dd3130',
+            orderColor:"#dd3130",
             alertBd:false,
+            color:"orange",
+            textColor: "white",
+            familyOrange:['green', 'yellow', 'blue'],
             myColor: "blue",
             logged: false,
             employees: [],
