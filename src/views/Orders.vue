@@ -40,7 +40,8 @@
               align="center"
             >{{customer.name}} - {{customer.address}} - {{customer.phone}}</p>
           </u>
-          <v-row class="pl-4 pr-4 text-center" v-for="(c, i) in cart" :key="i">
+          <v-row class="pl-6 pr-6">
+          <v-row class="pl-1 pr-1 text-center" v-for="(c, i) in cart" :key="i">
             <v-col cols="6" class="text-left pt-0 pb-0">{{c.name}}</v-col>
             <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
@@ -76,13 +77,15 @@
                 {{o}}
               </span>
             </v-col>
-            <v-col cols="12">
+            <v-col class="pt-0 pb-0 pr-0 pl-0" cols="12">
               <hr />
             </v-col>
           </v-row>
+            
+          </v-row>
 
           <v-card-actions
-            :style="{'font-size': '20px', background:color, position:'absolute', bottom:0, width:'100%'}"
+            :style="{'font-size': '20px', color:textColor, background:color, position:'absolute', bottom:0, width:'100%'}"
           >
             <v-col cols="6" class="text-center">Total</v-col>
             <v-col cols="6" class="text-center text-bold">R$ {{total.toFixed(2).replace('.', ',')}}</v-col>
@@ -296,24 +299,28 @@
       <v-col class="text-center" cols="12">
         <v-row align="center">
           <v-col align="center" cols="4">
-            <v-btn :style="{color:'white'}" :color="familyOrange[0]" large @click="receive">Receber</v-btn>
+            <v-btn large :style="{color:'green'}">Normal</v-btn>
+            <!-- <v-btn :style="{color:'white'}" :color="familyOrange[0]" large @click="receive">Receber</v-btn> -->
           </v-col>
           <v-col align="center" cols="4">
-            <v-btn @click="cancelOrder" :style="{color: textColor}" color="red">Cancelar</v-btn>
+            <!-- <v-btn @click="cancelOrder" :style="{color: textColor}" color="red">Cancelar</v-btn> -->
+            <v-btn large :style="{color:'red'}">Normal</v-btn>
           </v-col>
           <v-col align="center" cols="4">
-            <v-btn
+            <v-btn v-if="delivery" large :style="{color:'blue'}">Normal</v-btn>
+            <!-- <v-btn
               :style="{color:'white'}"
               color="#0F8DB8"
               v-if="delivery"
               @click="typeOrderBalcao"
-            >{{btnDesc}}</v-btn>
-            <v-btn
+            >{{btnDesc}}</v-btn> -->
+            <v-btn v-else large :style="{color:'blue'}">Normal</v-btn>
+            <!-- <v-btn
               :style="{color:'white'}"
               color="#6B64EB"
               v-else
               @click="typeOrderDelivery"
-            >{{btnDesc}}</v-btn>
+            >{{btnDesc}}</v-btn> -->
           </v-col>
         </v-row>
       </v-col>
@@ -440,6 +447,7 @@ export default {
   },
 
   async mounted() {
+    this.typeOrderBalcao()
     window.addEventListener("keypress", e => {
       if (e.keyCode == 13) {
         this.dialogObs = true;
@@ -598,7 +606,7 @@ export default {
       this.delivery = true;
       this.deliveryTitle = "Delivery";
       this.btnDesc = "Balcão";
-      this.color = "orange";
+      this.color = "red";
 
       this.$root.$emit("change_color", this.orderColor);
     },
@@ -609,7 +617,7 @@ export default {
       this.delivery = false;
       this.deliveryTitle = "Balcão";
       this.btnDesc = "Delivery";
-      this.color = "gray";
+      this.color = "orange";
       this.$root.$emit("change_color", this.color);
     },
 
