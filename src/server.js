@@ -1,6 +1,8 @@
 import sqlite3 from "sqlite3";
 const db = new sqlite3.Database("/home/basis/Downloads/app-descktop/src/database/database.db");
 require("http").createServer(async (req, res) => {
+    var response = ''
+
     if (req.url == '/') {
         res.end("Raiz");
     }
@@ -58,6 +60,26 @@ require("http").createServer(async (req, res) => {
             res.end(JSON.stringify(rows))
         });
 
+    }else if(req.url == '/products'){
+        if (req.method == 'POST') {
+            req.on('data', (chunk) =>{
+                let data = JSON.parse(chunk)
+                let sql = "INSERT INTO products(name, price, section_id) VALUES (?,?,?)";
+
+                db.run(sql, [data[0].name, data[0].price, data[0].section_id], err => {
+                    if(err){
+                        return console.log(err.message)
+                    }
+
+                    response += 'Feito'
+                })
+            })
+            res.end(response)
+        }else if (req.method == 'GET') {
+            res.end("GET")                
+        }else{
+            res.end("Method not allowed (suport GET or POST)")                
+        }
     }
 
     else {
