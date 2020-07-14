@@ -638,9 +638,9 @@ export default {
       this.deliveryTitle = "Delivery";
       this.btnDesc = "Balcão";
       this.cart = []
-      this.color = "red";
+      this.color = "#90EE90";
 
-      this.$root.$emit("change_color", this.orderColor);
+      this.$root.$emit("change_color", this.color);
     },
 
     typeOrderBalcao() {
