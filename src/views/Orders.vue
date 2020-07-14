@@ -34,11 +34,12 @@
       <v-col cols="5" :style="{background:''}">
         <v-card height="100%" :style="{background: backgroundColor}" class="overflow-y-auto">
           <v-card-title class="justify-center">{{deliveryTitle}}</v-card-title>
-          <u>
+          <u v-if="delivery && customer.name != null">
             <p
-              v-if="delivery"
+              class="mb-0"
               align="center"
-            >{{customer.name}} - {{customer.address}} - {{customer.phone}}</p>
+            >{{customer.name}} - {{customer.address}} - {{customer.phone}}</p><br>
+            <p align="center" class="mb-0 btn" @click="findCustomer"><a>Editar</a></p>
           </u>
           <v-row class="pl-6 pr-6">
           <v-row class="pl-1 pr-1 text-center" v-for="(c, i) in cart" :key="i">
@@ -190,13 +191,13 @@
                 ></v-select>
                 <v-row align="center">
                   <v-col align="center" cols="6">
-                    <u>
-                      <a @click="cancelarForm">Cancelar</a>
+                    <u v-if="!newCustomer">
+                      <a @click="blockInputs = !blockInputs">Editar</a>
                     </u>
                   </v-col>
                   <v-col align="center" cols="6">
                     <u>
-                      <a @click="blockInputs = !blockInputs">Editar</a>
+                      <a @click="cancelarForm">Cancelar</a>
                     </u>
                   </v-col>
                 </v-row>
@@ -249,7 +250,7 @@
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" ref="btnOk" text @click="dialog = false">Ok</v-btn>
+            <v-btn color="primary" ref="btnOk" text @click="updateCustomer">Ok</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -307,14 +308,14 @@
             <v-btn large :style="{color:'red'}">Normal</v-btn>
           </v-col>
           <v-col align="center" cols="4">
-            <v-btn v-if="delivery" large :style="{color:'blue'}">Normal</v-btn>
+            <v-btn v-if="delivery" large :style="{color:'blue'}" @click="typeOrderBalcao">Balcão</v-btn>
             <!-- <v-btn
               :style="{color:'white'}"
               color="#0F8DB8"
               v-if="delivery"
               @click="typeOrderBalcao"
             >{{btnDesc}}</v-btn> -->
-            <v-btn v-else large :style="{color:'blue'}">Normal</v-btn>
+            <v-btn v-else large :style="{color:'blue'}" @click="typeOrderDelivery">Entregas</v-btn>
             <!-- <v-btn
               :style="{color:'white'}"
               color="#6B64EB"
@@ -450,13 +451,20 @@ export default {
     this.typeOrderBalcao()
     window.addEventListener("keypress", e => {
       if (e.keyCode == 13) {
-        this.dialogObs = true;
+        if (this.observationSecond != '') {
+          this.dialogObs = true;
+          this.saveObs()
+        }
+        if (this.quantity > 0) {
+          this.dialogObs = true;
+          setTimeout(()=>{
+            this.$nextTick(()=>{
+              this.$refs.observation.focus();   
+            })
+          }, 200)
+        }
+
       }
-    });
-    setTimeout(() => {
-      this.$nextTick(() => {
-        this.$refs.product.focus();
-      }, 200);
     });
     this.loadLocality();
     this.loadProducts();
@@ -505,7 +513,9 @@ export default {
     }
   },
   watch: {
-    quantity(e) {},
+    quantity(e) {
+      
+    },
 
     product(e) {
       this.$refs.quantity.focus();
@@ -518,7 +528,11 @@ export default {
     },
 
     observation(e) {
-      // this.obsSelected = true;
+      setTimeout(() =>{
+          this.$nextTick(() => {
+          this.$refs.observationSecond.focus();
+        }, 200);  
+      })
     },
 
     typePayment(e) {
@@ -594,9 +608,18 @@ export default {
         this.product.observations.push(this.observationSecond);
       }
 
+      this.observationSecond = ''
+      this.observation = {}
+
       this.insertInCart();
 
       this.dialogObs = false;
+
+      setTimeout(() => {
+      // this.$nextTick(() => {
+        this.$refs.product.focus();
+      }, 200);
+    // });
     },
 
     typeOrderDelivery() {
@@ -606,6 +629,7 @@ export default {
       this.delivery = true;
       this.deliveryTitle = "Delivery";
       this.btnDesc = "Balcão";
+      this.cart = []
       this.color = "red";
 
       this.$root.$emit("change_color", this.orderColor);
@@ -680,6 +704,7 @@ export default {
           // get the last insert id
           // this.blockInputs = true;
           alert("Cliente atualizado!");
+          this.dialog = false
         }
       );
     },
@@ -752,16 +777,15 @@ export default {
         }
         if (row) {
           this.blockInputs = true;
-          console.log("Encontrei");
           this.updatingCustomer = true;
           this.findingCustomer = false;
           this.customer = row;
+          this.dialog = true
           let sql = "SELECT * FROM locality where id=?";
           db.get(sql, row.locality_id, (err, row) => {
             this.locObj = row;
           });
         } else {
-          console.log("Não encontrei");
           this.newCustomer = true;
           this.findingCustomer = false;
           this.blockInputs = false;
