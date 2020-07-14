@@ -72,11 +72,14 @@
               </template>
               <span>Total parcial</span>
             </v-tooltip>
-            <v-col cols="12" class="text-left pt-0 pb-0">
+            <v-col cols="10" class="text-left pt-0 pb-0">
               <span :style="{'font-size':'12px'}" v-for="(o, i) in c.observations" :key="i">
                 <span v-if="i > 0">,</span>
                 {{o}}
               </span>
+            </v-col>
+            <v-col cols="2" class="pt-0 pb-0">
+              <a @click="removeFromCart(i, (c.price * c.quantity))" :style="{color:'red'}">Remover</a>
             </v-col>
             <v-col class="pt-0 pb-0 pr-0 pl-0" cols="12">
               <hr />
@@ -545,6 +548,11 @@ export default {
   },
 
   methods: {
+    removeFromCart(i, parcialPrice){
+      this.total = this.total - parcialPrice
+      this.cart.splice(i, 1);
+    },
+
     focusChanged(e) {
       console.log(e);
     },
