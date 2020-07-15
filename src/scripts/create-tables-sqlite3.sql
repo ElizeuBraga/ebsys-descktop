@@ -5,6 +5,7 @@ drop table if exists orders;
 drop table if exists deliveries ;
 drop table if exists products;
 drop table if exists customers;
+drop table if exists rates;
 
 DROP table if exists sections;
 DROP table if exists locality;
@@ -42,6 +43,19 @@ create table products (
 	foreign key (section_id) references sections(id)
 );
 
+CREATE table locality(
+	id integer primary key,
+	name varchar(20) not null
+);
+
+create table rates (
+	id integer primary key,
+	name varchar(50) not null,
+	price real not null,
+	locality_id integer not null,
+	foreign key (locality_id) references locality(id)
+);
+
 CREATE table sections(
 	id integer primary key,
 	name varchar(50) not null	
@@ -74,10 +88,5 @@ CREATE table customers(
 	foreign key (locality_id) references locality(id)
 );
 
-CREATE table locality(
-	id integer primary key,
-	name varchar(20) not null,
-	price real not null
-);
 PRAGMA foreign_keys = ON;
 --commit;

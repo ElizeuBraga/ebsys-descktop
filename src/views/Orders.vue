@@ -33,14 +33,23 @@
 
       <v-col cols="5" :style="{background:''}">
         <v-card height="100%" :style="{background: backgroundColor}" class="overflow-y-auto">
-          <v-card-title class="justify-center">{{deliveryTitle}}</v-card-title>
-          <u v-if="delivery && customer.name != null">
+          <v-card-title :style="{background:color, color:textColor}" class="justify-center pb-0 pt-0">{{deliveryTitle}}</v-card-title>
+          <!-- <u v-if="delivery && customer.name != null"> -->
+          <v-row v-if="delivery && customer.name != null" align="center" class="pl-0 pr-0 pb-0 pt-0">
+            <v-col cols="12" class="pl-0 pr-0 pb-0">
             <p
-              class="mb-0"
               align="center"
-            >{{customer.name}} - {{customer.address}} - {{customer.phone}}</p><br>
-            <p align="center" class="mb-0 btn" @click="findCustomer"><a>Editar</a></p>
-          </u>
+            >{{customer.name}} - {{customer.address}} - {{customer.phone}}</p>
+            </v-col>
+            <v-col align="center" cols="6" class="pb-0 pt-0">
+              <a @click="dialog = true">Editar</a>
+            </v-col>
+            <v-col align="center" cols="6" class="pb-0 pt-0">
+              <a @click="cancelarForm">Cancelar</a>
+            </v-col>
+          </v-row>
+          <hr/>
+          <!-- </u> -->
           <v-row class="pl-6 pr-6">
           <v-row class="pl-1 pr-1 text-center" v-for="(c, i) in cart" :key="i">
             <v-col cols="6" class="text-left pt-0 pb-0">{{c.name}}</v-col>
@@ -165,25 +174,25 @@
                 <p class="text-center bold">Novo cliente</p>
                 <p class="text-center bold">{{message}}</p>
                 <v-text-field
-                  :color="orderColor"
+                  :color="color"
                   :disabled="updatingCustomer"
                   v-model="customer.phone"
                   label="Telefone"
                 />
                 <v-text-field
-                  :color="orderColor"
+                  :color="color"
                   :disabled="blockInputs"
                   v-model="customer.name"
                   label="Nome"
                 />
                 <v-text-field
-                  :color="orderColor"
+                  :color="color"
                   :disabled="blockInputs"
                   v-model="customer.address"
                   label="Endereço"
                 />
                 <v-select
-                  :color="orderColor"
+                  :color="color"
                   :items="locality"
                   return-object
                   :disabled="blockInputs"
@@ -192,18 +201,6 @@
                   v-model="locObj"
                   label="Localidades"
                 ></v-select>
-                <v-row align="center">
-                  <v-col align="center" cols="6">
-                    <u v-if="!newCustomer">
-                      <a @click="blockInputs = !blockInputs">Editar</a>
-                    </u>
-                  </v-col>
-                  <v-col align="center" cols="6">
-                    <u>
-                      <a @click="cancelarForm">Cancelar</a>
-                    </u>
-                  </v-col>
-                </v-row>
               </v-col>
               <v-col v-else cols="10">
                 <v-text-field
@@ -211,14 +208,14 @@
                   counter="11"
                   max-length="11"
                   clearable
-                  :color="orderColor"
+                  :color="color"
                   v-model="customer.phone"
                   label="Telefone"
                 />
               </v-col>
               <v-col v-if="newCustomer" cols="10">
                 <v-btn
-                  :style="{background:orderColor, color:'white'}"
+                  :style="{background:color, color:'white'}"
                   rounded
                   @click="saveCustomer"
                   label="Preço"
@@ -253,7 +250,8 @@
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" ref="btnOk" text @click="updateCustomer">Ok</v-btn>
+            <v-btn v-if="updatingCustomer" color="primary" ref="btnOk" text @click="dialog = false">Cancelar</v-btn>
+            <v-btn v-else color="primary" ref="btnOk" text @click="cancelarForm">Cancelar</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -337,7 +335,7 @@ import mixins from "../mixins/mixins";
 import axios from "axios";
 import { VMoney } from "v-money";
 import sqlite3 from "sqlite3";
-import globalShortcut from "electron";
+import globalShortcut, { dialog } from "electron";
 // const { Client } = require("pg");
 
 const db = new sqlite3.Database(
@@ -388,7 +386,7 @@ export default {
       formTitle: "Buscar um cliente",
       dialog: false,
       delivery: false,
-      quantity: 0,
+      quantity: 1,
       product: {},
       isLoading: false,
       customer: {},
@@ -455,10 +453,10 @@ export default {
     window.addEventListener("keypress", e => {
       if (e.keyCode == 13) {
         if (this.observationSecond != '') {
-          this.dialogObs = true;
+          // this.dialogObs = true;
           this.saveObs()
         }
-        if (this.quantity > 0) {
+        if (this.quantity >= 1 && Object.keys(this.product).length > 0) {
           this.dialogObs = true;
           setTimeout(()=>{
             this.$nextTick(()=>{
@@ -479,7 +477,7 @@ export default {
         !this.customer.phone ||
         !this.customer.name ||
         !this.customer.address ||
-        this.blockInputs
+        this.blockInputs || Object.keys(this.locObj).length === 0
       );
     },
     items() {
@@ -548,6 +546,19 @@ export default {
   },
 
   methods: {
+    async insertDeliveryRate(locality_id){
+      let sql = "select * from rates where locality_id = ? limit 1";
+      await db.get(sql, locality_id, (err, row) => {
+        if (err) {
+          return console.log(err);
+        }
+        if (row) {
+          this.product = row
+          this.insertInCart()
+        }
+      });
+    },
+
     removeFromCart(i, parcialPrice){
       this.total = this.total - parcialPrice
       this.cart.splice(i, 1);
@@ -635,7 +646,7 @@ export default {
       this.updatingCustomer = false;
       this.dialog = true;
       this.delivery = true;
-      this.deliveryTitle = "Delivery";
+      this.deliveryTitle = "Entregas";
       this.btnDesc = "Balcão";
       this.cart = []
       this.color = "#90EE90";
@@ -644,6 +655,7 @@ export default {
     },
 
     typeOrderBalcao() {
+      this.cancelOrder()
       this.customer = {};
       this.dialog = false;
       this.delivery = false;
@@ -657,11 +669,13 @@ export default {
       this.cart = [];
     },
     cancelarForm() {
+      this.typeOrderBalcao()
       this.locObj = {};
       this.customer = {};
       this.updatingCustomer = false;
       this.newCustomer = false;
       this.findingCustomer = true;
+      this.dialog = false
     },
     formatPrice(value) {
       let val = (value / 1).toFixed(2).replace(".", ",");
@@ -669,7 +683,6 @@ export default {
     },
 
     saveCustomer() {
-      console.log(this.locObj);
       this.customer.locality_id = this.locObj.id;
       let sql =
         "INSERT INTO customers(name, phone, address, locality_id) VALUES (?,?,?,?)";
@@ -685,6 +698,7 @@ export default {
           if (err) {
             return console.log(err.message);
           }
+          this.insertDeliveryRate(this.customer.locality_id)
           this.blockInputs = true;
           this.updatingCustomer = true;
           this.newCustomer = false;
@@ -749,7 +763,7 @@ export default {
         this.total += element.price * parseInt(element.quantity);
       });
 
-      this.quantity = 0;
+      this.quantity = 1;
       this.$refs.product.focus();
     },
 
@@ -784,15 +798,18 @@ export default {
           return console.log(err);
         }
         if (row) {
-          this.blockInputs = true;
-          this.updatingCustomer = true;
+          this.dialog = false
+          // this.blockInputs = true;
+          setTimeout(()=>{
+            this.updatingCustomer = true;
+          }, 200)
           this.findingCustomer = false;
           this.customer = row;
-          this.dialog = true
           let sql = "SELECT * FROM locality where id=?";
           db.get(sql, row.locality_id, (err, row) => {
             this.locObj = row;
           });
+          this.insertDeliveryRate(row.locality_id);
         } else {
           this.newCustomer = true;
           this.findingCustomer = false;
