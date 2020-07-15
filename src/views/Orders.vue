@@ -88,7 +88,7 @@
               </span>
             </v-col>
             <v-col cols="2" class="pt-0 pb-0">
-              <a @click="removeFromCart(i, (c.price * c.quantity))" :style="{color:'red'}">Remover</a>
+              <a v-if="c.name != 'Taxa de entrega'" @click="removeFromCart(i, (c.price * c.quantity))" :style="{color:'red'}">Remover</a>
             </v-col>
             <v-col class="pt-0 pb-0 pr-0 pl-0" cols="12">
               <hr />
@@ -554,7 +554,8 @@ export default {
         }
         if (row) {
           this.product = row
-          this.insertInCart()
+          this.cart.shift()
+          this.insertInCart(true)
         }
       });
     },
@@ -725,6 +726,7 @@ export default {
           }
           // get the last insert id
           // this.blockInputs = true;
+          this.insertDeliveryRate(this.customer.locality_id);
           alert("Cliente atualizado!");
           this.dialog = false
         }
@@ -752,10 +754,16 @@ export default {
       this.order = p;
     },
 
-    insertInCart() {
+    insertInCart(rate = false) {
       this.product.quantity = this.quantity;
       let prod = JSON.stringify(this.product);
-      this.cart.push(JSON.parse(prod));
+
+      if(rate){
+        console.log('No inicio')
+        this.cart.unshift(JSON.parse(prod));
+      }else{
+        this.cart.push(JSON.parse(prod));
+      }
 
       this.total = 0;
       this.product = {};
