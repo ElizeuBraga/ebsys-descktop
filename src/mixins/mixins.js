@@ -5,12 +5,17 @@ import axios from 'axios';
 export default {
     data() {
         return {
-            backgroundColor:"white",
+            //colors
+            backgroundColor:"f5f5f5",
+            mainColor: "orange",
+
+
+
             colorPrimary:'#f5d019',
             colorSecondary:'#dd3130',
             orderColor:"#dd3130",
             alertBd:false,
-            color:"orange",
+            color:"#f5624c",
             textColor: "white",
             familyOrange:['green', 'yellow', 'blue'],
             myColor: "blue",

@@ -1,10 +1,10 @@
 <template>
   <v-app>
-      <v-app-bar :style="{background: color}">
+      <v-app-bar :style="{background: mainColor}">
         <v-app-bar-nav-icon v-show="logged" @click="drawer = true"></v-app-bar-nav-icon>
         <v-toolbar-title :style="{color:textColor}" v-on:logged="teste($event)">{{pageTitle}}</v-toolbar-title>
       </v-app-bar>
-      <v-container fill-height fluid :style="{width:'1800px', background:''}">
+      <v-container fill-height fluid :style="{width:'1800px', background:backgroundColor}">
       <v-navigation-drawer v-model="drawer" absolute temporary>
         <v-list nav dense>
           <v-list-item-group :color="myColor">
@@ -53,7 +53,7 @@ export default {
 
   created() {
     this.$root.$on('change_color', (e) =>{
-      this.color = e
+      this.mainColor = e
     })
     // Listen event logged and deslogged
     EventBus.$on('changetitle', (payLoad) =>{
@@ -82,4 +82,7 @@ export default {
 };
 </script>
 <style lang="scss">
+  .v-application{
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  }
 </style>
