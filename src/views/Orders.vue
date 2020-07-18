@@ -129,10 +129,15 @@
           <v-card-actions
             :style="{'font-size': '20px', color:mainColor, position:'absolute', bottom:0, width:'100%'}"
           >
-            <v-col cols="6" class="text-center">
+          <v-col cols="4" class="text-center">
               <b>Total</b>
             </v-col>
-            <v-col cols="6" class="text-center">
+            <v-col cols="4" class="text-center">
+              <v-icon v-if="indexPayment != -1" :color="paymentForm[indexPayment].color">{{paymentForm[indexPayment].icon}}</v-icon>
+              <span v-else>Pagamento</span>
+              <!-- <span>{{paymentForm[indexPayment].name}}</span> -->
+            </v-col>
+            <v-col cols="4" class="text-center">
               <b>R$ {{total.toFixed(2).replace('.', ',')}}</b>
             </v-col>
           </v-card-actions>
@@ -413,6 +418,11 @@ export default {
   directives: { money: VMoney },
   data() {
     return {
+      paymentForm:[
+        {icon:'credit_card', name:'Crédito', color:'red'},
+        {icon:'money', name:"Dinheiro", color:'green'},
+        {icon:'credit_card', name:'Débito', color:'blue'}],
+      indexPayment: -1,
       typePayment: {},
       paymentTypes: [
         { id: "M", name: "Dinheiro" },
@@ -499,12 +509,21 @@ export default {
 
   async mounted() {
     document.onkeydown = (e) => {
+      
       if(e.keyCode === 113){
-        console.log(e)
-        this.cartVibrate = true
+        if (this.indexPayment != -1) {
+          console.log('Pode receber')
+          return;
+        }else{
+          this.cartVibrate = true
         setTimeout(()=>{
           this.cartVibrate = false
         }, 600)
+        }
+      }
+
+      if(e.keyCode == 116){
+        this.changepaymentForm()
       }
     };
     this.typeOrderBalcao();
@@ -602,6 +621,13 @@ export default {
   },
 
   methods: {
+    changepaymentForm(){
+      this.indexPayment += 1;
+
+      if(this.indexPayment == 3){
+        this.indexPayment = 0;
+      }
+    },
   
       theAction (event) {
         console.log(event)
