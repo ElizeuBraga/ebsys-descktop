@@ -32,7 +32,12 @@
       <!-- coluna do Pedido inicio-->
 
       <v-col cols="5" :style="{background:backgroundColor}">
-        <v-card :class="[cartVibrate ? 'cart' : '']" elevation="10" height="95%" :style="{background: ''}">
+        <v-card
+          :class="[cartVibrate ? 'cart' : '']"
+          elevation="10"
+          height="95%"
+          :style="{background: ''}"
+        >
           <!-- <v-icon>shopping_cart</v-icon> -->
           <v-card-title :style="{background:'', color:mainColor}" class="justify-center pb-0 pt-0">
             <b>{{deliveryTitle}}</b>
@@ -56,7 +61,9 @@
               </a>
             </v-col>
             <v-col align="center" cols="1" class="pb-0 pt-0">
-              <a @click="cancelarForm"><v-icon>edit</v-icon></a>
+              <a @click="cancelarForm">
+                <v-icon>edit</v-icon>
+              </a>
             </v-col>
           </v-row>
           <!-- <hr/> -->
@@ -129,12 +136,13 @@
           <v-card-actions
             :style="{'font-size': '20px', color:mainColor, position:'absolute', bottom:0, width:'100%'}"
           >
-          <v-col cols="4" class="text-center">
+            <v-col cols="4" class="text-center">
               <b>Total</b>
             </v-col>
-            <v-col cols="4" class="text-center">
-              <v-icon v-if="indexPayment != -1" :color="paymentForm[indexPayment].color">{{paymentForm[indexPayment].icon}}</v-icon>
-              <span v-else>Pagamento</span>
+            <v-col cols="4" class="text-center" align="center">
+              <!-- <v-img v-if="indexPayment != -1" position="center center" width="36" src="../assets/money.jpg"></v-img>
+              <!-- <v-icon v-if="indexPayment != -1" :color="paymentForm[indexPayment].color">{{paymentForm[indexPayment].icon}}</v-icon>-->
+              <!-- <span v-else>Pagamento</span> -->
               <!-- <span>{{paymentForm[indexPayment].name}}</span> -->
             </v-col>
             <v-col cols="4" class="text-center">
@@ -307,8 +315,8 @@
 
           <v-card-text>
             <v-row justify="center">
-              <v-text-field ref="receive" :color="mainColor" v-model="total"></v-text-field>
-              <v-autocomplete
+              <v-text-field ref="receive" :color="mainColor" v-model="totalToReceive"></v-text-field>
+              <!-- <v-autocomplete
                 ref="typePayment"
                 v-model="typePayment"
                 :items="payments"
@@ -321,7 +329,10 @@
                 placeholder="Forma de pagamento"
                 prepend-icon="mdi-database-search"
                 return-object
-              ></v-autocomplete>
+              ></v-autocomplete>-->
+              <v-col cols="12">
+                <span v-for="f in paymentForm" :key="f.name">{{f.name}} - {{f.price}}</span>
+              </v-col>
             </v-row>
           </v-card-text>
 
@@ -386,8 +397,8 @@ import globalShortcut, { dialog } from "electron";
 
 // hotkeys('f5', function(event, handler){
 //   // Prevent the default refresh event under WINDOWS system
-//   event.preventDefault() 
-//   alert('you pressed F5!') 
+//   event.preventDefault()
+//   alert('you pressed F5!')
 // });
 // const { Client } = require("pg");
 
@@ -418,10 +429,9 @@ export default {
   directives: { money: VMoney },
   data() {
     return {
-      paymentForm:[
-        {icon:'credit_card', name:'Crédito', color:'red'},
-        {icon:'money', name:"Dinheiro", color:'green'},
-        {icon:'credit_card', name:'Débito', color:'blue'}],
+      //payments
+      totalToReceive: 0,
+      paymentForm: [],
       indexPayment: -1,
       typePayment: {},
       paymentTypes: [
@@ -508,22 +518,42 @@ export default {
   },
 
   async mounted() {
-    document.onkeydown = (e) => {
-      
-      if(e.keyCode === 113){
+    document.onkeydown = e => {
+      if (e.keyCode == 13 && this.dialogReceive) {
+        console.log("Escolha uma forma de pagamento");
+      }
+
+      if (e.keyCode === 113) {
         if (this.indexPayment != -1) {
-          console.log('Pode receber')
+          console.log("Pode receber");
           return;
-        }else{
-          this.cartVibrate = true
-        setTimeout(()=>{
-          this.cartVibrate = false
-        }, 600)
+        } else {
+          this.cartVibrate = true;
+          setTimeout(() => {
+            this.cartVibrate = false;
+          }, 600);
         }
       }
 
-      if(e.keyCode == 116){
-        this.changepaymentForm()
+      if (e.keyCode === 112) {
+        if (this.cart.length == 0) {
+          this.cartVibrate = true;
+          setTimeout(() => {
+            this.cartVibrate = false;
+          }, 600);
+
+          return;
+        }
+        setTimeout(() => {
+          this.$refs.receive.focus();
+        }, 200);
+        this.totalToReceive = this.total;
+        this.formTitle = "Receber";
+        this.dialogReceive = true;
+      }
+
+      if (e.keyCode == 116) {
+        this.changepaymentForm();
       }
     };
     this.typeOrderBalcao();
@@ -591,6 +621,13 @@ export default {
     }
   },
   watch: {
+    typePayment(e) {
+      e.price = this.totalToReceive;
+      let val = JSON.stringify(e);
+      this.paymentForm.push(JSON.parse(val));
+      this.totalToReceive = this.total - this.totalToReceive;
+    },
+
     quantity(e) {},
 
     product(e) {
@@ -609,28 +646,20 @@ export default {
           this.$refs.observationSecond.focus();
         }, 200);
       });
-    },
-
-    typePayment(e) {
-      // window.addEventListener("keypress", e => {
-      //   this.$nextTick(() => {
-      //     this.$refs.endOrder.focus();
-      //   });
-      // });
     }
   },
 
   methods: {
-    changepaymentForm(){
+    changepaymentForm() {
       this.indexPayment += 1;
 
-      if(this.indexPayment == 3){
+      if (this.indexPayment == 3) {
         this.indexPayment = 0;
       }
     },
-  
-      theAction (event) {
-        console.log(event)
+
+    theAction(event) {
+      console.log(event);
     },
 
     async insertDeliveryRate(locality_id) {
@@ -929,16 +958,38 @@ export default {
 }
 
 @keyframes shake {
-  0% { transform: translate(1px, 1px) rotate(0deg); }
-  10% { transform: translate(-1px, -2px) rotate(-1deg); }
-  20% { transform: translate(-3px, 0px) rotate(1deg); }
-  30% { transform: translate(3px, 2px) rotate(0deg); }
-  40% { transform: translate(1px, -1px) rotate(1deg); }
-  50% { transform: translate(-1px, 2px) rotate(-1deg); }
-  60% { transform: translate(-3px, 1px) rotate(0deg); }
-  70% { transform: translate(3px, 1px) rotate(-1deg); }
-  80% { transform: translate(-1px, -1px) rotate(1deg); }
-  90% { transform: translate(1px, 2px) rotate(0deg); }
-  100% { transform: translate(1px, -2px) rotate(-1deg); }
+  0% {
+    transform: translate(1px, 1px) rotate(0deg);
+  }
+  10% {
+    transform: translate(-1px, -2px) rotate(-1deg);
+  }
+  20% {
+    transform: translate(-3px, 0px) rotate(1deg);
+  }
+  30% {
+    transform: translate(3px, 2px) rotate(0deg);
+  }
+  40% {
+    transform: translate(1px, -1px) rotate(1deg);
+  }
+  50% {
+    transform: translate(-1px, 2px) rotate(-1deg);
+  }
+  60% {
+    transform: translate(-3px, 1px) rotate(0deg);
+  }
+  70% {
+    transform: translate(3px, 1px) rotate(-1deg);
+  }
+  80% {
+    transform: translate(-1px, -1px) rotate(1deg);
+  }
+  90% {
+    transform: translate(1px, 2px) rotate(0deg);
+  }
+  100% {
+    transform: translate(1px, -2px) rotate(-1deg);
+  }
 }
 </style>
