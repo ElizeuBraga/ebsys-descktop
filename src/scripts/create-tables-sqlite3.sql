@@ -1,6 +1,5 @@
 --begin;
-drop table if exists itemsorders;
-drop table if exists itemsdeliveries ;
+drop table if exists items;
 drop table if exists orders;
 drop table if exists deliveries ;
 drop table if exists products;
@@ -17,21 +16,12 @@ create table cashiers(
 	closed_at datetime
 );
 
-create table itemsorders(
+create table items(
 	id integer primary key,
 	quantity integer not null,
 	product_id integer not null,
 	order_id integer not null,
 	foreign key (order_id) references orders (id),
-	foreign key (product_id) references products (id)
-);
-
-create table itemsdeliveries(
-	id integer primary key,
-	quantity integer not null,
-	product_id integer not null,
-	delivery_id integer,
-	foreign key (delivery_id) references deliveries (id),
 	foreign key (product_id) references products (id)
 );
 
@@ -66,17 +56,10 @@ CREATE table orders(
 	payment char(1) not null,
 	created_at datetime not null,
 	cashier_id integer not null,
+	customer_id integer,
+	order_type integer not null,
 	foreign key (cashier_id) references cashiers (id)
-);
-
-CREATE table deliveries(
-	id integer primary key,
-	payment char(1) not null,
-	created_at datetime not null,
-	customer_id integer not null,
-	cashier_id integer not null,
-	foreign key (customer_id) references customers (id),
-	foreign key (cashier_id) references cashiers (id)
+	foreign key (customer_id) references cashiers (customer_id)
 );
 
 CREATE table customers(

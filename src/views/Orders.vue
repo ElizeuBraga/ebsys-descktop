@@ -331,7 +331,9 @@
                 return-object
               ></v-autocomplete>-->
               <v-col cols="12">
-                <span v-for="f in paymentForm" :key="f.name">{{f.name}} - {{f.price}}</span>
+                <v-row>
+                  <v-col :style="{background: f.color}" cols="4" v-for="f in paymentForm" :key="f.id" @click="changePayment(f)">{{f.name}}</v-col>
+                </v-row>
               </v-col>
             </v-row>
           </v-card-text>
@@ -387,37 +389,29 @@
 
 
 <script>
+// class Product{
+//   index(){
+//     return "All products";
+//   }
+// }
+
 import mixins from "../mixins/mixins";
 import axios from "axios";
 import { VMoney } from "v-money";
 import sqlite3 from "sqlite3";
 import globalShortcut, { dialog } from "electron";
+import {ProductController} from '../controllers/ProductController';
+import {LocalityController} from '../controllers/LocalityController';
+import {OrderController} from '../controllers/OrderController';
+import {ItemController} from '../controllers/ItemController';
+import {CashierController} from '../controllers/CashierController';
 
-// import hotkeys from 'hotkeys-js';
-
-// hotkeys('f5', function(event, handler){
-//   // Prevent the default refresh event under WINDOWS system
-//   event.preventDefault()
-//   alert('you pressed F5!')
-// });
-// const { Client } = require("pg");
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
 );
 
-// const client = new Client({
-//   user: "postgres",
-//   host: "localhost",
-//   database: "postgres",
-//   password: "postgres",
-//   port: 5432
-// });
-
 var Pusher = require("pusher-js");
-
-// Enable pusher logging - don't include this in production
-// Pusher.logToConsole = true;
 
 var pusher = new Pusher("a885cc143df63df6146a", {
   cluster: "us2"
@@ -431,7 +425,11 @@ export default {
     return {
       //payments
       totalToReceive: 0,
-      paymentForm: [],
+      paymentForm: [
+        {id: 1, name:'Dinheiro'},
+        {id: 2, name:'Débito'},
+        {id: 3, name:'Crédito'},
+      ],
       indexPayment: -1,
       typePayment: {},
       paymentTypes: [
@@ -497,7 +495,8 @@ export default {
       orders: [],
       order: {
         customer_id: 1,
-        payment: "M"
+        payment: "M",
+        cashier_id: 1
       },
       isEditing: false,
       message: "",
@@ -518,6 +517,15 @@ export default {
   },
 
   async mounted() {
+    var p = new ProductController();
+    this.products = await p.index();
+
+    var l = new LocalityController();
+    this.locality = await l.index();
+
+    let cashier = await new CashierController();
+    cashier.index();
+  
     document.onkeydown = e => {
       if (e.keyCode == 13 && this.dialogReceive) {
         console.log("Escolha uma forma de pagamento");
@@ -532,6 +540,14 @@ export default {
           setTimeout(() => {
             this.cartVibrate = false;
           }, 600);
+        }
+      }
+
+      if (e.keyCode == 116) {
+        if (this.delivery) {
+          this.typeOrderBalcao();
+        } else {
+          this.typeOrderDelivery();
         }
       }
 
@@ -573,8 +589,6 @@ export default {
         }
       }
     });
-    this.loadLocality();
-    this.loadProducts();
   },
 
   computed: {
@@ -650,6 +664,16 @@ export default {
   },
 
   methods: {
+    openCashier(){
+      let cashier = new CashierController();
+      cashier.store();
+    },
+
+    changePayment(f){
+      console.log(f)
+      f.color = 'red'
+    },
+
     changepaymentForm() {
       this.indexPayment += 1;
 
@@ -687,43 +711,9 @@ export default {
 
     endOrder() {
       if (!this.delivery) {
-        let rowid = null;
-        this.order.payment = this.typePayment.id;
-        this.order.cashier_id = 1;
-
-        db.run("BEGIN TRANSACTION;");
-        let sql =
-          "insert into orders (payment, created_at, cashier_id) values(?,datetime('now'),?);";
-
-        db.run(sql, [this.order.payment, this.order.cashier_id], err => {
-          if (err) {
-            return console.log(err.message);
-          }
-
-          console.log("Inseri o pedido");
-        });
-
-        let sql2 = "select last_insert_rowid() as rowid";
-        db.get(sql2, (err, row) => {
-          if (err) {
-            return console.log(err);
-          }
-          let sql3 =
-            "INSERT INTO itemsorders(quantity, product_id, order_id)values(?,?,?);";
-
-          setTimeout(() => {
-            this.cart.forEach(element => {
-              db.run(sql3, [element.quantity, element.id, row.rowid], err => {
-                if (err) {
-                  return console.log(err);
-                }
-                console.log("Inseri os itens");
-              });
-            });
-          }, 200);
-        });
-
-        db.run("COMMIT;");
+        this.order.order_type = 0;
+        let order = new OrderController();
+        order.store(this.order, this.cart);
       }
     },
     receive() {
@@ -766,7 +756,7 @@ export default {
       this.deliveryTitle = "Entregas";
       this.btnDesc = "Balcão";
       this.cart = [];
-      this.mainColor = "#90EE90";
+      this.mainColor = "greenyellow";
 
       this.$root.$emit("change_color", this.mainColor);
     },
@@ -889,18 +879,6 @@ export default {
 
       this.quantity = 1;
       this.$refs.product.focus();
-    },
-
-    async loadProducts() {
-      let sql = "select * from products";
-      await db.all(sql, (err, rows) => {
-        if (err) {
-          return console.log(err);
-        }
-        rows.forEach(row => {
-          this.products.push(row);
-        });
-      });
     },
 
     async loadLocality() {
