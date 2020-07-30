@@ -33,7 +33,7 @@
 
       <v-col cols="5" :style="{background:backgroundColor}">
         <v-card
-          :class="[cartVibrate ? 'cart' : '']"
+          :class="[cartVibrate ? '' : '']"
           elevation="10"
           height="95%"
           :style="{background: ''}"
@@ -42,13 +42,21 @@
           <v-card-title :style="{background:'', color:mainColor}" class="justify-center pb-0 pt-0">
             <b>{{deliveryTitle}}</b>
           </v-card-title>
+          <v-alert :value="alert" class="ml-2 mr-2" transition="scale-transition" type="error">{{msg}}</v-alert>
           <v-row
             v-if="cart.length == 0"
             :style="{background:'', height:'600px'}"
             align="center"
             justify="space-around"
           >
-            <v-icon :style="{opacity: 0.4}" :disabled="true" size="200" align="center">shopping_cart</v-icon>
+            <v-col cols="12" align="center">
+              <v-icon
+                :style="{opacity: 0.4}"
+                :disabled="true"
+                size="200"
+                align="center"
+              >shopping_cart</v-icon>
+            </v-col>
           </v-row>
           <!-- <u v-if="delivery && customer.name != null"> -->
           <v-row v-if="delivery && customer.name != null" align="center" class="pb-0 pt-0">
@@ -315,26 +323,28 @@
 
           <v-card-text>
             <v-row justify="center">
-              <v-text-field ref="receive" :color="mainColor" v-model="totalToReceive"></v-text-field>
-              <!-- <v-autocomplete
-                ref="typePayment"
-                v-model="typePayment"
-                :items="payments"
-                :loading="isLoading"
-                :color="mainColor"
-                hide-no-data
-                hide-selected
-                item-text="Description"
-                item-value="API"
-                placeholder="Forma de pagamento"
-                prepend-icon="mdi-database-search"
-                return-object
-              ></v-autocomplete>-->
-              <v-col cols="12">
-                <v-row>
-                  <v-col :style="{background: f.color}" cols="4" v-for="f in paymentForm" :key="f.id" @click="changePayment(f)">{{f.name}}</v-col>
-                </v-row>
+              <v-col cols="6">
+                <v-text-field ref="receive" :color="mainColor" v-model="totalToReceive"></v-text-field>
               </v-col>
+              <v-col cols="6">
+                <v-select
+                  ref="payment"
+                  v-model="payment"
+                  :items="paymentsFormats"
+                  :loading="isLoading"
+                  :color="mainColor"
+                  hide-no-data
+                  item-text="name"
+                  item-value="API"
+                  placeholder="Forma de pagamento"
+                  prepend-icon="mdi-database-search"
+                  return-object
+                ></v-select>
+              </v-col>
+              <div>
+                <span cols="4" v-for="(p, i) in payments" :key="i">{{p.name}} - {{p.price}}</span>
+                <br />
+              </div>
             </v-row>
           </v-card-text>
 
@@ -345,7 +355,7 @@
             <v-btn
               :style="{width:'100%', background: mainColor}"
               color="white"
-              ref="endOrder"
+              ref="btnendorder"
               text
               @click="endOrder"
             >Ok</v-btn>
@@ -358,12 +368,13 @@
       <v-col class="text-center" cols="12">
         <v-row align="center">
           <v-col align="center" cols="4">
-            <v-btn large :style="{color:'green'}">Normal</v-btn>
+            <v-btn @click="openCashier()" large :style="{color:'green'}">Abrir</v-btn>
+            <v-btn @click="closeCashier()" large :style="{color:'red'}">Fechar caixa</v-btn>
             <!-- <v-btn :style="{color:'white'}" :color="familyOrange[0]" large @click="receive">Receber</v-btn> -->
           </v-col>
           <v-col align="center" cols="4">
             <!-- <v-btn @click="cancelOrder" :style="{color: textColor}" color="red">Cancelar</v-btn> -->
-            <v-btn large :style="{color:'red'}">Normal</v-btn>
+            <v-btn large :style="{color:'red'}" @click="testemeth">Normal</v-btn>
           </v-col>
           <v-col align="center" cols="4">
             <v-btn v-if="delivery" large :style="{color:'blue'}" @click="typeOrderBalcao">Balcão</v-btn>
@@ -400,12 +411,12 @@ import axios from "axios";
 import { VMoney } from "v-money";
 import sqlite3 from "sqlite3";
 import globalShortcut, { dialog } from "electron";
-import {ProductController} from '../controllers/ProductController';
-import {LocalityController} from '../controllers/LocalityController';
-import {OrderController} from '../controllers/OrderController';
-import {ItemController} from '../controllers/ItemController';
-import {CashierController} from '../controllers/CashierController';
-
+import { ProductController } from "../controllers/ProductController";
+import { LocalityController } from "../controllers/LocalityController";
+import { OrderController } from "../controllers/OrderController";
+import { ItemController } from "../controllers/ItemController";
+import { CashierController } from "../controllers/CashierController";
+import { PaymentController } from "../controllers/PaymentController";
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -424,12 +435,23 @@ export default {
   data() {
     return {
       //payments
+      payment: {},
+      payments: [],
+      paymentsFormats: [
+        { id: 1, name: "Dinheiro" },
+        { id: 2, name: "Débito" },
+        { id: 3, name: "Crédito" },
+        { id: 4, name: "Ticket" }
+      ],
       totalToReceive: 0,
       paymentForm: [
-        {id: 1, name:'Dinheiro'},
-        {id: 2, name:'Débito'},
-        {id: 3, name:'Crédito'},
+        { id: 1, name: "Dinheiro" },
+        { id: 2, name: "Débito" },
+        { id: 3, name: "Crédito" }
       ],
+
+      alert: false,
+      msg: '',
       indexPayment: -1,
       typePayment: {},
       paymentTypes: [
@@ -493,11 +515,7 @@ export default {
       alignment: "end",
       qtdDataReturned: 0,
       orders: [],
-      order: {
-        customer_id: 1,
-        payment: "M",
-        cashier_id: 1
-      },
+      order: {},
       isEditing: false,
       message: "",
       userExists: false,
@@ -512,7 +530,8 @@ export default {
       subGroup: false,
       nav: false,
       avatar: false,
-      rounded: false
+      rounded: false,
+      teste: false
     };
   },
 
@@ -523,12 +542,33 @@ export default {
     var l = new LocalityController();
     this.locality = await l.index();
 
-    let cashier = await new CashierController();
-    cashier.index();
-  
     document.onkeydown = e => {
       if (e.keyCode == 13 && this.dialogReceive) {
-        console.log("Escolha uma forma de pagamento");
+        this.$refs.payment.focus();
+      }
+
+      if (e.keyCode == 13 && this.dialogReceive && this.totalToReceive == 0) {
+        this.endOrder();
+      }
+
+      if (e.keyCode == 13 && Object.keys(this.payment).length > 0) {
+        let payment = new PaymentController();
+        let result = payment.calcPayment(
+          parseFloat(this.totalToReceive),
+          this.payment
+        );
+        this.payments.push(JSON.parse(JSON.stringify(result)));
+
+        let calcResult = 0;
+        this.payments.forEach(element => {
+          calcResult += element.price;
+        });
+
+        this.totalToReceive = this.total - calcResult;
+        this.payment = {};
+        if (this.totalToReceive == 0) {
+          this.$refs.btnendorder.$el.focus();
+        }
       }
 
       if (e.keyCode === 113) {
@@ -552,7 +592,20 @@ export default {
       }
 
       if (e.keyCode === 112) {
-        if (this.cart.length == 0) {
+        setTimeout(()=>{
+          this.alert = false
+        }, 3000)
+        if (
+          this.cart.length == 0 ||
+          localStorage.getItem("cashier_id") == "null"
+        ) {
+          if (localStorage.getItem("cashier_id") == "null") {
+            this.alert = true;
+            this.msg = 'Caixa fechado';
+          } else {
+            this.alert = true;
+            this.msg = 'Carrinho vazio';
+          }
           this.cartVibrate = true;
           setTimeout(() => {
             this.cartVibrate = false;
@@ -592,6 +645,13 @@ export default {
   },
 
   computed: {
+    async cashierStatus(){
+      let cashier = new CashierController();
+      let result = await cashier.index();
+      console.log(result)
+      return result
+    },
+
     inputs() {
       return (
         !this.customer.phone ||
@@ -612,16 +672,16 @@ export default {
       });
     },
 
-    payments() {
-      return this.paymentTypes.map(type => {
-        const Description =
-          type.name.length > this.descriptionLimit
-            ? type.name.slice(0, this.descriptionLimit) + "..."
-            : type.name;
+    // payments() {
+    //   return this.paymentTypes.map(type => {
+    //     const Description =
+    //       type.name.length > this.descriptionLimit
+    //         ? type.name.slice(0, this.descriptionLimit) + "..."
+    //         : type.name;
 
-        return Object.assign({}, type, { Description });
-      });
-    },
+    //     return Object.assign({}, type, { Description });
+    //   });
+    // },
 
     obs() {
       return this.observations.map(obs => {
@@ -664,14 +724,28 @@ export default {
   },
 
   methods: {
-    openCashier(){
+    async testemeth(){
+      let cashier = new CashierController();
+      this.teste = await cashier.index();
+
+      console.log("-- no teste --")
+      console.log(this.teste)
+      console.log("-- no teste --")
+    },
+
+    openCashier() {
       let cashier = new CashierController();
       cashier.store();
     },
 
-    changePayment(f){
-      console.log(f)
-      f.color = 'red'
+    closeCashier() {
+      let cashier = new CashierController();
+      cashier.update();
+    },
+
+    changePayment(f) {
+      console.log(f);
+      f.color = "red";
     },
 
     changepaymentForm() {
@@ -709,12 +783,19 @@ export default {
       console.log(e);
     },
 
+    clearAll() {
+      (this.cart = []), (this.order = {});
+    },
+
     endOrder() {
       if (!this.delivery) {
         this.order.order_type = 0;
         let order = new OrderController();
         order.store(this.order, this.cart);
       }
+
+      this.dialogReceive = false;
+      this.cart = [];
     },
     receive() {
       if (this.total > 0) {

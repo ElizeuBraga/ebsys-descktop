@@ -10,6 +10,15 @@ DROP table if exists sections;
 DROP table if exists locality;
 DROP table if exists cashiers;
 
+DROP table if exists payments;
+
+
+create table payments(
+	id integer primary key,
+	price real not null,
+	order_id integer not null,
+	foreign key (order_id) references orders (id)
+);
 create table cashiers(
 	id integer primary key,
 	opened_at datetime not null,
@@ -53,7 +62,6 @@ CREATE table sections(
 
 CREATE table orders(
 	id integer primary key,
-	payment char(1) not null,
 	created_at datetime not null,
 	cashier_id integer not null,
 	customer_id integer,

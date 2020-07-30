@@ -5,7 +5,9 @@ export class CashierController{
     }
 
     async index(){
-        await new Cashier().find();
+        let cashier = new Cashier();
+        let result = await cashier.find();
+        return result;
     }
 
     show(id){
@@ -13,7 +15,8 @@ export class CashierController{
     }
 
     update(){
-
+        let cashier = new Cashier();
+        cashier.update();
     }
 
     async store(){

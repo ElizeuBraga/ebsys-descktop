@@ -14,8 +14,8 @@ export class Order {
 
     async create(o, i) {
         console.log(o)
-        let sql = "insert into orders (payment, created_at, cashier_id, order_type) values(?,datetime('now'),?, ?);";
-        db.run(sql, [o.payment, o.cashier_id, o.order_type], function(err) {
+        let sql = "insert into orders (created_at, cashier_id, order_type) values(datetime('now'),?, ?);";
+        db.run(sql, [o.cashier_id, o.order_type], function(err) {
             if (err) {
                 return console.log(err.message);
             }
