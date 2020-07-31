@@ -2,15 +2,18 @@
 drop table if exists items;
 drop table if exists orders;
 drop table if exists deliveries ;
+DROP table if exists localities;
 drop table if exists products;
 drop table if exists customers;
-drop table if exists rates;
+drop table if exists prices;
+
 
 DROP table if exists sections;
-DROP table if exists locality;
+
 DROP table if exists cashiers;
 
 DROP table if exists payments;
+DROP table if exists users;
 
 
 create table payments(
@@ -29,6 +32,7 @@ create table items(
 	id integer primary key,
 	quantity integer not null,
 	product_id integer not null,
+	price real not null,
 	order_id integer not null,
 	foreign key (order_id) references orders (id),
 	foreign key (product_id) references products (id)
@@ -42,17 +46,12 @@ create table products (
 	foreign key (section_id) references sections(id)
 );
 
-CREATE table locality(
+CREATE table localities(
 	id integer primary key,
-	name varchar(20) not null
-);
-
-create table rates (
-	id integer primary key,
-	name varchar(50) not null,
-	price real not null,
-	locality_id integer not null,
-	foreign key (locality_id) references locality(id)
+	name varchar(20) not null,
+	product_id integer not null,
+	foreign key (product_id) references products (id)
+	
 );
 
 CREATE table sections(
@@ -77,6 +76,13 @@ CREATE table customers(
 	phone varchar(11) unique not null,
 	locality_id integer not null,
 	foreign key (locality_id) references locality(id)
+);
+
+CREATE table users(
+	id integer primary key,
+	name varchar(50) not null,
+	phone varchar(11) unique not null,
+	role_type varchar(10)
 );
 
 PRAGMA foreign_keys = ON;

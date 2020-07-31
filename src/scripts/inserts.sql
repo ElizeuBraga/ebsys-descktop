@@ -18,7 +18,8 @@ values
 	('Hot dogs'),
 	('Açai'),
 	('Fritas'),
-	('Extras');
+	('Extras'),
+    ('Taxas');
 	
 INSERT
 	Into products(name, price, section_id)
@@ -107,10 +108,12 @@ values
 	('Fritas com queijo', 10.00, 13),
 	('Fritas com cheddar', 12.50, 13),
 	('Fritas com bacon(queijo ou cheddar)', 12.50, 13),
-	('Fritas com calabresa(catupiry ou cheddar)', 12.50, 13);
+	('Fritas com calabresa(catupiry ou cheddar)', 12.50, 13),
 	--Extras
 	
---INSERT into locality(name)values('Sobradinho');
+	--Taxas
+	('Taxa Sobradinho', 3.00, 15);
+INSERT into locality(name, product_id)values('Sobradinho',1);
 --INSERT into locality(name)values('Sobradinho II');
 --INSERT into locality(name)values('Setor de Mansões');
 --INSERT into rates(name, price, locality_id)values('Taxa de entrega', 2.5, 1);

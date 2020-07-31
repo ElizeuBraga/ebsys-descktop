@@ -11,9 +11,9 @@ export class ProductController{
         return products
     }
 
-    show(id){
+    async showByLocality(id){
         let product = new Product();
-        let product1 = product.find(id);
+        let product1 = await product.findByLocality(id);
 
         return product1;
     }
@@ -22,8 +22,11 @@ export class ProductController{
 
     }
 
-    store(){
+    async store(p){
+        let product = new Product();
+        let result = await product.create(p);
 
+        return result
     }
 
     destroy(){

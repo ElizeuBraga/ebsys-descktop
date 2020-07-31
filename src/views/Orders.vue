@@ -42,7 +42,18 @@
           <v-card-title :style="{background:'', color:mainColor}" class="justify-center pb-0 pt-0">
             <b>{{deliveryTitle}}</b>
           </v-card-title>
-          <v-alert :value="alert" class="ml-2 mr-2" transition="scale-transition" type="error">{{msg}}</v-alert>
+          <v-alert
+            :value="error"
+            class="ml-2 mr-2"
+            transition="scale-transition"
+            type="error"
+          >{{msg}}</v-alert>
+          <v-alert
+            :value="success"
+            class="ml-2 mr-2"
+            transition="scale-transition"
+            type="success"
+          >{{msg}}</v-alert>
           <v-row
             v-if="cart.length == 0"
             :style="{background:'', height:'600px'}"
@@ -258,6 +269,7 @@
               </v-col>
               <v-col v-else cols="10">
                 <v-text-field
+                  ref="phone"
                   type="phone"
                   counter="11"
                   max-length="11"
@@ -417,6 +429,7 @@ import { OrderController } from "../controllers/OrderController";
 import { ItemController } from "../controllers/ItemController";
 import { CashierController } from "../controllers/CashierController";
 import { PaymentController } from "../controllers/PaymentController";
+import { CustomerController } from "../controllers/CustomerController";
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -450,8 +463,10 @@ export default {
         { id: 3, name: "Crédito" }
       ],
 
+      error: false,
+      success: false,
       alert: false,
-      msg: '',
+      msg: "",
       indexPayment: -1,
       typePayment: {},
       paymentTypes: [
@@ -536,6 +551,8 @@ export default {
   },
 
   async mounted() {
+    this.typeOrderBalcao();
+
     var p = new ProductController();
     this.products = await p.index();
 
@@ -586,25 +603,31 @@ export default {
       if (e.keyCode == 116) {
         if (this.delivery) {
           this.typeOrderBalcao();
+          setTimeout(() => {
+            this.$refs.product.focus();
+          }, 200);
         } else {
           this.typeOrderDelivery();
+          setTimeout(() => {
+            this.$refs.phone.focus();
+          }, 200);
         }
       }
 
       if (e.keyCode === 112) {
-        setTimeout(()=>{
-          this.alert = false
-        }, 3000)
+        setTimeout(() => {
+          this.alert = false;
+        }, 3000);
         if (
           this.cart.length == 0 ||
           localStorage.getItem("cashier_id") == "null"
         ) {
           if (localStorage.getItem("cashier_id") == "null") {
             this.alert = true;
-            this.msg = 'Caixa fechado';
+            this.msg = "Caixa fechado";
           } else {
             this.alert = true;
-            this.msg = 'Carrinho vazio';
+            this.msg = "Carrinho vazio";
           }
           this.cartVibrate = true;
           setTimeout(() => {
@@ -625,7 +648,7 @@ export default {
         this.changepaymentForm();
       }
     };
-    this.typeOrderBalcao();
+
     window.addEventListener("keypress", e => {
       if (e.keyCode == 13) {
         if (this.observationSecond != "") {
@@ -645,11 +668,11 @@ export default {
   },
 
   computed: {
-    async cashierStatus(){
+    async cashierStatus() {
       let cashier = new CashierController();
       let result = await cashier.index();
-      console.log(result)
-      return result
+      console.log(result);
+      return result;
     },
 
     inputs() {
@@ -724,13 +747,13 @@ export default {
   },
 
   methods: {
-    async testemeth(){
+    async testemeth() {
       let cashier = new CashierController();
       this.teste = await cashier.index();
 
-      console.log("-- no teste --")
-      console.log(this.teste)
-      console.log("-- no teste --")
+      console.log("-- no teste --");
+      console.log(this.teste);
+      console.log("-- no teste --");
     },
 
     openCashier() {
@@ -758,20 +781,6 @@ export default {
 
     theAction(event) {
       console.log(event);
-    },
-
-    async insertDeliveryRate(locality_id) {
-      let sql = "select * from rates where locality_id = ? limit 1";
-      await db.get(sql, locality_id, (err, row) => {
-        if (err) {
-          return console.log(err);
-        }
-        if (row) {
-          this.product = row;
-          this.cart.shift();
-          this.insertInCart(true);
-        }
-      });
     },
 
     removeFromCart(i, parcialPrice) {
@@ -818,7 +827,7 @@ export default {
       this.observationSecond = "";
       this.observation = {};
 
-      this.insertInCart();
+      this.insertInCart(this.product);
 
       this.dialogObs = false;
 
@@ -851,6 +860,7 @@ export default {
       this.btnDesc = "Delivery";
       this.mainColor = "orange";
       this.$root.$emit("change_color", this.mainColor);
+      this.$refs.product.focus();
     },
 
     cancelOrder() {
@@ -870,29 +880,26 @@ export default {
       return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     },
 
-    saveCustomer() {
-      this.customer.locality_id = this.locObj.id;
-      let sql =
-        "INSERT INTO customers(name, phone, address, locality_id) VALUES (?,?,?,?)";
-      db.run(
-        sql,
-        [
-          this.customer.name,
-          this.customer.phone,
-          this.customer.address,
-          this.customer.locality_id
-        ],
-        err => {
-          if (err) {
-            return console.log(err.message);
-          }
-          this.insertDeliveryRate(this.customer.locality_id);
-          this.blockInputs = true;
-          this.updatingCustomer = true;
-          this.newCustomer = false;
-          alert("Usuario salvo com sucesso");
+    async saveCustomer() {
+      setTimeout(() => {
+        this.success = false;
+        this.error = false;
+      }, 3000);
+      this.customer.locality_id = 1;
+      let customer = new CustomerController();
+      let result = await customer.store(this.customer);
+
+      if (result === true) {
+        this.success = true;
+        this.msg = "Salvo com sucesso!";
+      } else {
+        this.error = true;
+        if (result == 19) {
+          this.msg = "Usuario já existe!";
+        } else {
+          this.msg = "Erro inesperado. Codigo " + result;
         }
-      );
+      }
     },
 
     updateCustomer() {
@@ -913,7 +920,6 @@ export default {
           }
           // get the last insert id
           // this.blockInputs = true;
-          this.insertDeliveryRate(this.customer.locality_id);
           alert("Cliente atualizado!");
           this.dialog = false;
         }
@@ -941,16 +947,10 @@ export default {
       this.order = p;
     },
 
-    insertInCart(rate = false) {
-      this.product.quantity = this.quantity;
-      let prod = JSON.stringify(this.product);
-
-      if (rate) {
-        console.log("No inicio");
-        this.cart.unshift(JSON.parse(prod));
-      } else {
-        this.cart.push(JSON.parse(prod));
-      }
+    insertInCart(product) {
+      product.quantity = this.quantity;
+      let prod = JSON.stringify(product);
+      this.cart.push(JSON.parse(prod));
 
       this.total = 0;
       this.product = {};
@@ -960,17 +960,6 @@ export default {
 
       this.quantity = 1;
       this.$refs.product.focus();
-    },
-
-    async loadLocality() {
-      await db.serialize(() => {
-        db.each(`SELECT rowid, name FROM locality`, (err, row) => {
-          if (err) {
-            console.error(err.message);
-          }
-          this.locality.push(row);
-        });
-      });
     },
 
     async findCustomer() {
@@ -988,17 +977,16 @@ export default {
           }, 200);
           this.findingCustomer = false;
           this.customer = row;
-          let sql = "SELECT * FROM locality where id=?";
-          db.get(sql, row.locality_id, (err, row) => {
-            this.locObj = row;
-          });
-          this.insertDeliveryRate(row.locality_id);
         } else {
           this.newCustomer = true;
           this.findingCustomer = false;
           this.blockInputs = false;
         }
       });
+
+      let p2 = new ProductController();
+      let result = await p2.showByLocality(1);
+      this.insertInCart(result);
     }
   }
 };

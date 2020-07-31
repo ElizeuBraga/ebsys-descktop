@@ -5,10 +5,11 @@ export class LocalityController{
 
     }
 
-    index(){
-        // // let product = new Product();
-        // // let products = product.all();
-        // // return products
+    async index(){
+        let locality = new Locality();
+        let localities = await locality.all();
+
+        return localities;
     }
 
     show(id){
