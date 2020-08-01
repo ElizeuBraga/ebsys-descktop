@@ -4,7 +4,6 @@ drop table if exists orders;
 drop table if exists customers;
 DROP table if exists localities;
 drop table if exists products;
-drop table if exists deliveries ;
 
 
 
@@ -34,6 +33,9 @@ create table items(
 	product_id integer not null,
 	price real not null,
 	order_id integer not null,
+	created_at datetime not null,
+	updated_at datetime,
+	deleted_at datetime,
 	foreign key (order_id) references orders (id),
 	foreign key (product_id) references products (id)
 );
@@ -61,10 +63,12 @@ CREATE table sections(
 
 CREATE table orders(
 	id integer primary key,
-	created_at datetime not null,
 	cashier_id integer not null,
 	customer_id integer,
 	order_type integer not null,
+	created_at datetime not null,
+	updated_at datetime,
+	deleted_at datetime,
 	foreign key (cashier_id) references cashiers (id)
 	foreign key (customer_id) references cashiers (customer_id)
 );
@@ -82,7 +86,11 @@ CREATE table users(
 	id integer primary key,
 	name varchar(50) not null,
 	phone varchar(11) unique not null,
-	role_type varchar(10)
+	password varchar(32) not null,
+	role_type varchar(10)not null,
+	created_at datetime not null,
+	updated_at datetime,
+	deleted_at datetime
 );
 
 PRAGMA foreign_keys = ON;

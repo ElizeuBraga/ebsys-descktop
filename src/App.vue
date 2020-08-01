@@ -3,6 +3,8 @@
       <v-app-bar :style="{background: mainColor}">
         <v-app-bar-nav-icon v-show="logged" @click="drawer = true"></v-app-bar-nav-icon>
         <v-toolbar-title :style="{color:textColor}" v-on:logged="teste($event)">{{pageTitle}}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-toolbar-title :style="{color:textColor}" @click="logout">{{loggedUser.name}}</v-toolbar-title>
       </v-app-bar>
       <v-container fill-height fluid :style="{width:'1800px', background:backgroundColor}">
       <v-navigation-drawer v-model="drawer" absolute temporary>
@@ -46,6 +48,7 @@ export default {
   },
   data() {
     return {
+      loggedUser: {},
       pageTitle: "Skiltys FastFood",
       drawer: false
     };
@@ -54,6 +57,10 @@ export default {
   created() {
     this.$root.$on('change_color', (e) =>{
       this.mainColor = e
+    })
+
+    this.$root.$on('logged_user', (e) =>{
+      this.loggedUser = e
     })
     // Listen event logged and deslogged
     EventBus.$on('changetitle', (payLoad) =>{
@@ -71,8 +78,7 @@ export default {
 
   methods: {
     logout() {
-      EventBus.$emit("logged", false);
-      this.$router.push("/");
+      this.$root.$emit("logout", true);
     },
     returnPageTitle(e) {
       this.pageTitle = e;

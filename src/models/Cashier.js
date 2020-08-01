@@ -36,11 +36,10 @@ export class Cashier {
     }
 
     async find() {
-        let sql = "select * from cashiers where date(opened_at) = date('now', 'localtime') and closed_at ISNULL";
+        let sql = "select id from cashiers where date(opened_at) = date('now', 'localtime') and closed_at ISNULL";
         let result = await db.get(sql);
         if (result) {
-            localStorage.setItem('cashier_id', result.id)
-            return true
+            return result.id
         }else{
             return false
         }

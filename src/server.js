@@ -1,5 +1,6 @@
 import sqlite3 from "sqlite3";
 import {ProductController} from './controllers/ProductController';
+import { UserController } from "./controllers/UserController";
 const db = new sqlite3.Database("/home/basis/Downloads/app-descktop/src/database/database.db");
 require("http").createServer(async (req, res) => {
     var response = ''
@@ -77,8 +78,23 @@ require("http").createServer(async (req, res) => {
         }else{
             res.end("Method not allowed (suport GET or POST)")                
         }
-    }
+    }else if(req.url == '/users'){
+        if (req.method == 'POST') {
+            req.on('data', (chunk) =>{
+                let data = JSON.parse(chunk)
+                let user = new UserController();
+                let resp = user.store(data);
+                
+                response = resp
+            })
 
+            res.end(response)
+        }else if (req.method == 'GET') {
+            res.end("GET")                
+        }else{
+            res.end("Method not allowed (suport GET or POST)")                
+        }
+    }
     else {
         res.end("Not Found")
     }

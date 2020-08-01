@@ -13,10 +13,10 @@ export class Item {
     }
 
     async create(items, order_id) {
-        let sql3 = "INSERT INTO items(quantity, product_id, order_id)values(?,?,?);";
+        let sql3 = "INSERT INTO items(quantity, price, product_id, order_id, created_at)values(?, ?, ?, ?, datetime('now', 'localtime'));";
     
-        items.forEach(e => {
-            db.run(sql3, [e.quantity, e.id, order_id], err => {
+        items.forEach(i => {
+            db.run(sql3, [i.quantity, i.id, i.price, order_id], err => {
                 if (err) {
                     let order = new Order();
                     order.destroy(order_id)

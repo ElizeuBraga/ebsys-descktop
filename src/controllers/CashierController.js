@@ -5,13 +5,15 @@ export class CashierController{
     }
 
     async index(){
+        // let cashier = new Cashier();
+        // let result = await cashier.find();
+        // return result;
+    }
+
+    async show(id=null){
         let cashier = new Cashier();
         let result = await cashier.find();
         return result;
-    }
-
-    show(id){
-        
     }
 
     update(){

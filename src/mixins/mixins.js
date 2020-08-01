@@ -50,14 +50,21 @@ export default {
     },
 
     methods: {
-        showAlert(type, msg, timer=2000){
-            this.alert = true
-            this.typeAlert = type
-            this.message = msg
+        showMessageError(msg){
+            this.error = true
+            this.msg = msg
             setTimeout(()=>{
-                this.alert = false
-            }, timer);
-        }
+              this.error = false
+            }, 3000)
+          },
+      
+          showMessageSucess(msg){
+            this.success = true
+            this.msg = msg
+            setTimeout(()=>{
+              this.success = false
+            }, 3000)
+          },
     },
 
 }

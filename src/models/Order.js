@@ -14,7 +14,7 @@ export class Order {
 
     async create(o, i) {
         console.log(o)
-        let sql = "insert into orders (created_at, cashier_id, order_type) values(datetime('now'),?, ?);";
+        let sql = "insert into orders (cashier_id, order_type, created_at) values(?, ?, datetime('now', 'localtime'));";
         db.run(sql, [o.cashier_id, o.order_type], function(err) {
             if (err) {
                 return console.log(err.message);

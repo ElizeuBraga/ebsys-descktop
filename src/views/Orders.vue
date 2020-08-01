@@ -158,12 +158,6 @@
             <v-col cols="4" class="text-center">
               <b>Total</b>
             </v-col>
-            <v-col cols="4" class="text-center" align="center">
-              <!-- <v-img v-if="indexPayment != -1" position="center center" width="36" src="../assets/money.jpg"></v-img>
-              <!-- <v-icon v-if="indexPayment != -1" :color="paymentForm[indexPayment].color">{{paymentForm[indexPayment].icon}}</v-icon>-->
-              <!-- <span v-else>Pagamento</span> -->
-              <!-- <span>{{paymentForm[indexPayment].name}}</span> -->
-            </v-col>
             <v-col cols="4" class="text-center">
               <b>R$ {{total.toFixed(2).replace('.', ',')}}</b>
             </v-col>
@@ -402,8 +396,46 @@
               color="white"
               ref="btnendorder"
               text
-              @click="endOrder"
+              @click="endOrder(order, cart)"
             >Ok</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- modal login -->
+      <v-dialog v-model="unlogged" width="500" :persistent="true">
+        <v-card>
+          <v-card-title class="headline grey lighten-2 text-center" primary-title>Login</v-card-title>
+
+          <v-card-text>
+            <v-row justify="center">
+              <v-col cols="12">
+                <v-text-field
+                  ref="receive"
+                  label="Telefone ou email"
+                  :color="mainColor"
+                  v-model="user"
+                ></v-text-field>
+                <v-text-field ref="receive" type="password" label="Senha" :color="mainColor" v-model="password"></v-text-field>
+              </v-col>
+            </v-row>
+          </v-card-text>
+          <v-alert
+            :value="msgLogin"
+            class="ml-2 mr-2"
+            transition="scale-transition"
+            type="error"
+          >{{msgloginerror}}</v-alert>
+          <v-divider></v-divider>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              :style="{width:'100%', background: mainColor}"
+              color="white"
+              ref="btnendorder"
+              text
+              @click="login(user, password)"
+            >Entrar</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -419,7 +451,7 @@
           </v-col>
           <v-col align="center" cols="4">
             <!-- <v-btn @click="cancelOrder" :style="{color: textColor}" color="red">Cancelar</v-btn> -->
-            <v-btn large :style="{color:'red'}" @click="testemeth">Normal</v-btn>
+            <v-btn large :style="{color:'red'}">Normal</v-btn>
           </v-col>
           <v-col align="center" cols="4">
             <v-btn v-if="delivery" large :style="{color:'blue'}" @click="typeOrderBalcao">Balcão</v-btn>
@@ -463,6 +495,8 @@ import { ItemController } from "../controllers/ItemController";
 import { CashierController } from "../controllers/CashierController";
 import { PaymentController } from "../controllers/PaymentController";
 import { CustomerController } from "../controllers/CustomerController";
+import { UserController } from "../controllers/UserController";
+import bcryptjs from 'bcryptjs'
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -496,6 +530,8 @@ export default {
         { id: 3, name: "Crédito" }
       ],
 
+      cashier_id: null,
+      unlogged: true,
       error: false,
       success: false,
       alert: false,
@@ -530,6 +566,8 @@ export default {
       blockInputs: false,
       descriptionLimit: 60,
       modalFindCustomer: false,
+      user: null,
+      password: null,
       money: {
         decimal: ",",
         thousands: ".",
@@ -558,9 +596,11 @@ export default {
       loading: false,
       dialog: false,
       name: "",
+      msgloginerror: "",
       phone: "",
       price: "",
       locObj: {},
+      loggedUser: {},
       modalCustomer: false,
       address: "",
       alignment: "end",
@@ -589,19 +629,31 @@ export default {
   async mounted() {
     this.typeOrderBalcao();
 
+this.$root.$on('logout',(e)=>{
+  this.unlogged = e
+  this.password = null
+})
+    //cashier status
+    var cashier = new CashierController();
+    let response = await cashier.show();
+    this.cashier_id = response;
+
+    //load products
     var p = new ProductController();
     this.products = await p.index();
 
+    // load localities
     var l = new LocalityController();
     this.locality = await l.index();
 
+    //keyboard events
     document.onkeydown = e => {
       if (e.keyCode == 13 && this.dialogReceive) {
         this.$refs.payment.focus();
       }
 
       if (e.keyCode == 13 && this.dialogReceive && this.totalToReceive == 0) {
-        this.endOrder();
+        this.endOrder(this.order, this.cart);
       }
 
       if (e.keyCode == 13 && Object.keys(this.payment).length > 0) {
@@ -704,6 +756,10 @@ export default {
   },
 
   computed: {
+    msgLogin() {
+      return this.msgloginerror != "";
+    },
+
     async cashierStatus() {
       let cashier = new CashierController();
       let result = await cashier.index();
@@ -783,13 +839,21 @@ export default {
   },
 
   methods: {
-    async testemeth() {
-      let cashier = new CashierController();
-      this.teste = await cashier.index();
+    async login(usr, password) {
+      let user = new UserController();
+      let result = await user.login(usr, password);
 
-      console.log("-- no teste --");
-      console.log(this.teste);
-      console.log("-- no teste --");
+      bcryptjs.compare(password, result.password, (err, res) => {
+        if (res === true) {
+          this.unlogged = false;
+          this.$root.$emit("logged_user", result);
+        } else {
+          this.msgloginerror = "Usuario ou senha estão incorretos";
+          setTimeout(() => {
+            this.msgloginerror = "";
+          }, 3000);
+        }
+      });
     },
 
     openCashier() {
@@ -832,11 +896,22 @@ export default {
       (this.cart = []), (this.order = {});
     },
 
-    endOrder() {
+    endOrder(order, items) {
+      if (!this.cashier_id) {
+        this.showMessageError("Caixa Fechado");
+        this.dialogReceive = false;
+        return;
+      }
       if (!this.delivery) {
-        this.order.order_type = 0;
-        let order = new OrderController();
-        order.store(this.order, this.cart);
+        order.order_type = 0;
+        order.cashier_id = this.cashier_id;
+        let o = new OrderController();
+        o.store(order, items);
+      } else {
+        order.order_type = 1;
+        order.cashier_id = this.cashier_id;
+        let o = new OrderController();
+        o.store(order, items);
       }
 
       this.dialogReceive = false;
@@ -880,7 +955,7 @@ export default {
       this.btnDesc = "Balcão";
       this.cart = [];
       this.mainColor = "greenyellow";
-      this.modalFindCustomer = true
+      this.modalFindCustomer = true;
 
       this.$root.$emit("change_color", this.mainColor);
     },
@@ -894,17 +969,20 @@ export default {
       this.mainColor = "orange";
       this.$root.$emit("change_color", this.mainColor);
       this.$refs.product.focus();
-      this.modalFindCustomer = false
+      this.modalFindCustomer = false;
     },
 
     cancelOrder() {
       this.cart = [];
+      this.total = 0;
+      this.product = {};
+      this.dialogObs = false;
     },
     cancelarForm() {
       this.typeOrderBalcao();
       this.locObj = {};
       this.customer = {};
-      this.modalFindCustomer = false
+      this.modalFindCustomer = false;
       this.modalCustomer = false;
     },
     formatPrice(value) {
@@ -1000,17 +1078,17 @@ export default {
       let customerresult = await customer.show(phone);
 
       if (customerresult != undefined) {
-        this.modalFindCustomer = false
+        this.modalFindCustomer = false;
         let p2 = new ProductController();
         let result = await p2.showByLocality(customerresult.locality_id);
         this.insertInCart(result);
 
-        return
+        return;
       }
 
-      this.modalFindCustomer = false
+      this.modalFindCustomer = false;
       this.modalCustomer = true;
-      this.newCustomer = true
+      this.newCustomer = true;
     }
   }
 };

@@ -14,8 +14,15 @@ select * from products p2 ;
 SELECT * from localities l ;
 select * from rates r ;
 select * from sections s ;
+select * from orders o ;
+select * from items i2 ;
+
+select * from cashiers c ;
+
+insert into cashiers (opened_at) values(datetime('now'));
 
 select * from customers c;
+
 
 INSERT into customers(name, address, phone, locality_id) values('Elizeu Braga', 'Q15', '61998636231', 1);
 
