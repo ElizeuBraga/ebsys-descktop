@@ -12,6 +12,11 @@ db.get = util.promisify(db.get);
 bcryptjs.compare = util.promisify(bcryptjs.compare)
 
 export class User{
+    constructor(){
+        let user = {}
+        let hashed = null
+    }
+
     async create(u){
         var password = null;
         bcryptjs.genSalt(10, async (err, salt) => {
@@ -36,6 +41,29 @@ export class User{
     
     }
 
+    async update(u){
+        
+        bcryptjs.genSalt(10, async (err, salt) => {
+            await bcryptjs.hash(u.password, salt, (err, hash) => {
+                // Store hash in your password DB.
+                let resolved = false;
+                let sql = "update users set password = ?, updated_at = datetime('now', 'localtime') where id = ?";
+                let response = db.run(sql, [hash, u.id]);
+                
+                response.then(()=>{
+                    console.log('Rsolved')
+                    resolved = true;
+                }).catch((error)=>{
+                    console.log(error)
+                    console.log('Erro')
+                    resolved = error.errno
+                })
+                return resolved
+                
+            });
+        });
+    }
+
     async auth(user, password){
         let sql = "select * from users where phone = ?";
         let result = await db.get(sql, [user]);
@@ -43,4 +71,5 @@ export class User{
         return result;
 
     }
+
 }

@@ -10,7 +10,7 @@ export default {
             mainColor: "orange",
 
 
-
+            loggedUser:{},
             colorPrimary:'#f5d019',
             colorSecondary:'#dd3130',
             orderColor:"#dd3130",

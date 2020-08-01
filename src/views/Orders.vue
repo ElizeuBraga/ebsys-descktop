@@ -414,7 +414,7 @@
                   ref="receive"
                   label="Telefone ou email"
                   :color="mainColor"
-                  v-model="user"
+                  v-model="username"
                 ></v-text-field>
                 <v-text-field ref="receive" type="password" label="Senha" :color="mainColor" v-model="password"></v-text-field>
               </v-col>
@@ -434,7 +434,48 @@
               color="white"
               ref="btnendorder"
               text
-              @click="login(user, password)"
+              :disabled="fieldsLogin"
+              @click="login(username, password)"
+            >Entrar</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- modal reset password -->
+      <v-dialog v-model="resetpassword" width="500" :persistent="true">
+        <v-card>
+          <v-card-title class="headline grey lighten-2 text-center" primary-title>Trocar senha</v-card-title>
+
+          <v-card-text>
+            <v-row justify="center">
+              <v-col cols="12">
+                <v-text-field
+                  ref="receive"
+                  label="Senha"
+                  :color="mainColor"
+                  v-model="password"
+                  type="password" 
+                ></v-text-field>
+                <v-text-field ref="receive" type="password" label="Confirme a senha" :color="mainColor" v-model="confirm_password"></v-text-field>
+              </v-col>
+            </v-row>
+          </v-card-text>
+          <v-alert
+            :value="msgLogin"
+            class="ml-2 mr-2"
+            transition="scale-transition"
+            type="error"
+          >{{msgloginerror}}</v-alert>
+          <v-divider></v-divider>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              :style="{width:'100%', background: mainColor}"
+              color="white"
+              ref="btnendorder"
+              text
+              :disabled="password == '' || confirm_password == ''"
+              @click="resetPassword(password, confirm_password)"
             >Entrar</v-btn>
           </v-card-actions>
         </v-card>
@@ -567,7 +608,9 @@ export default {
       descriptionLimit: 60,
       modalFindCustomer: false,
       user: null,
-      password: null,
+      username: '',
+      password: '',
+      confirm_password: '',
       money: {
         decimal: ",",
         thousands: ".",
@@ -588,6 +631,7 @@ export default {
       findingCustomer: true,
       maskPhone: "(##)# ####-####",
       item: 5,
+      resetpassword:false,
       customers: [],
       img: "",
       selected: {},
@@ -600,7 +644,6 @@ export default {
       phone: "",
       price: "",
       locObj: {},
-      loggedUser: {},
       modalCustomer: false,
       address: "",
       alignment: "end",
@@ -631,7 +674,7 @@ export default {
 
 this.$root.$on('logout',(e)=>{
   this.unlogged = e
-  this.password = null
+  this.password = ''
 })
     //cashier status
     var cashier = new CashierController();
@@ -703,19 +746,14 @@ this.$root.$on('logout',(e)=>{
       }
 
       if (e.keyCode === 112) {
-        setTimeout(() => {
-          this.alert = false;
-        }, 3000);
         if (
           this.cart.length == 0 ||
           localStorage.getItem("cashier_id") == "null"
         ) {
           if (localStorage.getItem("cashier_id") == "null") {
-            this.alert = true;
-            this.msg = "Caixa fechado";
+            this.showMessageError('Caixa fechado');
           } else {
-            this.alert = true;
-            this.msg = "Carrinho vazio";
+            this.showMessageError('Sem itens para pedido');
           }
           this.cartVibrate = true;
           setTimeout(() => {
@@ -756,6 +794,10 @@ this.$root.$on('logout',(e)=>{
   },
 
   computed: {
+    fieldsLogin(){
+      return this.username == '' || this.password == ''
+    },
+
     msgLogin() {
       return this.msgloginerror != "";
     },
@@ -839,14 +881,39 @@ this.$root.$on('logout',(e)=>{
   },
 
   methods: {
+    resetPassword(password, confirm_password){
+      setTimeout(() => {
+            this.msgloginerror = "";
+          }, 3000);
+      if (password != confirm_password) {
+        this.msgloginerror = "Senhas não conferem"
+        return;
+      }
+
+console.log(this.loggedUser)
+      let u = {
+        password: password,
+        id: this.loggedUser.id
+      }
+      let user = new UserController();
+      user.update(u);
+      this.resetpassword = false
+    },
+
     async login(usr, password) {
       let user = new UserController();
       let result = await user.login(usr, password);
 
       bcryptjs.compare(password, result.password, (err, res) => {
         if (res === true) {
+          this.loggedUser = result
           this.unlogged = false;
           this.$root.$emit("logged_user", result);
+          if (result.updated_at === null) {
+            this.resetpassword = true
+            this.password = ''
+            
+          }
         } else {
           this.msgloginerror = "Usuario ou senha estão incorretos";
           setTimeout(() => {
