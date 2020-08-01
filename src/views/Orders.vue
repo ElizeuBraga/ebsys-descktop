@@ -224,12 +224,55 @@
         </v-card>
       </v-dialog>
 
-      <!-- modal cliente -->
-      <v-dialog v-model="dialog" width="500" :persistent="true">
-        <!-- <template v-slot:activator="{ on, attrs }">
-        <v-btn color="red lighten-2" dark v-bind="attrs" v-on="on">Click Me</v-btn>
-        </template>-->
+      <!-- modal find customer -->
+      <v-dialog v-model="modalFindCustomer" width="500" :persistent="true">
+        <v-card>
+          <v-card-title class="headline grey lighten-2 text-center" primary-title>Buscar cliente</v-card-title>
+          <v-card-text>
+            <v-row justify="center">
+              <v-col cols="10">
+                <v-text-field
+                  ref="phone"
+                  type="phone"
+                  counter="11"
+                  max-length="11"
+                  clearable
+                  :color="mainColor"
+                  v-model="customer.phone"
+                  label="Telefone"
+                />
+              </v-col>
+              <v-col cols="10">
+                <v-btn
+                  :style="{background:mainColor, color:'white'}"
+                  rounded
+                  @click="findCustomer(customer.phone)"
+                  label="Preço"
+                  width="100%"
+                  :disabled="!customer.phone"
+                >Buscar</v-btn>
+              </v-col>
+            </v-row>
+          </v-card-text>
 
+          <v-divider></v-divider>
+
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              v-if="updatingCustomer"
+              color="primary"
+              ref="btnOk"
+              text
+              @click="dialog = false"
+            >Cancelar</v-btn>
+            <v-btn v-else color="primary" ref="btnOk" text @click="cancelarForm">Cancelar</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- modal new  cliente or update cliente -->
+      <v-dialog v-model="modalCustomer" width="500" :persistent="true">
         <v-card>
           <v-card-title class="headline grey lighten-2 text-center" primary-title>{{formTitle}}</v-card-title>
 
@@ -298,16 +341,6 @@
                   width="100%"
                   :disabled="inputs"
                 >Atualizar</v-btn>
-              </v-col>
-              <v-col v-if="findingCustomer" cols="10">
-                <v-btn
-                  :style="{background:mainColor, color:'white'}"
-                  rounded
-                  @click="findCustomer"
-                  label="Preço"
-                  width="100%"
-                  :disabled="!customer.phone"
-                >Buscar</v-btn>
               </v-col>
             </v-row>
           </v-card-text>
@@ -496,6 +529,7 @@ export default {
       customer: {},
       blockInputs: false,
       descriptionLimit: 60,
+      modalFindCustomer: false,
       money: {
         decimal: ",",
         thousands: ".",
@@ -508,6 +542,7 @@ export default {
         { id: 2, name: "Pratos" }
       ],
 
+      dialogCustomer: false,
       btnDesc: "Delivery",
       cart: [],
       newCustomer: false,
@@ -526,6 +561,7 @@ export default {
       phone: "",
       price: "",
       locObj: {},
+      modalCustomer: false,
       address: "",
       alignment: "end",
       qtdDataReturned: 0,
@@ -839,14 +875,12 @@ export default {
     },
 
     typeOrderDelivery() {
-      this.findingCustomer = true;
-      this.updatingCustomer = false;
-      this.dialog = true;
       this.delivery = true;
       this.deliveryTitle = "Entregas";
       this.btnDesc = "Balcão";
       this.cart = [];
       this.mainColor = "greenyellow";
+      this.modalFindCustomer = true
 
       this.$root.$emit("change_color", this.mainColor);
     },
@@ -854,13 +888,13 @@ export default {
     typeOrderBalcao() {
       this.cancelOrder();
       this.customer = {};
-      this.dialog = false;
       this.delivery = false;
       this.deliveryTitle = "Balcão";
       this.btnDesc = "Delivery";
       this.mainColor = "orange";
       this.$root.$emit("change_color", this.mainColor);
       this.$refs.product.focus();
+      this.modalFindCustomer = false
     },
 
     cancelOrder() {
@@ -870,10 +904,8 @@ export default {
       this.typeOrderBalcao();
       this.locObj = {};
       this.customer = {};
-      this.updatingCustomer = false;
-      this.newCustomer = false;
-      this.findingCustomer = true;
-      this.dialog = false;
+      this.modalFindCustomer = false
+      this.modalCustomer = false;
     },
     formatPrice(value) {
       let val = (value / 1).toFixed(2).replace(".", ",");
@@ -900,6 +932,7 @@ export default {
           this.msg = "Erro inesperado. Codigo " + result;
         }
       }
+      this.modalCustomer = false;
     },
 
     updateCustomer() {
@@ -962,31 +995,22 @@ export default {
       this.$refs.product.focus();
     },
 
-    async findCustomer() {
-      let sql = "SELECT * FROM customers where phone=?";
+    async findCustomer(phone) {
+      let customer = new CustomerController();
+      let customerresult = await customer.show(phone);
 
-      await db.get(sql, this.customer.phone, (err, row) => {
-        if (err) {
-          return console.log(err);
-        }
-        if (row) {
-          this.dialog = false;
-          // this.blockInputs = true;
-          setTimeout(() => {
-            this.updatingCustomer = true;
-          }, 200);
-          this.findingCustomer = false;
-          this.customer = row;
-        } else {
-          this.newCustomer = true;
-          this.findingCustomer = false;
-          this.blockInputs = false;
-        }
-      });
+      if (customerresult != undefined) {
+        this.modalFindCustomer = false
+        let p2 = new ProductController();
+        let result = await p2.showByLocality(customerresult.locality_id);
+        this.insertInCart(result);
 
-      let p2 = new ProductController();
-      let result = await p2.showByLocality(1);
-      this.insertInCart(result);
+        return
+      }
+
+      this.modalFindCustomer = false
+      this.modalCustomer = true;
+      this.newCustomer = true
     }
   }
 };

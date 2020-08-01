@@ -112,8 +112,9 @@ values
 	--Extras
 	
 	--Taxas
-	('Taxa Sobradinho', 3.00, 15);
-INSERT into locality(name, product_id)values('Sobradinho',1);
+	('Taxa Sobradinho', 3.00, 15),
+	('Taxa condominio', 6.00, 15);
+INSERT into localities(name, product_id)values('Sobradinho',73);
 --INSERT into locality(name)values('Sobradinho II');
 --INSERT into locality(name)values('Setor de Mansões');
 --INSERT into rates(name, price, locality_id)values('Taxa de entrega', 2.5, 1);

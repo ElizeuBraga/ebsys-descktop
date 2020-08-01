@@ -1,11 +1,11 @@
 --begin;
 drop table if exists items;
 drop table if exists orders;
-drop table if exists deliveries ;
+drop table if exists customers;
 DROP table if exists localities;
 drop table if exists products;
-drop table if exists customers;
-drop table if exists prices;
+drop table if exists deliveries ;
+
 
 
 DROP table if exists sections;
@@ -75,7 +75,7 @@ CREATE table customers(
 	address varchar(50) not null,
 	phone varchar(11) unique not null,
 	locality_id integer not null,
-	foreign key (locality_id) references locality(id)
+	foreign key (locality_id) references localities(id)
 );
 
 CREATE table users(

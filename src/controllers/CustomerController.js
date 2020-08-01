@@ -6,4 +6,11 @@ export class CustomerController{
 
         return response;
     }
+
+    async show(phone){
+       let customer = new Customer();
+       let response = await customer.find(phone);
+
+       return response
+    }
 }

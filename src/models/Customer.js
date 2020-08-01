@@ -7,6 +7,7 @@ const db = new sqlite3.Database(
 );
 
 db.run = util.promisify(db.run);
+db.get = util.promisify(db.get);
 export class Customer{
 
     async create(c){
@@ -21,5 +22,12 @@ export class Customer{
         })
 
         return resolved
+    }
+
+    async find(phone){
+        let sql = "select * from customers where phone = ?";
+        let response = await db.get(sql, [phone]);
+
+        return response;
     }
 }
