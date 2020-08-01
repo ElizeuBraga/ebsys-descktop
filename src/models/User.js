@@ -41,8 +41,12 @@ export class User{
     
     }
 
+    resetPassword(u){
+        let sql = "update users set updated_at = NULL where id = ?";
+        db.run(sql, [u.id]);
+    }
+
     async update(u){
-        
         bcryptjs.genSalt(10, async (err, salt) => {
             await bcryptjs.hash(u.password, salt, (err, hash) => {
                 // Store hash in your password DB.

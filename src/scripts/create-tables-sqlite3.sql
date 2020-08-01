@@ -23,8 +23,15 @@ create table payments(
 );
 create table cashiers(
 	id integer primary key,
-	opened_at datetime not null,
-	closed_at datetime
+	user_id integer not null,
+	money TEXT,
+	debit TEXT,
+	credit TEXT,
+	ticket TEXT,
+	created_at datetime not null,
+	updated_at datetime,
+	deleted_at datetime,
+	foreign key (user_id) references users (id)
 );
 
 create table items(

@@ -16,14 +16,14 @@ export class CashierController{
         return result;
     }
 
-    update(){
+    update(c){
         let cashier = new Cashier();
-        cashier.update();
+        cashier.update(c);
     }
 
-    async store(){
+    async store(loggedUser){
         let item = new Cashier();
-        item.create();
+        item.create(loggedUser);
     }
 
     destroy(){

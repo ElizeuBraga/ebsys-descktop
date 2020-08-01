@@ -1,12 +1,27 @@
 <template>
   <v-app>
-      <v-app-bar :style="{background: mainColor}">
-        <v-app-bar-nav-icon v-show="logged" @click="drawer = true"></v-app-bar-nav-icon>
-        <v-toolbar-title :style="{color:textColor}" v-on:logged="teste($event)">{{pageTitle}}</v-toolbar-title>
-        <v-spacer></v-spacer>
-        <v-toolbar-title :style="{color:textColor}" @click="logout">{{loggedUser.name}}</v-toolbar-title>
-      </v-app-bar>
-      <v-container fill-height fluid :style="{width:'1800px', background:backgroundColor}">
+    <v-app-bar :style="{background: mainColor}">
+      <v-app-bar-nav-icon v-show="logged" @click="drawer = true"></v-app-bar-nav-icon>
+      <v-toolbar-title :style="{color:textColor}" v-on:logged="teste($event)">{{pageTitle}}</v-toolbar-title>
+      <v-spacer></v-spacer>
+
+      <v-menu transition="slide-y-transition" bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-toolbar-title :style="{color:textColor}" v-bind="attrs" v-on="on">{{loggedUser.name}}</v-toolbar-title>
+          <!-- <v-btn class="purple" color="primary" dark v-bind="attrs" v-on="on">Slide Y Transition</v-btn> -->
+        </template>
+        <v-list>
+          <v-list-item v-for="(item, i) in items" :key="i" @click="clickedItem(item)">
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+
+
+
+
+    </v-app-bar>
+    <v-container fill-height fluid :style="{width:'1800px', background:backgroundColor}">
       <v-navigation-drawer v-model="drawer" absolute temporary>
         <v-list nav dense>
           <v-list-item-group :color="myColor">
@@ -33,7 +48,7 @@
         </v-list>
       </v-navigation-drawer>
       <router-view></router-view>
-      </v-container>
+    </v-container>
   </v-app>
 </template>
 
@@ -41,6 +56,7 @@
 import mixins from "./mixins/mixins";
 import EventBus from "./EventBus";
 import Login from "./views/Login";
+import {User} from './models/User';
 export default {
   mixins: [mixins],
   components: {
@@ -48,6 +64,7 @@ export default {
   },
   data() {
     return {
+      items: [{ title: "Trocar senha" }, { title: "Sair"}],
       loggedUser: {},
       pageTitle: "Skiltys FastFood",
       drawer: false
@@ -55,23 +72,23 @@ export default {
   },
 
   created() {
-    this.$root.$on('change_color', (e) =>{
-      this.mainColor = e
-    })
-
-    this.$root.$on('logged_user', (e) =>{
-      this.loggedUser = e
-    })
-    // Listen event logged and deslogged
-    EventBus.$on('changetitle', (payLoad) =>{
-      this.pageTitle = payLoad
+    this.$root.$on("change_color", e => {
+      this.mainColor = e;
     });
-    EventBus.$on("logged", (payLoad) => {
-      if(payLoad){
+
+    this.$root.$on("logged_user", e => {
+      this.loggedUser = e;
+    });
+    // Listen event logged and deslogged
+    EventBus.$on("changetitle", payLoad => {
+      this.pageTitle = payLoad;
+    });
+    EventBus.$on("logged", payLoad => {
+      if (payLoad) {
         this.logged = true;
-      }else{
+      } else {
         this.logged = false;
-        this.pageTitle = 'Ebsys'
+        this.pageTitle = "Ebsys";
       }
     });
   },
@@ -79,6 +96,23 @@ export default {
   methods: {
     logout() {
       this.$root.$emit("logout", true);
+    },
+
+    resetPassword(u) {
+      let user = new User()
+      user.resetPassword(u)
+
+    },
+
+    clickedItem(item){
+      if (item.title === 'Sair') {
+        this.logout()
+      }
+      
+      if (item.title === 'Trocar senha') {
+        this.resetPassword(this.loggedUser)
+        this.logout()
+      }
     },
     returnPageTitle(e) {
       this.pageTitle = e;
@@ -88,7 +122,8 @@ export default {
 };
 </script>
 <style lang="scss">
-  .v-application{
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-  }
+.v-application {
+  font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+    "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+}
 </style>
