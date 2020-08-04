@@ -10,14 +10,12 @@ export class Payment{
     }
 
     create(payments, order_id){
-        let sql = "INSERT INTO payments(price, order_id)values(?,?)";
+        let sql = "INSERT INTO payments(price, order_id, payment_type, created_at)values(?,?, ?, datetime('now', 'localtime'))";
         payments.forEach(e => {
-            db.run(sql, [e.price, order_id], err =>{
+            db.run(sql, [e.price, order_id, e.payment_type], err =>{
                 if(err){
                     return console.log(err)
                 }
-
-                console.log('Pagamento inserido')
             });        
         });
     }

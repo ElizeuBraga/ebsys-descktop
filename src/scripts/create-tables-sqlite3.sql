@@ -1,33 +1,31 @@
 --begin;
 drop table if exists items;
+DROP table if exists payments;
 drop table if exists orders;
 drop table if exists customers;
 DROP table if exists localities;
 drop table if exists products;
-
-
-
 DROP table if exists sections;
-
 DROP table if exists cashiers;
-
-DROP table if exists payments;
 DROP table if exists users;
-
 
 create table payments(
 	id integer primary key,
 	price real not null,
 	order_id integer not null,
+	payment_type char,
+	created_at datetime not null,
+	updated_at datetime,
+	deleted_at datetime,
 	foreign key (order_id) references orders (id)
 );
 create table cashiers(
 	id integer primary key,
 	user_id integer not null,
-	money TEXT,
-	debit TEXT,
-	credit TEXT,
-	ticket TEXT,
+	money real,
+	debit real,
+	credit real,
+	ticket real,
 	created_at datetime not null,
 	updated_at datetime,
 	deleted_at datetime,

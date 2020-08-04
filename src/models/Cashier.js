@@ -15,11 +15,31 @@ export class Cashier {
 
     }
 
+    remove_character(str, char_pos) 
+    {
+        let part1 = str.substring(0, char_pos);
+        let part2 = str.substring(char_pos + 1, str.length);
+        return (part1 + part2);
+    }
+
     async update(cashier) {
-        let r1 =  cashier.money.replace(',', ',')
-        let r2 = cashier.debit.replace(',', ',')
-        let r3 = cashier.credit.replace(',', ',')
-        let r4 = cashier.ticket.replace(',', ',')
+        let r1 =  cashier.money.replace(',', '.')
+        let r2 = cashier.debit.replace(',', '.')
+        let r3 = cashier.credit.replace(',', '.')
+        let r4 = cashier.ticket.replace(',', '.')
+
+        if(r1.length == 8){
+            r1 = this.remove_character(r1, 1)
+        }
+        if(r2.length == 8){
+            r2 = this.remove_character(r2, 1)
+        }
+        if(r3.length == 8){
+            r3 = this.remove_character(r3, 1)
+        }
+        if(r4.length == 8){
+            r4 = this.remove_character(r4, 1)
+        }
 
         let sql = "update cashiers set updated_at = datetime('now', 'localtime'), money = ?, credit = ?, debit = ?, ticket = ? where id = ?";
         db.run(sql, [r1, r2, r3, r4 , cashier.id], err => {
@@ -27,8 +47,6 @@ export class Cashier {
                 return console.log(err);
             }
         });
-
-        console.log('Caixa fechado')
     }
 
     async create(loggedUser) {
@@ -44,7 +62,6 @@ export class Cashier {
         let sql = "select * from cashiers where date(created_at) = date('now', 'localtime') and updated_at ISNULL";
         let result = await db.get(sql);
         if (result) {
-            console.log('existe')
             return result
         }else{
             return result =  {

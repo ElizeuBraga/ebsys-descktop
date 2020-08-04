@@ -400,7 +400,7 @@
               color="white"
               ref="btnendorder"
               text
-              @click="endOrder(order, cart)"
+              @click="endOrder(order, cart, payments)"
             >Ok</v-btn>
           </v-card-actions>
         </v-card>
@@ -415,24 +415,28 @@
             <v-row justify="center">
               <v-col cols="6">
                 <v-text-field
+                  maxlength="7"
                   :color="mainColor"
                   v-money="money"
                   label="Dinheiro"
                   v-model="cashier.money"
                 ></v-text-field>
                 <v-text-field
+                  maxlength="7"
                   :color="mainColor"
                   v-money="money"
                   label="Débito"
                   v-model="cashier.credit"
                 ></v-text-field>
                 <v-text-field
+                  maxlength="7"
                   :color="mainColor"
                   v-money="money"
                   label="Crédito"
                   v-model="cashier.debit"
                 ></v-text-field>
                 <v-text-field
+                  maxlength="7"
                   :color="mainColor"
                   v-money="money"
                   label="Ticket"
@@ -559,12 +563,18 @@
               large
               :style="{color:'green'}"
             >Abrir</v-btn>
-            <v-btn v-else @click="modalCloseCashier = true" large :style="{color:'red'}">Fechar caixa</v-btn>
+            <v-btn
+              v-else
+              @click="modalCloseCashier = true"
+              large
+              :style="{color:'red'}"
+            >Fechar caixa</v-btn>
             <!-- <v-btn :style="{color:'white'}" :color="familyOrange[0]" large @click="receive">Receber</v-btn> -->
           </v-col>
           <v-col align="center" cols="4">
             <!-- <v-btn @click="cancelOrder" :style="{color: textColor}" color="red">Cancelar</v-btn> -->
-            <v-btn large :style="{color:'red'}">Normal</v-btn>
+            <!-- <v-btn large :style="{color:'red'}">Normal</v-btn> -->
+            <span v-if="loggedUser.name != undefined">Caixa aberto por {{loggedUser.name}}</span>
           </v-col>
           <v-col align="center" cols="4">
             <v-btn v-if="delivery" large :style="{color:'blue'}" @click="typeOrderBalcao">Balcão</v-btn>
@@ -635,10 +645,10 @@ export default {
         precision: 2,
         masked: false, // doesn't work with directive
         // Waiting on https://github.com/vuejs-tips/v-money/pull/51 to be merged
-        allowBlank: true,
+        allowBlank: true
         // Waiting on https://github.com/vuejs-tips/v-money/pull/36 to be merged
-        max: 999.99,
-        min: 0.01
+        // max: 999.99,
+        // min: 0.01
         // Also bugged that this is not clearable
         // https://github.com/vuejs-tips/v-money/issues/44
       },
@@ -663,7 +673,7 @@ export default {
         debit: "0,00",
         credit: "0,00",
         ticket: "0,00",
-        moneyamount: "0,00"
+        money: "0,00"
       },
       unlogged: true,
       error: false,
@@ -758,8 +768,6 @@ export default {
   },
 
   async mounted() {
-    let r = this.formatPrice("25");
-    console.log(r);
     this.typeOrderBalcao();
 
     this.$root.$on("logout", e => {
@@ -830,7 +838,7 @@ export default {
         }
       }
 
-      if (e.keyCode == 116) {
+      if (e.keyCode == 116 && !this.unlogged) {
         if (this.delivery) {
           this.typeOrderBalcao();
           setTimeout(() => {
@@ -969,12 +977,10 @@ export default {
       var cashier = new CashierController();
       let response = await cashier.show();
       this.cashier = response;
-
-      console.log(this.cashier)
       if (this.cashier.created_at) {
         this.statusCashier = true;
         return true;
-      }else{
+      } else {
         this.statusCashier = false;
         return false;
       }
@@ -1031,6 +1037,8 @@ export default {
       let cashier = new CashierController();
       cashier.update(c);
       this.cashierStatus();
+
+      this.modalCloseCashier = false
     },
 
     changePayment(f) {
@@ -1063,26 +1071,20 @@ export default {
       (this.cart = []), (this.order = {});
     },
 
-    endOrder(order, items) {
-      if (!this.cashier_id) {
-        this.showMessageError("Caixa Fechado");
-        this.dialogReceive = false;
-        return;
-      }
+    endOrder(order, items, payments) {
+      order.cashier_id = this.cashier.id;
       if (!this.delivery) {
         order.order_type = 0;
-        order.cashier_id = this.cashier_id;
-        let o = new OrderController();
-        o.store(order, items);
       } else {
+        order.customer_id = this.customer.id;
         order.order_type = 1;
-        order.cashier_id = this.cashier_id;
-        let o = new OrderController();
-        o.store(order, items);
       }
-
+      let o = new OrderController();
+      o.store(order, items, payments);
       this.dialogReceive = false;
       this.cart = [];
+      this.customer = {};
+      this.typeOrderBalcao();
     },
     receive() {
       if (this.total > 0) {
@@ -1242,8 +1244,8 @@ export default {
     async findCustomer(phone) {
       let customer = new CustomerController();
       let customerresult = await customer.show(phone);
-
       if (customerresult != undefined) {
+        this.customer = customerresult;
         this.modalFindCustomer = false;
         let p2 = new ProductController();
         let result = await p2.showByLocality(customerresult.locality_id);

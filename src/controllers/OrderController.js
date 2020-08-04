@@ -17,9 +17,9 @@ export class OrderController{
 
     }
 
-    async store(o, i){
+    async store(o, i, p){
         let order = new Order();
-        let order_id = await order.create(o, i);
+        let order_id = await order.create(o, i, p);
     }
 
     destroy(){

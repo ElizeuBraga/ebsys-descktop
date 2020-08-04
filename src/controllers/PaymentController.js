@@ -1,7 +1,7 @@
 import {Payment} from '../models/Payment';
 export class PaymentController{
-    store(payments, order_id){
-        payment = new Payment();
+    async store(payments, order_id){
+        let payment = await new Payment();
         payment.create(payments, order_id);
     }
 
