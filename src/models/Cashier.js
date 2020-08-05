@@ -1,3 +1,4 @@
+import { userInfo } from "os";
 import sqlite3 from "sqlite3";
 const util    = require('util');
 
@@ -59,7 +60,7 @@ export class Cashier {
     }
 
     async find() {
-        let sql = "select * from cashiers where date(created_at) = date('now', 'localtime') and updated_at ISNULL";
+        let sql = "select * from cashiers where updated_at ISNULL";
         let result = await db.get(sql);
         if (result) {
             return result
@@ -70,6 +71,16 @@ export class Cashier {
                 ticket: "0,00",
                 moneyamount: "0,00"
               }
+        }
+    }
+
+    async checkUserOpenedCashier(){
+        let sql = "select u.id, u.name from cashiers c2 join users u on u.id = c2.user_id where c2.updated_at ISNULL";
+        let result = await db.get(sql);
+        if (result) {
+            return result
+        }else{
+            return false
         }
     }
 }

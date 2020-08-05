@@ -33,12 +33,10 @@
 
       <v-col cols="5" :style="{background:backgroundColor}">
         <v-card
-          :class="[cartVibrate ? '' : '']"
           elevation="10"
           height="95%"
           :style="{background: ''}"
         >
-          <!-- <v-icon>shopping_cart</v-icon> -->
           <v-card-title :style="{background:'', color:mainColor}" class="justify-center pb-0 pt-0">
             <b>{{deliveryTitle}}</b>
           </v-card-title>
@@ -69,7 +67,6 @@
               >shopping_cart</v-icon>
             </v-col>
           </v-row>
-          <!-- <u v-if="delivery && customer.name != null"> -->
           <v-row v-if="delivery && customer.name != null" align="center" class="pb-0 pt-0">
             <v-col cols="10" align="center">
               <span>{{customer.name}} - {{customer.address}} - {{customer.phone}}</span>
@@ -85,9 +82,7 @@
               </a>
             </v-col>
           </v-row>
-          <!-- <hr/> -->
           <br />
-          <!-- </u> -->
           <v-row class="pl-6 pr-6">
             <v-row class="pl-1 pr-1 text-center" v-for="(c, i) in cart" :key="i">
               <v-col cols="4" class="text-left pt-0 pb-0">{{c.name}}</v-col>
@@ -138,14 +133,6 @@
                   {{o}}
                 </span>
               </v-col>
-              <!-- <v-col cols="3" class="pt-0 pb-0">
-                <a
-                  v-if="c.name != 'Taxa de entrega'"
-                  @click="removeFromCart(i, (c.price * c.quantity))"
-                >
-                  <v-icon align="center">remove_circle_outline</v-icon>
-                </a>
-              </v-col>-->
               <v-col class="pt-0 pb-0 pr-0 pl-0" cols="12">
                 <hr />
               </v-col>
@@ -165,28 +152,14 @@
         </v-card>
         <!-- menu -->
       </v-col>
-      <!-- coluna do Pedido -->
+
+
       <!-- observações -->
       <v-dialog v-model="dialogObs" width="500" :persistent="true">
-        <!-- <template v-slot:activator="{ on, attrs }">
-        <v-btn color="red lighten-2" dark v-bind="attrs" v-on="on">Click Me</v-btn>
-        </template>-->
-
         <v-card>
           <v-card-title class="headline grey lighten-2" primary-title>Observações</v-card-title>
 
           <v-card-text>
-            <!-- <v-select
-                ref="observation"
-                :items="observations"
-                return-object
-                placeholder="Selecione um item"
-                :disabled="blockInputs"
-                item-text="name"
-                item-value="rowId"
-                v-model="observation"
-                label="Observações"
-            ></v-select>-->
             <v-autocomplete
               ref="observation"
               v-model="observation"
@@ -268,13 +241,12 @@
       <!-- modal new  cliente or update cliente -->
       <v-dialog v-model="modalCustomer" width="500" :persistent="true">
         <v-card>
-          <v-card-title class="headline grey lighten-2 text-center" primary-title>{{formTitle}}</v-card-title>
+          <v-card-title class="headline grey lighten-2 text-center" primary-title>Novo cliente</v-card-title>
 
           <v-card-text>
             <v-row justify="center">
               <v-col v-if="newCustomer || updatingCustomer" cols="10">
                 <p class="text-center bold">Novo cliente</p>
-                <p class="text-center bold">{{message}}</p>
                 <v-text-field
                   :color="mainColor"
                   :disabled="updatingCustomer"
@@ -358,7 +330,7 @@
       <!-- modal Receive-->
       <v-dialog v-model="dialogReceive" width="500" :persistent="false">
         <v-card>
-          <v-card-title class="headline grey lighten-2 text-center" primary-title>{{formTitle}}</v-card-title>
+          <v-card-title class="headline grey lighten-2 text-center" primary-title>Receber</v-card-title>
 
           <v-card-text>
             <v-row justify="center">
@@ -569,28 +541,13 @@
               large
               :style="{color:'red'}"
             >Fechar caixa</v-btn>
-            <!-- <v-btn :style="{color:'white'}" :color="familyOrange[0]" large @click="receive">Receber</v-btn> -->
           </v-col>
           <v-col align="center" cols="4">
-            <!-- <v-btn @click="cancelOrder" :style="{color: textColor}" color="red">Cancelar</v-btn> -->
-            <!-- <v-btn large :style="{color:'red'}">Normal</v-btn> -->
-            <span v-if="loggedUser.name != undefined">Caixa aberto por {{loggedUser.name}}</span>
+            <span :style="{color: mainColor}" v-if="userCashier">Caixa aberto por {{userCashier.name}}</span>
           </v-col>
           <v-col align="center" cols="4">
             <v-btn v-if="delivery" large :style="{color:'blue'}" @click="typeOrderBalcao">Balcão</v-btn>
-            <!-- <v-btn
-              :style="{color:'white'}"
-              color="#0F8DB8"
-              v-if="delivery"
-              @click="typeOrderBalcao"
-            >{{btnDesc}}</v-btn>-->
             <v-btn v-else large :style="{color:'blue'}" @click="typeOrderDelivery">Entregas</v-btn>
-            <!-- <v-btn
-              :style="{color:'white'}"
-              color="#6B64EB"
-              v-else
-              @click="typeOrderDelivery"
-            >{{btnDesc}}</v-btn>-->
           </v-col>
         </v-row>
       </v-col>
@@ -600,17 +557,10 @@
 
 
 <script>
-// class Product{
-//   index(){
-//     return "All products";
-//   }
-// }
-
 import mixins from "../mixins/mixins";
 import axios from "axios";
 import { VMoney } from "v-money";
 import sqlite3 from "sqlite3";
-import globalShortcut, { dialog } from "electron";
 import { ProductController } from "../controllers/ProductController";
 import { LocalityController } from "../controllers/LocalityController";
 import { OrderController } from "../controllers/OrderController";
@@ -620,6 +570,7 @@ import { PaymentController } from "../controllers/PaymentController";
 import { CustomerController } from "../controllers/CustomerController";
 import { UserController } from "../controllers/UserController";
 import bcryptjs from "bcryptjs";
+import { Cashier } from '../models/Cashier';
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -633,27 +584,32 @@ var pusher = new Pusher("a885cc143df63df6146a", {
 
 export default {
   mixins: [mixins],
-  components: {},
   directives: { money: VMoney },
   data() {
     return {
       money: {
         decimal: ",",
         thousands: ".",
-        // prefix: "R$ ",
-        // suffix: " / SCU",
         precision: 2,
         masked: false, // doesn't work with directive
         // Waiting on https://github.com/vuejs-tips/v-money/pull/51 to be merged
         allowBlank: true
-        // Waiting on https://github.com/vuejs-tips/v-money/pull/36 to be merged
-        // max: 999.99,
-        // min: 0.01
-        // Also bugged that this is not clearable
-        // https://github.com/vuejs-tips/v-money/issues/44
       },
-      //payments
+
+      //cashier variables
       statusCashier: false,
+      total: 0,
+      totalToReceive: 0,
+      cashier: {
+        debit: "0,00",
+        credit: "0,00",
+        ticket: "0,00",
+        money: "0,00"
+      },
+      modalCloseCashier: false,
+      userCashier: undefined,
+
+      //payment variables
       payment: {},
       payments: [],
       paymentsFormats: [
@@ -662,112 +618,61 @@ export default {
         { id: 3, name: "Crédito" },
         { id: 4, name: "Ticket" }
       ],
-      totalToReceive: 0,
-      paymentForm: [
-        { id: 1, name: "Dinheiro" },
-        { id: 2, name: "Débito" },
-        { id: 3, name: "Crédito" }
-      ],
-
-      cashier: {
-        debit: "0,00",
-        credit: "0,00",
-        ticket: "0,00",
-        money: "0,00"
-      },
+      dialogReceive: false,
+      
+      //user variables
+      username: "",
+      password: "",
+      confirm_password: "",
+      dialog: false,
       unlogged: true,
+      resetpassword: false,
+
+      //messages variable
       error: false,
       success: false,
-      alert: false,
       msg: "",
-      indexPayment: -1,
-      typePayment: {},
-      paymentTypes: [
-        { id: "M", name: "Dinheiro" },
-        { id: "D", name: "Débito" },
-        { id: "C", name: "Crédito" }
-      ],
+      msgloginerror: "",
+
+      //order variables
+      order: {},
+      locObj: {},
+      locality: [],
+      product: {},
+      products: [],
+      cart: [],
+      quantity: 1,
       deliveryTitle: "Balcão",
-      cartVibrate: false,
-      total: 0,
-      keyPressed: 0,
+      delivery: false,
+
+      // obs variables
       observationSecond: "",
-      obsSelected: false,
       observation: {},
       observations: [
         { name: "Suco", rowid: 1 },
         { name: "Coca", rowid: 2 }
       ],
-      modalCloseCashier: false,
-      dialogReceive: false,
       dialogObs: false,
-      formTitle: "Buscar um cliente",
-      dialog: false,
-      delivery: false,
-      quantity: 1,
-      product: {},
-      isLoading: false,
-      customer: {},
-      blockInputs: false,
       descriptionLimit: 60,
-      modalFindCustomer: false,
-      user: null,
-      username: "",
-      password: "",
-      confirm_password: "",
-      locality: [],
-      sections: [
-        { id: 1, name: "Bebidas" },
-        { id: 2, name: "Pratos" }
-      ],
 
+      // customer variables
+      customer: {},
       dialogCustomer: false,
       btnDesc: "Delivery",
-      cart: [],
       newCustomer: false,
       updatingCustomer: false,
-      findingCustomer: true,
-      maskPhone: "(##)# ####-####",
-      item: 5,
-      resetpassword: false,
-      customers: [],
-      img: "",
-      selected: {},
-      dsc: "",
-      products: [],
-      loading: false,
       dialog: false,
-      name: "",
-      msgloginerror: "",
-      phone: "",
-      price: "",
-      locObj: {},
+      modalFindCustomer: false,
       modalCustomer: false,
-      address: "",
-      alignment: "end",
-      qtdDataReturned: 0,
-      orders: [],
-      order: {},
-      isEditing: false,
-      message: "",
-      userExists: false,
-      disabled: false,
-      dense: false,
-      twoLine: false,
-      threeLine: true,
-      shaped: false,
-      flat: false,
-      subheader: false,
-      inactive: false,
-      subGroup: false,
-      nav: false,
-      avatar: false,
-      rounded: false,
-      teste: false
+      
+
+      isLoading: false,
+      blockInputs: false,
     };
   },
 
   async mounted() {
+    this.checkUserOpenedCashier();
     this.typeOrderBalcao();
 
     this.$root.$on("logout", e => {
@@ -826,18 +731,6 @@ export default {
         }
       }
 
-      if (e.keyCode === 113) {
-        if (this.indexPayment != -1) {
-          console.log("Pode receber");
-          return;
-        } else {
-          this.cartVibrate = true;
-          setTimeout(() => {
-            this.cartVibrate = false;
-          }, 600);
-        }
-      }
-
       if (e.keyCode == 116 && !this.unlogged) {
         if (this.delivery) {
           this.typeOrderBalcao();
@@ -862,10 +755,6 @@ export default {
           } else {
             this.showMessageError("Sem itens para pedido");
           }
-          this.cartVibrate = true;
-          setTimeout(() => {
-            this.cartVibrate = false;
-          }, 600);
 
           return;
         }
@@ -873,12 +762,7 @@ export default {
           this.$refs.receive.focus();
         }, 200);
         this.totalToReceive = this.total;
-        this.formTitle = "Receber";
         this.dialogReceive = true;
-      }
-
-      if (e.keyCode == 116) {
-        this.changepaymentForm();
       }
     };
 
@@ -905,8 +789,6 @@ export default {
       return this.username == "" || this.password == "";
     },
 
-    priceInField() {},
-
     msgLogin() {
       return this.msgloginerror != "";
     },
@@ -931,17 +813,6 @@ export default {
       });
     },
 
-    // payments() {
-    //   return this.paymentTypes.map(type => {
-    //     const Description =
-    //       type.name.length > this.descriptionLimit
-    //         ? type.name.slice(0, this.descriptionLimit) + "..."
-    //         : type.name;
-
-    //     return Object.assign({}, type, { Description });
-    //   });
-    // },
-
     obs() {
       return this.observations.map(obs => {
         const Description =
@@ -953,16 +824,8 @@ export default {
       });
     }
   },
+
   watch: {
-    typePayment(e) {
-      e.price = this.totalToReceive;
-      let val = JSON.stringify(e);
-      this.paymentForm.push(JSON.parse(val));
-      this.totalToReceive = this.total - this.totalToReceive;
-    },
-
-    quantity(e) {},
-
     observation(e) {
       setTimeout(() => {
         this.$nextTick(() => {
@@ -973,6 +836,12 @@ export default {
   },
 
   methods: {
+    async checkUserOpenedCashier(){
+      let cashier = new Cashier();
+      let response = await cashier.checkUserOpenedCashier();
+      this.userCashier = response;
+    },
+
     async cashierStatus() {
       var cashier = new CashierController();
       let response = await cashier.show();
@@ -1009,14 +878,18 @@ export default {
       let result = await user.login(usr, password);
 
       bcryptjs.compare(password, result.password, (err, res) => {
-        if (res === true) {
-          this.loggedUser = result;
-          this.unlogged = false;
-          this.$root.$emit("logged_user", result);
-          this.$refs.product.focus();
-          if (result.updated_at === null) {
+        if (result.updated_at === null) {
             this.resetpassword = true;
             this.password = "";
+          }
+        else if (res === true) {
+          if (result.id != this.userCashier.id) {
+            this.msgloginerror = "Este caixa foi aberto por outro usuario, contate o administrador.";
+          }else{
+            this.loggedUser = result;
+            this.unlogged = false;
+            this.$root.$emit("logged_user", result);
+            this.$refs.product.focus();
           }
         } else {
           this.msgloginerror = "Usuario ou senha estão incorretos";
@@ -1041,34 +914,9 @@ export default {
       this.modalCloseCashier = false
     },
 
-    changePayment(f) {
-      console.log(f);
-      f.color = "red";
-    },
-
-    changepaymentForm() {
-      this.indexPayment += 1;
-
-      if (this.indexPayment == 3) {
-        this.indexPayment = 0;
-      }
-    },
-
-    theAction(event) {
-      console.log(event);
-    },
-
     removeFromCart(i, parcialPrice) {
       this.total = this.total - parcialPrice;
       this.cart.splice(i, 1);
-    },
-
-    focusChanged(e) {
-      console.log(e);
-    },
-
-    clearAll() {
-      (this.cart = []), (this.order = {});
     },
 
     endOrder(order, items, payments) {
@@ -1086,17 +934,7 @@ export default {
       this.customer = {};
       this.typeOrderBalcao();
     },
-    receive() {
-      if (this.total > 0) {
-        this.dialogReceive = true;
-      }
-
-      this.formTitle = "Receber";
-    },
-
-    updateCart(item) {
-      console.log(item);
-    },
+  
     saveObs() {
       this.product.observations = [];
       this.product.observations.push(this.observation.name);
@@ -1153,10 +991,6 @@ export default {
       this.modalFindCustomer = false;
       this.modalCustomer = false;
     },
-    formatPrice(value) {
-      let val = (value / 1).toFixed(2).replace(".", ",");
-      return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    },
 
     async saveCustomer() {
       setTimeout(() => {
@@ -1205,27 +1039,6 @@ export default {
       );
     },
 
-    save() {
-      axios
-        .post(this.host + "products", {
-          name: this.name,
-          price: parseFloat(this.price),
-          section_id: this.selected.id,
-          img: this.img,
-          dsc: this.dsc
-        })
-        .then(function(response) {
-          console.log(response.data);
-        })
-        .catch(function(error) {
-          console.log(error);
-        });
-    },
-
-    show(p) {
-      this.order = p;
-    },
-
     insertInCart(product) {
       product.quantity = this.quantity;
       let prod = JSON.stringify(product);
@@ -1262,51 +1075,5 @@ export default {
 };
 </script>
 <style scoped>
-/* .inform {
-  font-size: 12px;
-  text-align: center;
-  color: red;
-} */
 
-.cart {
-  animation: shake 0.5s;
-  animation-iteration-count: infinite;
-  background: gray;
-}
-
-@keyframes shake {
-  0% {
-    transform: translate(1px, 1px) rotate(0deg);
-  }
-  10% {
-    transform: translate(-1px, -2px) rotate(-1deg);
-  }
-  20% {
-    transform: translate(-3px, 0px) rotate(1deg);
-  }
-  30% {
-    transform: translate(3px, 2px) rotate(0deg);
-  }
-  40% {
-    transform: translate(1px, -1px) rotate(1deg);
-  }
-  50% {
-    transform: translate(-1px, 2px) rotate(-1deg);
-  }
-  60% {
-    transform: translate(-3px, 1px) rotate(0deg);
-  }
-  70% {
-    transform: translate(3px, 1px) rotate(-1deg);
-  }
-  80% {
-    transform: translate(-1px, -1px) rotate(1deg);
-  }
-  90% {
-    transform: translate(1px, 2px) rotate(0deg);
-  }
-  100% {
-    transform: translate(1px, -2px) rotate(-1deg);
-  }
-}
 </style>
