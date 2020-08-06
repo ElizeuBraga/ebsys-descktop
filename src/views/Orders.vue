@@ -23,6 +23,7 @@
           :color="mainColor"
           label="Quantidade"
           ref="quantity"
+          @focus="hasFocus"
           v-model="quantity"
           type="number"
           min="1"
@@ -32,11 +33,7 @@
       <!-- coluna do Pedido inicio-->
 
       <v-col cols="5" :style="{background:backgroundColor}">
-        <v-card
-          elevation="10"
-          height="95%"
-          :style="{background: ''}"
-        >
+        <v-card elevation="10" height="95%" :style="{background: ''}">
           <v-card-title :style="{background:'', color:mainColor}" class="justify-center pb-0 pt-0">
             <b>{{deliveryTitle}}</b>
           </v-card-title>
@@ -153,7 +150,6 @@
         <!-- menu -->
       </v-col>
 
-
       <!-- observações -->
       <v-dialog v-model="dialogObs" width="500" :persistent="true">
         <v-card>
@@ -186,7 +182,7 @@
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" text @click="saveObs">Ok</v-btn>
+            <v-btn color="primary" ref="btnOkobs" text @click="saveObs">Ok</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -543,7 +539,14 @@
             >Fechar caixa</v-btn>
           </v-col>
           <v-col align="center" cols="4">
-            <span :style="{color: mainColor}" v-if="userCashier">Caixa aberto por {{userCashier.name}}</span>
+            <span
+              :style="{color: mainColor}"
+              v-if="userCashier"
+            >Caixa aberto por {{userCashier.name}}</span>
+            <span
+              :style="{color: 'red'}"
+              v-else
+            >Caixa fechado</span>
           </v-col>
           <v-col align="center" cols="4">
             <v-btn v-if="delivery" large :style="{color:'blue'}" @click="typeOrderBalcao">Balcão</v-btn>
@@ -570,7 +573,7 @@ import { PaymentController } from "../controllers/PaymentController";
 import { CustomerController } from "../controllers/CustomerController";
 import { UserController } from "../controllers/UserController";
 import bcryptjs from "bcryptjs";
-import { Cashier } from '../models/Cashier';
+import { Cashier } from "../models/Cashier";
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -619,7 +622,7 @@ export default {
         { id: 4, name: "Ticket" }
       ],
       dialogReceive: false,
-      
+
       //user variables
       username: "",
       password: "",
@@ -633,8 +636,10 @@ export default {
       success: false,
       msg: "",
       msgloginerror: "",
+      msgLogin: false,
 
       //order variables
+      hasFocusQuantity: true,
       order: {},
       locObj: {},
       locality: [],
@@ -664,10 +669,9 @@ export default {
       dialog: false,
       modalFindCustomer: false,
       modalCustomer: false,
-      
 
       isLoading: false,
-      blockInputs: false,
+      blockInputs: false
     };
   },
 
@@ -764,15 +768,13 @@ export default {
         this.totalToReceive = this.total;
         this.dialogReceive = true;
       }
-    };
 
-    window.addEventListener("keypress", e => {
       if (e.keyCode == 13) {
         if (this.observationSecond != "") {
           // this.dialogObs = true;
           this.saveObs();
         }
-        if (this.quantity >= 1 && Object.keys(this.product).length > 0) {
+        if (this.quantity >= 1 && Object.keys(this.product).length > 0 && !this.hasFocusQuantity) {
           this.dialogObs = true;
           setTimeout(() => {
             this.$nextTick(() => {
@@ -781,16 +783,12 @@ export default {
           }, 200);
         }
       }
-    });
+    }
   },
 
   computed: {
     fieldsLogin() {
       return this.username == "" || this.password == "";
-    },
-
-    msgLogin() {
-      return this.msgloginerror != "";
     },
 
     inputs() {
@@ -829,14 +827,16 @@ export default {
     observation(e) {
       setTimeout(() => {
         this.$nextTick(() => {
-          this.$refs.observationSecond.focus();
+          // this.$refs.observationSecond.focus();
+          this.$refs.btnOkobs.$el.focus();
+          return
         }, 200);
       });
     }
   },
 
   methods: {
-    async checkUserOpenedCashier(){
+    async checkUserOpenedCashier() {
       let cashier = new Cashier();
       let response = await cashier.checkUserOpenedCashier();
       this.userCashier = response;
@@ -856,11 +856,8 @@ export default {
     },
 
     resetPassword(password, confirm_password) {
-      setTimeout(() => {
-        this.msgloginerror = "";
-      }, 3000);
       if (password != confirm_password) {
-        this.msgloginerror = "Senhas não conferem";
+        this.showMessageErrorLogin('Senhas não conferem');
         return;
       }
       let u = {
@@ -873,45 +870,56 @@ export default {
       this.showMessageSucess("Senha alterada com sucesso");
     },
 
-    async login(usr, password) {
+    async login(username, password) {
+      setTimeout(() => {
+        this.msgloginerror = "";
+        this.msgLogin = false;
+      }, 3000);
+
       let user = new UserController();
-      let result = await user.login(usr, password);
+      let result = await user.login(username, password);
+
+      if (!result) {
+        this.showMessageErrorLogin('Usuario e/ou senha estão incorretos');
+        return;
+      }
 
       bcryptjs.compare(password, result.password, (err, res) => {
         if (result.updated_at === null) {
-            this.resetpassword = true;
-            this.password = "";
-          }
-        else if (res === true) {
-          if (result.id != this.userCashier.id) {
-            this.msgloginerror = "Este caixa foi aberto por outro usuario, contate o administrador.";
-          }else{
+          this.resetpassword = true;
+          this.password = "";
+        } else if (res === true) {
+          if (result.id != this.userCashier.id && this.userCashier.id != undefined) {
+            this.showMessageErrorLogin('Este caixa foi aberto por outro usuario, contate o administrador.');
+          } else {
             this.loggedUser = result;
             this.unlogged = false;
             this.$root.$emit("logged_user", result);
             this.$refs.product.focus();
           }
         } else {
-          this.msgloginerror = "Usuario ou senha estão incorretos";
-          setTimeout(() => {
-            this.msgloginerror = "";
-          }, 3000);
+          this.showMessageErrorLogin("Usuario e/ou senha estão incorretos");
         }
       });
+
     },
 
     openCashier(loggedUser) {
       let cashier = new CashierController();
       cashier.store(loggedUser);
       this.cashierStatus();
+      this.checkUserOpenedCashier();
     },
 
     closeCashier(c) {
       let cashier = new CashierController();
       cashier.update(c);
-      this.cashierStatus();
+      if (this.cashierStatus()) {
+        this.showMessageSucess("Caixa fechado com sucesso")        
+      }
 
-      this.modalCloseCashier = false
+      this.checkUserOpenedCashier();
+      this.modalCloseCashier = false;
     },
 
     removeFromCart(i, parcialPrice) {
@@ -934,7 +942,7 @@ export default {
       this.customer = {};
       this.typeOrderBalcao();
     },
-  
+
     saveObs() {
       this.product.observations = [];
       this.product.observations.push(this.observation.name);
@@ -1039,6 +1047,12 @@ export default {
       );
     },
 
+    hasFocus(){
+      setTimeout(()=>{
+        this.hasFocusQuantity = false;
+      }, 300)
+    },
+
     insertInCart(product) {
       product.quantity = this.quantity;
       let prod = JSON.stringify(product);
@@ -1075,5 +1089,4 @@ export default {
 };
 </script>
 <style scoped>
-
 </style>

@@ -57,12 +57,28 @@ export default {
               this.error = false
             }, 3000)
           },
+
+          showMessageErrorLogin(msg){
+            this.msgLogin = true
+            this.msgloginerror = msg
+            setTimeout(()=>{
+                this.msgLogin = false
+            }, 3000)
+          },
       
           showMessageSucess(msg){
             this.success = true
             this.msg = msg
             setTimeout(()=>{
               this.success = false
+            }, 3000)
+          },
+
+          showMessageSuccessLogin(msg){
+            this.msgLogin = true
+            this.msgloginerror = msg
+            setTimeout(()=>{
+                this.msgLogin = true
             }, 3000)
           },
     },

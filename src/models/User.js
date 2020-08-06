@@ -72,7 +72,11 @@ export class User{
         let sql = "select * from users where phone = ?";
         let result = await db.get(sql, [user]);
 
-        return result;
+        if(result){
+            return result
+        }else{
+            return false;
+        }
 
     }
 
