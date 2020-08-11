@@ -50,6 +50,7 @@ create table products (
 	name varchar(50) not null,
 	price real not null,
 	section_id integer not null,
+	ask_obs boolean default(true),
 	foreign key (section_id) references sections(id)
 );
 

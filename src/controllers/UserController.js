@@ -13,6 +13,7 @@ export class UserController{
     }
 
     update(u){
+        console.log(u)
         let user = new User();
         let result = user.update(u);
         return result

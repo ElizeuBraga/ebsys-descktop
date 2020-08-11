@@ -10,6 +10,7 @@
           :color="mainColor"
           hide-no-data
           hide-selected
+          :hint="product.price ? quantity + ' X '+product.price.toFixed(2).replace('.', ',') + ' = ' + (quantity*product.price).toFixed(2).replace('.', ',') : ''"
           item-text="Description"
           item-value="API"
           label="Buscar um produto"
@@ -107,7 +108,7 @@
                     v-on="on"
                     cols="2"
                     class="pt-0 pb-0"
-                  >{{String(c.price * c.quantity).replace('.', ',')}}</v-col>
+                  >{{parseFloat(c.price * c.quantity).toFixed(2).replace('.', ',')}}</v-col>
                 </template>
                 <span>Total parcial</span>
               </v-tooltip>
@@ -125,10 +126,7 @@
                 <span>Remover</span>
               </v-tooltip>
               <v-col cols="9" class="text-left pt-0 pb-0">
-                <span :style="{'font-size':'12px'}" v-for="(o, i) in c.observations" :key="i">
-                  <span v-if="i > 0">,</span>
-                  {{o}}
-                </span>
+                <span>{{c.observation}}</span>
               </v-col>
               <v-col class="pt-0 pb-0 pr-0 pl-0" cols="12">
                 <hr />
@@ -153,36 +151,21 @@
       <!-- observações -->
       <v-dialog v-model="dialogObs" width="500" :persistent="true">
         <v-card>
-          <v-card-title class="headline grey lighten-2" primary-title>Observações</v-card-title>
-
+          <v-card-title class="headline grey lighten-2" primary-title>Alguma Observação?</v-card-title>
           <v-card-text>
-            <v-autocomplete
-              ref="observation"
-              v-model="observation"
-              :items="obs"
-              :loading="isLoading"
-              :color="mainColor"
-              hide-no-data
-              hide-selected
-              item-text="Description"
-              item-value="API"
-              placeholder="Selecione uma observação"
-              prepend-icon="mdi-database-search"
-              return-object
-            ></v-autocomplete>
             <v-text-field
               :color="mainColor"
-              ref="observationSecond"
-              v-model="observationSecond"
+              ref="observation"
+              v-model="observation"
               label="Observação"
             ></v-text-field>
+            <v-switch v-model="donQuestionAgain" class="mx-2" label="Não mostrar novamente"></v-switch>
           </v-card-text>
-
           <v-divider></v-divider>
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" ref="btnOkobs" text @click="saveObs">Ok</v-btn>
+            <v-btn color="primary" ref="btnOkobs" text>Ok</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -331,29 +314,56 @@
           <v-card-text>
             <v-row justify="center">
               <v-col cols="6">
-                <v-text-field ref="receive" :color="mainColor" v-model="totalToReceive"></v-text-field>
+                <v-text-field
+                  :disabled="(totalToReceive == 0)"
+                  ref="receive"
+                  label="A receber"
+                  :color="mainColor"
+                  v-model="totalToReceive"
+                ></v-text-field>
+                <v-text-field
+                  v-if="payment.name == 'Dinheiro'"
+                  ref="amountMoney"
+                  label="Quanto?"
+                  :color="mainColor"
+                  v-model="amountMoney"
+                ></v-text-field>
               </v-col>
               <v-col cols="6">
-                <v-select
+                <v-autocomplete
+                :disabled="(totalToReceive == 0)"
                   ref="payment"
                   v-model="payment"
                   :items="paymentsFormats"
                   :loading="isLoading"
                   :color="mainColor"
                   hide-no-data
+                  hide-selected
                   item-text="name"
                   item-value="API"
-                  placeholder="Forma de pagamento"
+                  label="Buscar um produto"
+                  placeholder=""
                   prepend-icon="mdi-database-search"
                   return-object
-                ></v-select>
+                ></v-autocomplete>
+              </v-col>
+              <v-col cols="12">
+                <p v-for="(p, i) in payments" :key="i">
+                  <b>{{p.payment.name}}: </b>
+                  <span v-if="p.payment.name == 'Dinheiro'">
+                    {{parseFloat(p.payment.amountMoney).toFixed(2).replace('.', ',')}} - {{parseFloat(p.totalForThispayment).toFixed(2).replace('.', ',')}}
+                    <b>Troco</b>
+                    {{parseFloat(parseFloat(p.payment.amountMoney) - parseFloat(p.totalForThispayment)).toFixed(2).replace('.', ',')}}
+                  </span>
+                  <span v-else>{{parseFloat(p.totalForThispayment).toFixed(2).replace('.', ',')}}</span>
+                </p>
               </v-col>
               <div>
-                <span
+                <!-- <span
                   cols="4"
                   v-for="(p, i) in payments"
                   :key="i"
-                >{{p.name}} - {{p.price.toFixed(2).replace('.', ',')}}</span>
+                >{{p.name}} - {{p.price.toFixed(2).replace('.', ',')}}</span>-->
                 <br />
               </div>
             </v-row>
@@ -483,7 +493,7 @@
             <v-row justify="center">
               <v-col cols="12">
                 <v-text-field
-                  ref="receive"
+                  ref="password"
                   label="Senha"
                   :color="mainColor"
                   v-model="password"
@@ -543,10 +553,7 @@
               :style="{color: mainColor}"
               v-if="userCashier"
             >Caixa aberto por {{userCashier.name}}</span>
-            <span
-              :style="{color: 'red'}"
-              v-else
-            >Caixa fechado</span>
+            <span :style="{color: 'red'}" v-else>Caixa fechado</span>
           </v-col>
           <v-col align="center" cols="4">
             <v-btn v-if="delivery" large :style="{color:'blue'}" @click="typeOrderBalcao">Balcão</v-btn>
@@ -564,6 +571,7 @@ import mixins from "../mixins/mixins";
 import axios from "axios";
 import { VMoney } from "v-money";
 import sqlite3 from "sqlite3";
+import { Product } from "../models/Product";
 import { ProductController } from "../controllers/ProductController";
 import { LocalityController } from "../controllers/LocalityController";
 import { OrderController } from "../controllers/OrderController";
@@ -622,7 +630,7 @@ export default {
         { id: 4, name: "Ticket" }
       ],
       dialogReceive: false,
-
+      amountMoney: 0.00,
       //user variables
       username: "",
       password: "",
@@ -649,10 +657,11 @@ export default {
       quantity: 1,
       deliveryTitle: "Balcão",
       delivery: false,
+      fluxEnter: "quantity",
+      donQuestionAgain: false,
 
       // obs variables
-      observationSecond: "",
-      observation: {},
+      observation: "",
       observations: [
         { name: "Suco", rowid: 1 },
         { name: "Coca", rowid: 2 }
@@ -697,96 +706,217 @@ export default {
 
     //keyboard events
     document.onkeydown = e => {
-      if (e.keyCode == 13 && this.dialogReceive) {
-        this.$refs.payment.focus();
+      if (e.key == "Enter" && this.username && this.password) {
+        this.login(this.username, this.password);
       }
-
-      if (e.keyCode == 13 && this.dialogReceive && this.totalToReceive == 0) {
-        this.endOrder(this.order, this.cart);
-      }
-
-      if (e.keyCode == 13 && Object.keys(this.product).length > 0) {
-        if (!this.cashier.created_at) {
-          // this.$refs.quantity.focus();
-          this.showMessageError("Caixa fechado");
-          this.product = {};
-          return;
-        }
-        this.$refs.quantity.focus();
-      }
-
-      if (e.keyCode == 13 && Object.keys(this.payment).length > 0) {
-        let payment = new PaymentController();
-        let result = payment.calcPayment(
-          parseFloat(this.totalToReceive),
-          this.payment
-        );
-        this.payments.push(JSON.parse(JSON.stringify(result)));
-
-        let calcResult = 0;
-        this.payments.forEach(element => {
-          calcResult += element.price;
-        });
-
-        this.totalToReceive = this.total - calcResult;
-        this.payment = {};
-        if (this.totalToReceive == 0) {
-          this.$refs.btnendorder.$el.focus();
-        }
-      }
-
-      if (e.keyCode == 116 && !this.unlogged) {
+      if (e.key == "F5") {
         if (this.delivery) {
           this.typeOrderBalcao();
-          setTimeout(() => {
-            this.$refs.product.focus();
-          }, 200);
         } else {
           this.typeOrderDelivery();
-          setTimeout(() => {
-            this.$refs.phone.focus();
-          }, 200);
         }
       }
 
-      if (e.keyCode === 112) {
-        if (
-          this.cart.length == 0 ||
-          localStorage.getItem("cashier_id") == "null"
-        ) {
-          if (localStorage.getItem("cashier_id") == "null") {
-            this.showMessageError("Caixa fechado");
-          } else {
-            this.showMessageError("Sem itens para pedido");
-          }
-
+      if (e.key == "F1" && !this.unlogged) {
+        if (!this.statusCashier) {
+          this.showMessageError("Caixa fechado");
+          return;
+        } else if (this.cart.length == 0) {
+          this.showMessageError("Sem itens para pedido");
           return;
         }
         setTimeout(() => {
           this.$refs.receive.focus();
+          // this.$refs.receive.select();
         }, 200);
         this.totalToReceive = this.total;
         this.dialogReceive = true;
       }
 
-      if (e.keyCode == 13) {
-        if (this.observationSecond != "") {
-          // this.dialogObs = true;
-          this.saveObs();
-        }
-        if (this.quantity >= 1 && Object.keys(this.product).length > 0 && !this.hasFocusQuantity) {
-          this.dialogObs = true;
-          setTimeout(() => {
-            this.$nextTick(() => {
-              this.$refs.observation.focus();
-            });
-          }, 200);
-        }
+      if (e.keyCode == 27 && !this.dialogObs) {
+        this.product = {};
+        this.quantity = 1;
+
+        this.$nextTick(() => {
+          const input = this.$refs.product.$el.querySelector("input");
+          input.focus();
+        });
       }
-    }
+
+      if (e.keyCode == 13) {
+        if (this.dialogReceive) {
+          this.$refs.payment.focus();
+        }
+
+        if (Object.keys(this.payment).length > 0) {
+          if (this.payment.name == "Dinheiro") {
+            this.$refs.amountMoney.focus();
+          }
+          if (parseFloat(this.amountMoney) > 0 && (parseFloat(this.amountMoney) > parseFloat(this.totalToReceive))) {
+            this.payment.amountMoney = this.amountMoney
+            this.payments.push({
+              total: this.total,
+              totalForThispayment: this.totalToReceive,
+              payment: JSON.parse(JSON.stringify(this.payment))
+            });
+          let payment = new PaymentController();
+          let result = payment.calcPayment(this.payments);
+          this.payment = {};
+          this.totalToReceive = parseFloat(result).toFixed(2);
+          }
+        }
+        if (
+          Object.keys(this.product).length > 0 &&
+          this.fluxEnter == "quantity"
+        ) {
+          this.$refs.quantity.focus();
+          this.setFluxEnter("obs");
+        }
+
+        if (this.fluxEnter == "obs") {
+          if (this.product.ask_obs == 1) {
+            setTimeout(() => {
+              this.$nextTick(() => {
+                this.$refs.observation.focus();
+                this.setFluxEnter("product");
+              });
+            }, 200);
+            this.dialogObs = true;
+          } else {
+            this.$nextTick(() => {
+            const input = this.$refs.product.$el.querySelector("input");
+            input.focus();
+          });
+            this.insertInCart(this.product);
+          }
+        }
+
+        if (this.fluxEnter == "product") {
+          this.dialogObs = false;
+          this.insertInCart(this.product);
+          this.setFluxEnter("quantity");
+
+          this.$nextTick(() => {
+            const input = this.$refs.product.$el.querySelector("input");
+            input.focus();
+          });
+        }
+
+        // if (e.keyCode == 13 && Object.keys(this.payment).length > 0) {
+        //   let payment = new PaymentController();
+        //   let result = payment.calcPayment(
+        //     parseFloat(this.totalToReceive),
+        //     this.payment
+        //   );
+        //   this.payments.push(JSON.parse(JSON.stringify(result)));
+
+        //   let calcResult = 0;
+        //   this.payments.forEach(element => {
+        //     calcResult += element.price;
+        //   });
+
+        //   this.totalToReceive = this.total - calcResult;
+        //   this.payment = {};
+        //   if (this.totalToReceive == 0) {
+        //     this.$refs.btnendorder.$el.focus();
+        //   }
+        // }
+      }
+      // if (e.keyCode == 13 && this.dialogReceive) {
+      //   this.$refs.payment.focus();
+      // }
+
+      // if (e.keyCode == 13 && this.dialogReceive && this.totalToReceive == 0) {
+      //   this.endOrder(this.order, this.cart);
+      // }
+
+      // if (e.keyCode == 13 && Object.keys(this.product).length > 0) {
+      //   if (!this.cashier.created_at) {
+      //     // this.$refs.quantity.focus();
+      //     this.showMessageError("Caixa fechado");
+      //     this.product = {};
+      //     return;
+      //   }
+      //   this.$refs.quantity.focus();
+      // }
+
+      // if (e.keyCode == 13 && Object.keys(this.payment).length > 0) {
+      //   let payment = new PaymentController();
+      //   let result = payment.calcPayment(
+      //     parseFloat(this.totalToReceive),
+      //     this.payment
+      //   );
+      //   this.payments.push(JSON.parse(JSON.stringify(result)));
+
+      //   let calcResult = 0;
+      //   this.payments.forEach(element => {
+      //     calcResult += element.price;
+      //   });
+
+      //   this.totalToReceive = this.total - calcResult;
+      //   this.payment = {};
+      //   if (this.totalToReceive == 0) {
+      //     this.$refs.btnendorder.$el.focus();
+      //   }
+      // }
+
+      // if (e.keyCode == 116 && !this.unlogged) {
+      //   if (this.delivery) {
+      //     this.typeOrderBalcao();
+      //     setTimeout(() => {
+      //       this.$refs.product.focus();
+      //     }, 200);
+      //   } else {
+      //     this.typeOrderDelivery();
+      //     setTimeout(() => {
+      //       this.$refs.phone.focus();
+      //     }, 200);
+      //   }
+      // }
+
+      // if (e.keyCode === 112) {
+      //   if (
+      //     this.cart.length == 0 ||
+      //     localStorage.getItem("cashier_id") == "null"
+      //   ) {
+      //     if (localStorage.getItem("cashier_id") == "null") {
+      //       this.showMessageError("Caixa fechado");
+      //     } else {
+      //       this.showMessageError("Sem itens para pedido");
+      //     }
+
+      //     return;
+      //   }
+      //   setTimeout(() => {
+      //     this.$refs.receive.focus();
+      //   }, 200);
+      //   this.totalToReceive = this.total;
+      //   this.dialogReceive = true;
+      // }
+
+      // if (e.keyCode == 13) {
+      //   if (this.observationSecond != "") {
+      //     // this.dialogObs = true;
+      //     this.saveObs();
+      //   }
+      //   if (this.quantity >= 1 && Object.keys(this.product).length > 0 && !this.hasFocusQuantity) {
+      //     this.dialogObs = true;
+      //     setTimeout(() => {
+      //       this.$nextTick(() => {
+      //         this.$refs.observation.focus();
+      //       });
+      //     }, 200);
+      //   }
+      // }
+    };
   },
 
   computed: {
+    // flux of the key enter
+    computProductForQuantity() {
+      return this.product != Object.keys(this.product).length > 0;
+    },
+
     fieldsLogin() {
       return this.username == "" || this.password == "";
     },
@@ -806,7 +936,6 @@ export default {
           product.name.length > this.descriptionLimit
             ? product.name.slice(0, this.descriptionLimit) + "..."
             : product.name;
-
         return Object.assign({}, product, { Description });
       });
     },
@@ -824,18 +953,31 @@ export default {
   },
 
   watch: {
-    observation(e) {
-      setTimeout(() => {
-        this.$nextTick(() => {
-          // this.$refs.observationSecond.focus();
-          this.$refs.btnOkobs.$el.focus();
-          return
-        }, 200);
-      });
+    donQuestionAgain(e) {
+      console.log(e);
+    },
+    product() {
+      this.fluxEnter = "quantity";
+      this.quantity = 1;
+    },
+
+    payment(e) {
+      if (e.name != "Dinheiro") {
+        this.amountMoney = 1.00;
+      } else {
+        this.amountMoney = 0.00;
+      }
+
+      console.log(this.amountMoney);
     }
   },
 
   methods: {
+    setFluxEnter(val) {
+      setTimeout(() => {
+        this.fluxEnter = val;
+      }, 300);
+    },
     async checkUserOpenedCashier() {
       let cashier = new Cashier();
       let response = await cashier.checkUserOpenedCashier();
@@ -857,7 +999,7 @@ export default {
 
     resetPassword(password, confirm_password) {
       if (password != confirm_password) {
-        this.showMessageErrorLogin('Senhas não conferem');
+        this.showMessageErrorLogin("Senhas não conferem");
         return;
       }
       let u = {
@@ -871,37 +1013,41 @@ export default {
     },
 
     async login(username, password) {
-      setTimeout(() => {
-        this.msgloginerror = "";
-        this.msgLogin = false;
-      }, 3000);
-
       let user = new UserController();
       let result = await user.login(username, password);
 
       if (!result) {
-        this.showMessageErrorLogin('Usuario e/ou senha estão incorretos');
+        this.showMessageErrorLogin("Usuario e/ou senha estão incorretos");
         return;
       }
 
       bcryptjs.compare(password, result.password, (err, res) => {
-        if (result.updated_at === null) {
-          this.resetpassword = true;
-          this.password = "";
-        } else if (res === true) {
-          if (result.id != this.userCashier.id && this.userCashier.id != undefined) {
-            this.showMessageErrorLogin('Este caixa foi aberto por outro usuario, contate o administrador.');
+        if (res === true) {
+          if (result.updated_at === null) {
+            this.resetpassword = true;
+          }
+          if (
+            result.id != this.userCashier.id &&
+            this.userCashier.id != undefined
+          ) {
+            this.showMessageErrorLogin(
+              "Este caixa foi aberto por outro usuario, contate o administrador."
+            );
           } else {
             this.loggedUser = result;
             this.unlogged = false;
+            this.username = "";
+            this.password = "";
             this.$root.$emit("logged_user", result);
-            this.$refs.product.focus();
+            this.$nextTick(() => {
+              const input = this.$refs.product.$el.querySelector("input");
+              input.focus();
+            });
           }
         } else {
           this.showMessageErrorLogin("Usuario e/ou senha estão incorretos");
         }
       });
-
     },
 
     openCashier(loggedUser) {
@@ -915,7 +1061,7 @@ export default {
       let cashier = new CashierController();
       cashier.update(c);
       if (this.cashierStatus()) {
-        this.showMessageSucess("Caixa fechado com sucesso")        
+        this.showMessageSucess("Caixa fechado com sucesso");
       }
 
       this.checkUserOpenedCashier();
@@ -940,28 +1086,9 @@ export default {
       this.dialogReceive = false;
       this.cart = [];
       this.customer = {};
+      this.amountMoney = 0;
+      this.payments = [];
       this.typeOrderBalcao();
-    },
-
-    saveObs() {
-      this.product.observations = [];
-      this.product.observations.push(this.observation.name);
-      if (this.observationSecond != "") {
-        this.product.observations.push(this.observationSecond);
-      }
-
-      this.observationSecond = "";
-      this.observation = {};
-
-      this.insertInCart(this.product);
-
-      this.dialogObs = false;
-
-      setTimeout(() => {
-        // this.$nextTick(() => {
-        this.$refs.product.focus();
-      }, 200);
-      // });
     },
 
     typeOrderDelivery() {
@@ -969,6 +1096,7 @@ export default {
       this.deliveryTitle = "Entregas";
       this.btnDesc = "Balcão";
       this.cart = [];
+      this.total = 0;
       this.mainColor = "greenyellow";
       this.modalFindCustomer = true;
 
@@ -1047,13 +1175,18 @@ export default {
       );
     },
 
-    hasFocus(){
-      setTimeout(()=>{
+    hasFocus() {
+      setTimeout(() => {
         this.hasFocusQuantity = false;
-      }, 300)
+      }, 300);
     },
 
     insertInCart(product) {
+      if (this.donQuestionAgain) {
+        let p = new Product();
+        p.dontAskAgain(product.id);
+      }
+      product.observation = this.observation;
       product.quantity = this.quantity;
       let prod = JSON.stringify(product);
       this.cart.push(JSON.parse(prod));
@@ -1065,7 +1198,7 @@ export default {
       });
 
       this.quantity = 1;
-      this.$refs.product.focus();
+      this.observation = "";
     },
 
     async findCustomer(phone) {

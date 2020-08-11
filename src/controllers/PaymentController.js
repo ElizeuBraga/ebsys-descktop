@@ -5,14 +5,14 @@ export class PaymentController{
         payment.create(payments, order_id);
     }
 
-    calcPayment(toReceive, payment, payments, total){
-        payment.price = toReceive
-        // let calcResult = 0;
-        // payments.forEach(e => {
-        //    calcResult += e.price  
-        // });
+    calcPayment(payments){
+        let total = 0;
+        payments.forEach(element => {
+            total += parseFloat(element.totalForThispayment)
+        });
 
-        // let result = total - calcResult;
-        return payment;
+        let result = payments[0].total - total
+        console.log(result)
+        return result;
     }
 }

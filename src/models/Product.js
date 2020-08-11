@@ -28,7 +28,7 @@ export class Product {
     
     async all() {
         let products = []
-        let sql = "select * from products";
+        let sql = "select * from products order by name";
         db.all(sql, (err, rows) => {
             if (err) {
                 return console.log(err);
@@ -47,5 +47,11 @@ export class Product {
         let product = await db.get(sql, [id]);
 
         return product;
+    }
+
+    dontAskAgain(id){
+        console.log(id)
+        let sql = 'UPDATE products set ask_obs = false where id = ?'
+        db.run(sql, [id]);
     }
 }
