@@ -5,6 +5,12 @@ export class UserController{
 
     }
 
+    async index(){
+        let user = new User();
+        let users = await user.all();
+        return users;
+    }
+
     store(u){
         let user = new User();
         let result = user.create(u);

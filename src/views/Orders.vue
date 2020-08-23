@@ -32,7 +32,6 @@
       </v-col>
 
       <!-- coluna do Pedido inicio-->
-
       <v-col cols="5" :style="{background:backgroundColor}">
         <v-card elevation="10" height="95%" :style="{background: ''}">
           <v-card-title :style="{background:'', color:mainColor}" class="justify-center pb-0 pt-0">
@@ -57,7 +56,17 @@
             justify="space-around"
           >
             <v-col cols="12" align="center">
+              <v-progress-circular
+                v-if="value > 0"
+                :rotate="180"
+                :size="100"
+                :width="15"
+                :value="value"
+                color="pink"
+              >{{ value }}</v-progress-circular>
+
               <v-icon
+                v-else
                 :style="{opacity: 0.4}"
                 :disabled="true"
                 size="200"
@@ -331,7 +340,7 @@
               </v-col>
               <v-col cols="6">
                 <v-autocomplete
-                :disabled="(totalToReceive == 0)"
+                  :disabled="(totalToReceive == 0)"
                   ref="payment"
                   v-model="payment"
                   :items="paymentsFormats"
@@ -342,14 +351,14 @@
                   item-text="name"
                   item-value="API"
                   label="Buscar um produto"
-                  placeholder=""
+                  placeholder
                   prepend-icon="mdi-database-search"
                   return-object
                 ></v-autocomplete>
               </v-col>
               <v-col cols="12">
                 <p v-for="(p, i) in payments" :key="i">
-                  <b>{{p.payment.name}}: </b>
+                  <b>{{p.payment.name}}:</b>
                   <span v-if="p.payment.name == 'Dinheiro'">
                     {{parseFloat(p.payment.amountMoney).toFixed(2).replace('.', ',')}} - {{parseFloat(p.totalForThispayment).toFixed(2).replace('.', ',')}}
                     <b>Troco</b>
@@ -565,7 +574,7 @@
   </v-container>
 </template>
 
-
+<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>
 import mixins from "../mixins/mixins";
 import axios from "axios";
@@ -587,10 +596,8 @@ const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
 );
 
-var Pusher = require("pusher-js");
-
 var pusher = new Pusher("a885cc143df63df6146a", {
-  cluster: "us2"
+  cluster: "us2",
 });
 
 export default {
@@ -604,7 +611,7 @@ export default {
         precision: 2,
         masked: false, // doesn't work with directive
         // Waiting on https://github.com/vuejs-tips/v-money/pull/51 to be merged
-        allowBlank: true
+        allowBlank: true,
       },
 
       //cashier variables
@@ -615,7 +622,7 @@ export default {
         debit: "0,00",
         credit: "0,00",
         ticket: "0,00",
-        money: "0,00"
+        money: "0,00",
       },
       modalCloseCashier: false,
       userCashier: undefined,
@@ -627,10 +634,10 @@ export default {
         { id: 1, name: "Dinheiro" },
         { id: 2, name: "Débito" },
         { id: 3, name: "Crédito" },
-        { id: 4, name: "Ticket" }
+        { id: 4, name: "Ticket" },
       ],
       dialogReceive: false,
-      amountMoney: 0.00,
+      amountMoney: 0.0,
       //user variables
       username: "",
       password: "",
@@ -647,6 +654,8 @@ export default {
       msgLogin: false,
 
       //order variables
+      interval: {},
+      value: 0,
       hasFocusQuantity: true,
       order: {},
       locObj: {},
@@ -664,7 +673,7 @@ export default {
       observation: "",
       observations: [
         { name: "Suco", rowid: 1 },
-        { name: "Coca", rowid: 2 }
+        { name: "Coca", rowid: 2 },
       ],
       dialogObs: false,
       descriptionLimit: 60,
@@ -680,17 +689,25 @@ export default {
       modalCustomer: false,
 
       isLoading: false,
-      blockInputs: false
+      blockInputs: false,
     };
   },
 
   async mounted() {
+    var channel = pusher.subscribe("my-channel");
+    channel.bind("App\\Events\\ProductEvent", (data) => {
+      this.updateProducts()
+    });
     this.checkUserOpenedCashier();
     this.typeOrderBalcao();
 
-    this.$root.$on("logout", e => {
+    this.$root.$on("logout", (e) => {
       this.unlogged = e;
       this.password = "";
+    });
+
+    this.$root.$on("update_products", async (e) => {
+      this.updateProducts();
     });
 
     //cashier status
@@ -705,7 +722,7 @@ export default {
     this.locality = await l.index();
 
     //keyboard events
-    document.onkeydown = e => {
+    document.onkeydown = (e) => {
       if (e.key == "Enter" && this.username && this.password) {
         this.login(this.username, this.password);
       }
@@ -752,17 +769,20 @@ export default {
           if (this.payment.name == "Dinheiro") {
             this.$refs.amountMoney.focus();
           }
-          if (parseFloat(this.amountMoney) > 0 && (parseFloat(this.amountMoney) > parseFloat(this.totalToReceive))) {
-            this.payment.amountMoney = this.amountMoney
+          if (
+            parseFloat(this.amountMoney) > 0 &&
+            parseFloat(this.amountMoney) > parseFloat(this.totalToReceive)
+          ) {
+            this.payment.amountMoney = this.amountMoney;
             this.payments.push({
               total: this.total,
               totalForThispayment: this.totalToReceive,
-              payment: JSON.parse(JSON.stringify(this.payment))
+              payment: JSON.parse(JSON.stringify(this.payment)),
             });
-          let payment = new PaymentController();
-          let result = payment.calcPayment(this.payments);
-          this.payment = {};
-          this.totalToReceive = parseFloat(result).toFixed(2);
+            let payment = new PaymentController();
+            let result = payment.calcPayment(this.payments);
+            this.payment = {};
+            this.totalToReceive = parseFloat(result).toFixed(2);
           }
         }
         if (
@@ -784,9 +804,9 @@ export default {
             this.dialogObs = true;
           } else {
             this.$nextTick(() => {
-            const input = this.$refs.product.$el.querySelector("input");
-            input.focus();
-          });
+              const input = this.$refs.product.$el.querySelector("input");
+              input.focus();
+            });
             this.insertInCart(this.product);
           }
         }
@@ -931,7 +951,7 @@ export default {
       );
     },
     items() {
-      return this.products.map(product => {
+      return this.products.map((product) => {
         const Description =
           product.name.length > this.descriptionLimit
             ? product.name.slice(0, this.descriptionLimit) + "..."
@@ -941,7 +961,7 @@ export default {
     },
 
     obs() {
-      return this.observations.map(obs => {
+      return this.observations.map((obs) => {
         const Description =
           obs.name.length > this.descriptionLimit
             ? obs.name.slice(0, this.descriptionLimit) + "..."
@@ -949,7 +969,7 @@ export default {
 
         return Object.assign({}, obs, { Description });
       });
-    }
+    },
   },
 
   watch: {
@@ -963,16 +983,31 @@ export default {
 
     payment(e) {
       if (e.name != "Dinheiro") {
-        this.amountMoney = 1.00;
+        this.amountMoney = 1.0;
       } else {
-        this.amountMoney = 0.00;
+        this.amountMoney = 0.0;
       }
 
       console.log(this.amountMoney);
-    }
+    },
   },
 
   methods: {
+    async updateProducts(){
+      await axios
+        .get(
+          "https://api-api-api-api.herokuapp.com/api/for_sincronize/products"
+        )
+        .then(async (response) => {
+          let product = new Product();
+          await product.update(response.data);
+        });
+
+      let p = new ProductController();
+      this.products = await p.index();
+      this.showMessageSucess("Produtos atualizados com sucesso!");
+    },
+
     setFluxEnter(val) {
       setTimeout(() => {
         this.fluxEnter = val;
@@ -1004,7 +1039,7 @@ export default {
       }
       let u = {
         password: password,
-        id: this.loggedUser.id
+        id: this.loggedUser.id,
       };
       let user = new UserController();
       user.update(u);
@@ -1161,9 +1196,9 @@ export default {
           this.customer.name,
           this.customer.address,
           this.customer.locality_id,
-          this.customer.phone
+          this.customer.phone,
         ],
-        err => {
+        (err) => {
           if (err) {
             return console.log(err.message);
           }
@@ -1193,7 +1228,7 @@ export default {
 
       this.total = 0;
       this.product = {};
-      this.cart.forEach(element => {
+      this.cart.forEach((element) => {
         this.total += element.price * parseInt(element.quantity);
       });
 
@@ -1217,8 +1252,8 @@ export default {
       this.modalFindCustomer = false;
       this.modalCustomer = true;
       this.newCustomer = true;
-    }
-  }
+    },
+  },
 };
 </script>
 <style scoped>

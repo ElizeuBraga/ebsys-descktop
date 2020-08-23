@@ -9,12 +9,19 @@ const db = new sqlite3.Database(
 
 db.run = util.promisify(db.run);
 db.get = util.promisify(db.get);
+db.all = util.promisify(db.all);
 bcryptjs.compare = util.promisify(bcryptjs.compare)
 
 export class User{
     constructor(){
         let user = {}
         let hashed = null
+    }
+
+    async all(){
+        let sql = "select * from users;";
+        let users = await db.all(sql);
+        return users
     }
 
     async create(u){

@@ -5,9 +5,9 @@ export class ProductController{
 
     }
 
-    index(){
+    async index(){
         let product = new Product();
-        let products = product.all();
+        let products = await product.all();
         return products
     }
 
@@ -19,7 +19,7 @@ export class ProductController{
     }
 
     update(){
-
+        
     }
 
     async store(p){

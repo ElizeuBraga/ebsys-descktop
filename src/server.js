@@ -74,7 +74,12 @@ require("http").createServer(async (req, res) => {
 
             res.end(response)
         }else if (req.method == 'GET') {
-            res.end("GET")                
+            console.log('AQUI ESTOU')
+
+            let product = new ProductController();
+            let products = await product.index();
+
+            res.end(JSON.stringify(products))
         }else{
             res.end("Method not allowed (suport GET or POST)")                
         }
@@ -90,7 +95,11 @@ require("http").createServer(async (req, res) => {
 
             res.end(response)
         }else if (req.method == 'GET') {
-            res.end("GET")                
+                let user = new UserController();
+                let users = await user.index();
+
+                console.log('ESTOU AQUI')
+                res.end(JSON.stringify(users))
         }else{
             res.end("Method not allowed (suport GET or POST)")                
         }

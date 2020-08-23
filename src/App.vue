@@ -64,7 +64,7 @@ export default {
   },
   data() {
     return {
-      items: [{ title: "Trocar senha" }, { title: "Sair"}],
+      items: [{ title: "Trocar senha" }, {title: 'Atualizar'}, { title: "Sair"}],
       loggedUser: {},
       pageTitle: "Skiltys FastFood",
       drawer: false
@@ -107,6 +107,10 @@ export default {
     clickedItem(item){
       if (item.title === 'Sair') {
         this.logout()
+      }
+
+      if (item.title === 'Atualizar') {
+        this.$root.$emit("update_products", true);
       }
       
       if (item.title === 'Trocar senha') {

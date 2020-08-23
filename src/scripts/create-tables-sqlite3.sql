@@ -47,10 +47,14 @@ create table items(
 
 create table products (
 	id integer primary key,
+	id_remoto integer,
 	name varchar(50) not null,
 	price real not null,
 	section_id integer not null,
 	ask_obs boolean default(true),
+	created_at datetime,
+	updated_at datetime,
+	deleted_at datetime,
 	foreign key (section_id) references sections(id)
 );
 
