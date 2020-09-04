@@ -68,6 +68,7 @@ CREATE table localities(
 
 CREATE table sections(
 	id integer primary key,
+	remote_id integer not null ,
 	name varchar(50) not null	
 );
 
@@ -94,6 +95,7 @@ CREATE table customers(
 
 CREATE table users(
 	id integer primary key,
+	remote_id integer not null,
 	name varchar(50) not null,
 	phone varchar(11) unique not null,
 	password varchar(32) not null,

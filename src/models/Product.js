@@ -41,7 +41,6 @@ export class Product {
     }
 
     async create(p) {
-        console.log(p)
         let resolved = false;
         let sql = "insert into products (name, id_remoto, price,section_id, created_at)values(?,?,?,?,?)";
         let response = db.run(sql, [p.name, p.id, p.price, p.section_id, p.created_at]);
@@ -49,7 +48,7 @@ export class Product {
         await response.then(() => {
             resolved = true;
         }).catch((error) => {
-            resolved = error.errno
+            resolved = false
         })
 
         return resolved

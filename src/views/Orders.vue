@@ -591,6 +591,7 @@ import { CustomerController } from "../controllers/CustomerController";
 import { UserController } from "../controllers/UserController";
 import bcryptjs from "bcryptjs";
 import { Cashier } from "../models/Cashier";
+import { User } from '../models/User';
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -696,7 +697,11 @@ export default {
   async mounted() {
     var channel = pusher.subscribe("my-channel");
     channel.bind("App\\Events\\ProductEvent", (data) => {
-      this.updateProducts()
+      this.updateProducts(data.product)
+    });
+
+    channel.bind("App\\Events\\UserEvent", (data) => {
+      this.updateUsers(data.user);
     });
     this.checkUserOpenedCashier();
     this.typeOrderBalcao();
@@ -993,19 +998,15 @@ export default {
   },
 
   methods: {
-    async updateProducts(){
-      await axios
-        .get(
-          "https://api-api-api-api.herokuapp.com/api/for_sincronize/products"
-        )
-        .then(async (response) => {
-          let product = new Product();
-          await product.update(response.data);
-        });
+    async updateUsers(u){
+      let user = new User();
+      user.create(u);
+    },
 
-      let p = new ProductController();
-      this.products = await p.index();
-      this.showMessageSucess("Produtos atualizados com sucesso!");
+    async updateProducts(p){
+      let product = new Product();
+      await product.create(p);
+      this.products = await product.all();
     },
 
     setFluxEnter(val) {
