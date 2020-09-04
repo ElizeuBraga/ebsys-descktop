@@ -18,6 +18,19 @@ export class User {
         let hashed = null
     }
 
+    async find(id){
+        let resolved = false
+        let sql = "select * from users where remote_id = " + id;
+        let result = await db.get(sql);
+
+        if(result){
+            resolved = true
+        }else{
+            resolved = false
+        }
+        return resolved
+    }
+
     async all() {
         let sql = "select * from users;";
         let users = await db.all(sql);
@@ -44,25 +57,19 @@ export class User {
     }
 
     async update(u) {
-        bcryptjs.genSalt(10, async (err, salt) => {
-            await bcryptjs.hash(u.password, salt, (err, hash) => {
-                // Store hash in your password DB.
-                let resolved = false;
-                let sql = "update users set password = ?, updated_at = datetime('now', 'localtime') where id = ?";
-                let response = db.run(sql, [hash, u.id]);
+        let resolved = false;
+        let sql = "update users set name = ?, phone = ?, role = ?, password = ?, updated_at = ? where remote_id = ?"
+        let response = db.run(sql, [u.name, u.phone, u.role, u.password, u.updated_at, u.id]);
 
-                response.then(() => {
-                    console.log('Rsolved')
-                    resolved = true;
-                }).catch((error) => {
-                    console.log(error)
-                    console.log('Erro')
-                    resolved = error.errno
-                })
-                return resolved
+        await response.then(() => {
+            resolved = true;
+        }).catch((error) => {
+            resolved = false;
+        })
 
-            });
-        });
+        console.log(resolved)
+
+        return resolved;
     }
 
     async auth(user, password) {

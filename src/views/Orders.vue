@@ -1000,7 +1000,12 @@ export default {
   methods: {
     async updateUsers(u) {
       let user = new User();
-      user.create(u);
+      let res = await user.find(u.id)
+      if (res) {
+        await user.update(u);
+      } else {
+        await user.create(u);
+      }
     },
 
     async updateProducts(p) {
