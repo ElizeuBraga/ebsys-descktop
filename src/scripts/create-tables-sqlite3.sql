@@ -47,7 +47,7 @@ create table items(
 
 create table products (
 	id integer primary key,
-	id_remoto integer,
+	remote_id integer,
 	name varchar(50) not null,
 	price real not null,
 	section_id integer not null,
@@ -99,7 +99,7 @@ CREATE table users(
 	name varchar(50) not null,
 	phone varchar(11) unique not null,
 	password varchar(32) not null,
-	role_type varchar(10)not null,
+	"role" varchar(10)not null,
 	created_at datetime not null,
 	updated_at datetime,
 	deleted_at datetime

@@ -591,7 +591,7 @@ import { CustomerController } from "../controllers/CustomerController";
 import { UserController } from "../controllers/UserController";
 import bcryptjs from "bcryptjs";
 import { Cashier } from "../models/Cashier";
-import { User } from '../models/User';
+import { User } from "../models/User";
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -697,7 +697,7 @@ export default {
   async mounted() {
     var channel = pusher.subscribe("my-channel");
     channel.bind("App\\Events\\ProductEvent", (data) => {
-      this.updateProducts(data.product)
+      this.updateProducts(data.product);
     });
 
     channel.bind("App\\Events\\UserEvent", (data) => {
@@ -998,14 +998,20 @@ export default {
   },
 
   methods: {
-    async updateUsers(u){
+    async updateUsers(u) {
       let user = new User();
       user.create(u);
     },
 
-    async updateProducts(p){
+    async updateProducts(p) {
       let product = new Product();
-      await product.create(p);
+      let res = await product.find(p.id);
+
+      if (res) {
+        await product.update(p);
+      } else {
+        await product.create(p);
+      }
       this.products = await product.all();
     },
 

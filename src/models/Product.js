@@ -13,36 +13,27 @@ export class Product {
 
     }
 
-    async update(data) {
-        let products = await this.all();
-        if(data.length > products.length){
-            let local = products.length
-            let add = 0
-            while (local < data.length) {
-                await this.create(data[local])
-                local ++;
-                add ++;
-                console.log(local)
-            }
+    async find(id){
+        let resolved = false;
+        let sql = "SELECT * FROM products where remote_id = " + id;
+        let response = await db.get(sql);
 
+        if(response){
+            resolved = true
+        }else{
+            resolved = false
         }
+        return resolved
+    }
 
-        products = await this.all();
-        let sql = "update products set name = ? , price = ? , section_id = ?, updated_at = ? where id_remoto = ?";
-
-        let updated = 0
-        await products.forEach(async (p, i) => {
-            if ((p.name != data[i].name) || (p.price != data[i].price)) {
-                updated ++;
-                await db.run(sql, [data[i].name, data[i].price, data[i].section_id, data[i].updated_at, data[i].id]);
-            }
-        });
-
+    async update(p) {
+        let sql = "update products set name = ? , price = ? , section_id = ?, updated_at = ? where remote_id = " + p.id;
+        let resp = db.run(sql, [p.name, p.price, p.section_id, p.updated_at]);
     }
 
     async create(p) {
         let resolved = false;
-        let sql = "insert into products (name, id_remoto, price,section_id, created_at)values(?,?,?,?,?)";
+        let sql = "insert into products (name, remote_id, price,section_id, created_at)values(?,?,?,?,?)";
         let response = db.run(sql, [p.name, p.id, p.price, p.section_id, p.created_at]);
 
         await response.then(() => {
@@ -56,9 +47,7 @@ export class Product {
 
     async all() {
         let sql = "select * from products order by id";
-
         let products = await db.all(sql);
-
         return products;
     }
 
