@@ -92,7 +92,18 @@
           <br />
           <v-row class="pl-6 pr-6">
             <v-row class="pl-1 pr-1 text-center" v-for="(c, i) in cart" :key="i">
-              <v-col cols="4" class="text-left pt-0 pb-0">{{c.name}}</v-col>
+              <v-col cols="1" class="text-left pt-0 pb-0">{{i + 1}}</v-col>
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-col
+                    v-bind="attrs"
+                    v-on="on"
+                    cols="3"
+                    class="text-left pt-0 pb-0 text-truncate"
+                  >{{c.name}}</v-col>
+                </template>
+                <span>{{c.name}}</span>
+              </v-tooltip>
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-col v-bind="attrs" v-on="on" cols="2" class="pt-0 pb-0">{{c.quantity}}</v-col>
@@ -123,7 +134,7 @@
               </v-tooltip>
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
-                  <v-col v-on="on" cols="2" class="pt-0 pb-0" v-bind="attrs">
+                  <v-col v-on="on" cols="1" class="pt-0 pb-0" v-bind="attrs">
                     <a
                       v-if="c.name != 'Taxa de entrega'"
                       @click="removeFromCart(i, (c.price * c.quantity))"
@@ -134,7 +145,17 @@
                 </template>
                 <span>Remover</span>
               </v-tooltip>
-              <v-col cols="9" class="text-left pt-0 pb-0">
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-col v-on="on" cols="1" class="pt-0 pb-0" v-bind="attrs">
+                    <a v-if="c.name != 'Taxa de entrega'" @click="setObs(c)">
+                      <v-icon color="blue" align="center">edit</v-icon>
+                    </a>
+                  </v-col>
+                </template>
+                <span>Observação</span>
+              </v-tooltip>
+              <v-col cols="9" :style="{color:'gray'}" class="text-left pt-0 pb-0">
                 <span>{{c.observation}}</span>
               </v-col>
               <v-col class="pt-0 pb-0 pr-0 pl-0" cols="12">
@@ -146,10 +167,10 @@
           <v-card-actions
             :style="{'font-size': '20px', color:mainColor, position:'absolute', bottom:0, width:'100%'}"
           >
-            <v-col cols="4" class="text-center">
+            <!-- <v-col cols="4" class="text-center">
               <b>Total</b>
-            </v-col>
-            <v-col cols="4" class="text-center">
+            </v-col>-->
+            <v-col :style="{color: 'green'}" cols="12" class="text-right">
               <b>R$ {{total.toFixed(2).replace('.', ',')}}</b>
             </v-col>
           </v-card-actions>
@@ -168,13 +189,12 @@
               v-model="observation"
               label="Observação"
             ></v-text-field>
-            <v-switch v-model="donQuestionAgain" class="mx-2" label="Não mostrar novamente"></v-switch>
           </v-card-text>
           <v-divider></v-divider>
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" ref="btnOkobs" text>Ok</v-btn>
+            <v-btn color="primary" ref="btnOkobs" text @click="closeObs">Ok</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -318,54 +338,40 @@
       <!-- modal Receive-->
       <v-dialog v-model="dialogReceive" width="500" :persistent="false">
         <v-card>
-          <v-card-title class="headline grey lighten-2 text-center" primary-title>Receber</v-card-title>
+          <v-card-title class="headline grey lighten-2" primary-title>
+            <v-col cols="6">Receber</v-col>
+            <v-col :style="{color: 'green'}" class="text-right" cols="6">{{formatMoney(total)}}</v-col>
+          </v-card-title>
 
           <v-card-text>
             <v-row justify="center">
-              <v-col cols="6">
+              <v-col cols="4">
                 <v-text-field
-                  :disabled="(totalToReceive == 0)"
-                  ref="receive"
+                  type="number"
+                  min="1"
+                  max="4"
+                  ref="paymentType"
+                  label="Pagamento"
+                  :color="mainColor"
+                  v-model="paymentType"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="8">
+                <v-text-field
+                  ref="amountToReceive"
                   label="A receber"
                   :color="mainColor"
-                  v-model="totalToReceive"
+                  v-model="totalReceive"
                 ></v-text-field>
-                <v-text-field
-                  v-if="payment.name == 'Dinheiro'"
-                  ref="amountMoney"
-                  label="Quanto?"
-                  :color="mainColor"
-                  v-model="amountMoney"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="6">
-                <v-autocomplete
-                  :disabled="(totalToReceive == 0)"
-                  ref="payment"
-                  v-model="payment"
-                  :items="paymentsFormats"
-                  :loading="isLoading"
-                  :color="mainColor"
-                  hide-no-data
-                  hide-selected
-                  item-text="name"
-                  item-value="API"
-                  label="Buscar um produto"
-                  placeholder
-                  prepend-icon="mdi-database-search"
-                  return-object
-                ></v-autocomplete>
               </v-col>
               <v-col cols="12">
-                <p v-for="(p, i) in payments" :key="i">
-                  <b>{{p.payment.name}}:</b>
-                  <span v-if="p.payment.name == 'Dinheiro'">
-                    {{parseFloat(p.payment.amountMoney).toFixed(2).replace('.', ',')}} - {{parseFloat(p.totalForThispayment).toFixed(2).replace('.', ',')}}
-                    <b>Troco</b>
-                    {{parseFloat(parseFloat(p.payment.amountMoney) - parseFloat(p.totalForThispayment)).toFixed(2).replace('.', ',')}}
-                  </span>
-                  <span v-else>{{parseFloat(p.totalForThispayment).toFixed(2).replace('.', ',')}}</span>
+                <p class="text-center" id="payments">
+                  <span ref="money">1-Dinheiro</span>
+                  <span ref="debit">2-Débito</span>
+                  <span>3-Crédito</span>
+                  <span>4-Ticket</span>
                 </p>
+                <p v-for="(p, i) in payments" :key="i">{{p}}</p>
               </v-col>
               <div>
                 <!-- <span
@@ -383,12 +389,19 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
-              :style="{width:'100%', background: mainColor}"
+              :style="{width:'50%', background: 'green'}"
               color="white"
               ref="btnendorder"
               text
               @click="endOrder(order, cart, payments)"
-            >Ok</v-btn>
+            >Receber(Enter)</v-btn>
+            <v-btn
+              :style="{width:'50%', background: 'red'}"
+              color="white"
+              ref="btnendorder"
+              text
+              @click="cancelReceive"
+            >Cancelar(Esc)</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -570,6 +583,18 @@
           </v-col>
         </v-row>
       </v-col>
+      <v-row class="pt-0 pb-0 text-center">
+        <v-col cols="2" class="pt-0 pb-0">F9-Receber</v-col>
+        <v-col cols="2" class="pt-0 pb-0">F11-Cancelar tudo</v-col>
+        <v-col cols="2" class="pt-0 pb-0">
+          F5-
+          <span v-if="!delivery">(Entrega)</span>
+          <span v-else>(Balcão)</span>
+        </v-col>
+        <v-col cols="2" class="pt-0 pb-0">F2-Fechar caixa</v-col>
+        <v-col cols="2" class="pt-0 pb-0">F1-Observação</v-col>
+        <v-col cols="2" class="pt-0 pb-0">Esc-Cancelar tudo</v-col>
+      </v-row>
     </v-footer>
   </v-container>
 </template>
@@ -616,6 +641,7 @@ export default {
       },
 
       //cashier variables
+      totalReceive: 0.0,
       statusCashier: false,
       total: 0,
       totalToReceive: 0,
@@ -637,6 +663,7 @@ export default {
         { id: 3, name: "Crédito" },
         { id: 4, name: "Ticket" },
       ],
+      paymentType: 1,
       dialogReceive: false,
       amountMoney: 0.0,
       //user variables
@@ -644,7 +671,7 @@ export default {
       password: "",
       confirm_password: "",
       dialog: false,
-      unlogged: true,
+      unlogged: false,
       resetpassword: false,
 
       //messages variable
@@ -669,6 +696,7 @@ export default {
       delivery: false,
       fluxEnter: "quantity",
       donQuestionAgain: false,
+      nexStep: "",
 
       // obs variables
       observation: "",
@@ -678,6 +706,7 @@ export default {
       ],
       dialogObs: false,
       descriptionLimit: 60,
+      productInEditMode: {},
 
       // customer variables
       customer: {},
@@ -728,211 +757,66 @@ export default {
 
     //keyboard events
     document.onkeydown = (e) => {
-      if (e.key == "Enter" && this.username && this.password) {
-        this.login(this.username, this.password);
-      }
-      if (e.key == "F5") {
-        if (this.delivery) {
-          this.typeOrderBalcao();
-        } else {
-          this.typeOrderDelivery();
+      // iniciar o recebimento
+      if (e.key == "F9") {
+        if (this.cart.length > 0) {
+          this.dialogReceive = true;
+          this.totalReceive = this.total;
+          setTimeout(() => {
+            var p = document.getElementById("payments");
+            p.childNodes[this.paymentType - 1].style.color = this.mainColor;
+            this.$refs.paymentType.focus();
+          }, 200);
+          this.nexStep = "amountReceive";
         }
       }
 
-      if (e.key == "F1" && !this.unlogged) {
-        if (!this.statusCashier) {
-          this.showMessageError("Caixa fechado");
-          return;
-        } else if (this.cart.length == 0) {
-          this.showMessageError("Sem itens para pedido");
-          return;
+      if (e.key == "F1") {
+        if (this.cart.length > 0) {
+          this.dialogObs = true;
         }
-        setTimeout(() => {
-          this.$refs.receive.focus();
-          // this.$refs.receive.select();
-        }, 200);
-        this.totalToReceive = this.total;
-        this.dialogReceive = true;
       }
 
-      if (e.keyCode == 27 && !this.dialogObs) {
-        this.product = {};
-        this.quantity = 1;
-
-        this.$nextTick(() => {
-          const input = this.$refs.product.$el.querySelector("input");
-          input.focus();
-        });
+      if (e.key == "F11") {
+        this.clearForm();
+        this.cart = [];
+        this.total = 0;
       }
 
-      if (e.keyCode == 13) {
+      if (e.key == "Escape") {
+        // cancelando o recebimento
         if (this.dialogReceive) {
-          this.$refs.payment.focus();
+          this.cancelReceive();
+          return;
         }
-
-        if (Object.keys(this.payment).length > 0) {
-          if (this.payment.name == "Dinheiro") {
-            this.$refs.amountMoney.focus();
-          }
-          if (
-            parseFloat(this.amountMoney) > 0 &&
-            parseFloat(this.amountMoney) > parseFloat(this.totalToReceive)
-          ) {
-            this.payment.amountMoney = this.amountMoney;
-            this.payments.push({
-              total: this.total,
-              totalForThispayment: this.totalToReceive,
-              payment: JSON.parse(JSON.stringify(this.payment)),
-            });
-            let payment = new PaymentController();
-            let result = payment.calcPayment(this.payments);
-            this.payment = {};
-            this.totalToReceive = parseFloat(result).toFixed(2);
-          }
-        }
-        if (
-          Object.keys(this.product).length > 0 &&
-          this.fluxEnter == "quantity"
-        ) {
-          this.$refs.quantity.focus();
-          this.setFluxEnter("obs");
-        }
-
-        if (this.fluxEnter == "obs") {
-          if (this.product.ask_obs == 1) {
-            setTimeout(() => {
-              this.$nextTick(() => {
-                this.$refs.observation.focus();
-                this.setFluxEnter("product");
-              });
-            }, 200);
-            this.dialogObs = true;
-          } else {
-            this.$nextTick(() => {
-              const input = this.$refs.product.$el.querySelector("input");
-              input.focus();
-            });
-            this.insertInCart(this.product);
-          }
-        }
-
-        if (this.fluxEnter == "product") {
-          this.dialogObs = false;
-          this.insertInCart(this.product);
-          this.setFluxEnter("quantity");
-
-          this.$nextTick(() => {
-            const input = this.$refs.product.$el.querySelector("input");
-            input.focus();
-          });
-        }
-
-        // if (e.keyCode == 13 && Object.keys(this.payment).length > 0) {
-        //   let payment = new PaymentController();
-        //   let result = payment.calcPayment(
-        //     parseFloat(this.totalToReceive),
-        //     this.payment
-        //   );
-        //   this.payments.push(JSON.parse(JSON.stringify(result)));
-
-        //   let calcResult = 0;
-        //   this.payments.forEach(element => {
-        //     calcResult += element.price;
-        //   });
-
-        //   this.totalToReceive = this.total - calcResult;
-        //   this.payment = {};
-        //   if (this.totalToReceive == 0) {
-        //     this.$refs.btnendorder.$el.focus();
-        //   }
-        // }
       }
-      // if (e.keyCode == 13 && this.dialogReceive) {
-      //   this.$refs.payment.focus();
-      // }
+      if (e.key == "Enter") {
+        if (this.nexStep == "InsertInCart") {
+          this.insertInCart(this.product);
+        }
 
-      // if (e.keyCode == 13 && this.dialogReceive && this.totalToReceive == 0) {
-      //   this.endOrder(this.order, this.cart);
-      // }
+        if (this.nexStep == "paymentFormat") {
+          this.$refs.paymentType.focus();
+          this.nexStep = "amountReceive";
+          return;
+        }
 
-      // if (e.keyCode == 13 && Object.keys(this.product).length > 0) {
-      //   if (!this.cashier.created_at) {
-      //     // this.$refs.quantity.focus();
-      //     this.showMessageError("Caixa fechado");
-      //     this.product = {};
-      //     return;
-      //   }
-      //   this.$refs.quantity.focus();
-      // }
+        if (this.nexStep == "amountReceive") {
+          this.$refs.amountToReceive.focus();
+          this.nexStep = "insertInPayment";
+          return;
+        }
 
-      // if (e.keyCode == 13 && Object.keys(this.payment).length > 0) {
-      //   let payment = new PaymentController();
-      //   let result = payment.calcPayment(
-      //     parseFloat(this.totalToReceive),
-      //     this.payment
-      //   );
-      //   this.payments.push(JSON.parse(JSON.stringify(result)));
+        if (this.nexStep == "insertInPayment") {
+          this.insertPayment();
+          return;
+        }
 
-      //   let calcResult = 0;
-      //   this.payments.forEach(element => {
-      //     calcResult += element.price;
-      //   });
-
-      //   this.totalToReceive = this.total - calcResult;
-      //   this.payment = {};
-      //   if (this.totalToReceive == 0) {
-      //     this.$refs.btnendorder.$el.focus();
-      //   }
-      // }
-
-      // if (e.keyCode == 116 && !this.unlogged) {
-      //   if (this.delivery) {
-      //     this.typeOrderBalcao();
-      //     setTimeout(() => {
-      //       this.$refs.product.focus();
-      //     }, 200);
-      //   } else {
-      //     this.typeOrderDelivery();
-      //     setTimeout(() => {
-      //       this.$refs.phone.focus();
-      //     }, 200);
-      //   }
-      // }
-
-      // if (e.keyCode === 112) {
-      //   if (
-      //     this.cart.length == 0 ||
-      //     localStorage.getItem("cashier_id") == "null"
-      //   ) {
-      //     if (localStorage.getItem("cashier_id") == "null") {
-      //       this.showMessageError("Caixa fechado");
-      //     } else {
-      //       this.showMessageError("Sem itens para pedido");
-      //     }
-
-      //     return;
-      //   }
-      //   setTimeout(() => {
-      //     this.$refs.receive.focus();
-      //   }, 200);
-      //   this.totalToReceive = this.total;
-      //   this.dialogReceive = true;
-      // }
-
-      // if (e.keyCode == 13) {
-      //   if (this.observationSecond != "") {
-      //     // this.dialogObs = true;
-      //     this.saveObs();
-      //   }
-      //   if (this.quantity >= 1 && Object.keys(this.product).length > 0 && !this.hasFocusQuantity) {
-      //     this.dialogObs = true;
-      //     setTimeout(() => {
-      //       this.$nextTick(() => {
-      //         this.$refs.observation.focus();
-      //       });
-      //     }, 200);
-      //   }
-      // }
+        if (Object.keys(this.product).length > 0) {
+          this.$refs.quantity.focus();
+          this.nexStep = "InsertInCart";
+        }
+      }
     };
   },
 
@@ -982,8 +866,17 @@ export default {
       console.log(e);
     },
     product() {
-      this.fluxEnter = "quantity";
+      this.nexStep = "";
       this.quantity = 1;
+    },
+
+    paymentType() {
+      this.nexStep == "paymentFormat";
+      var p = document.getElementById("payments");
+      p.childNodes.forEach((element) => {
+        element.style.color = "";
+      });
+      p.childNodes[this.paymentType - 1].style.color = this.mainColor;
     },
 
     payment(e) {
@@ -998,9 +891,50 @@ export default {
   },
 
   methods: {
+    insertPayment() {
+      if(this.totalReceive == 0){
+        return
+      }
+      let totalReceive = parseFloat(this.totalReceive);
+      let total = parseFloat(this.total);
+      this.$refs.paymentType.focus();
+      this.nexStep = "amountReceive";
+
+      this.payments.push(totalReceive);
+
+      let result = 0;
+      this.payments.forEach(element => {
+        result += element
+      });
+      this.totalReceive = total - result;
+
+    },
+
+    closeObs() {
+      this.productInEditMode.observation = this.observation;
+      this.observation = "";
+      this.dialogObs = false;
+    },
+
+    setObs(p) {
+      this.productInEditMode = p;
+      this.dialogObs = true;
+      this.observation = this.productInEditMode.observation;
+    },
+
+    clearForm() {
+      this.product = {};
+      this.quantity = 1;
+      this.$refs.product.focus();
+    },
+
+    cancelReceive() {
+      this.dialogReceive = false;
+    },
+
     async updateUsers(u) {
       let user = new User();
-      let res = await user.find(u.id)
+      let res = await user.find(u.id);
       if (res) {
         await user.update(u);
       } else {
@@ -1239,13 +1173,11 @@ export default {
       this.cart.push(JSON.parse(prod));
 
       this.total = 0;
-      this.product = {};
       this.cart.forEach((element) => {
         this.total += element.price * parseInt(element.quantity);
       });
 
-      this.quantity = 1;
-      this.observation = "";
+      this.clearForm();
     },
 
     async findCustomer(phone) {

@@ -50,6 +50,9 @@ export default {
     },
 
     methods: {
+        formatMoney(value) {
+            return String('R$ ' + parseFloat(value).toFixed(2)).replace('.', ',');
+        },
         showMessageError(msg){
             this.error = true
             this.msg = msg
