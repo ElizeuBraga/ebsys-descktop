@@ -336,7 +336,7 @@
       </v-dialog>
 
       <!-- modal Receive-->
-      <v-dialog v-model="dialogReceive" width="500" :persistent="false">
+      <v-dialog v-model="dialogReceive" width="500" :persistent="true">
         <v-card>
           <v-card-title class="headline grey lighten-2" primary-title>
             <v-col cols="6">Receber</v-col>
@@ -345,7 +345,7 @@
 
           <v-card-text>
             <v-row justify="center">
-              <v-col cols="4">
+              <v-col cols="2">
                 <v-text-field
                   type="number"
                   min="1"
@@ -356,12 +356,22 @@
                   v-model="paymentType"
                 ></v-text-field>
               </v-col>
-              <v-col cols="8">
+              <v-col cols="5">
                 <v-text-field
+                  :max="falta"
                   ref="amountToReceive"
                   label="A receber"
                   :color="mainColor"
                   v-model="totalReceive"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="5">
+                <v-text-field
+                  :disabled="(paymentType != 1)"
+                  ref="amountToChange"
+                  :label="'Quantidade em ' + type"
+                  :color="mainColor"
+                  v-model="amountToChange"
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
@@ -371,7 +381,10 @@
                   <span>3-Crédito</span>
                   <span>4-Ticket</span>
                 </p>
-                <p v-for="(p, i) in payments" :key="i">{{p}}</p>
+                <p
+                  v-for="(p, i) in payments"
+                  :key="i"
+                >{{paymentsFormats[p.paymentType - 1]}} - {{formatMoney(p.price)}} <span v-if="p.paymentType == 1"><span :style="{'font-size': 1, color: ''}">(Troco para <b>{{formatMoney(p.amountToChange)}}</b> é <b>{{formatMoney(p.amountToChange - p.price)}}</b>)</span></span></p>
               </v-col>
               <div>
                 <!-- <span
@@ -394,11 +407,11 @@
               ref="btnendorder"
               text
               @click="endOrder(order, cart, payments)"
-            >Receber(Enter)</v-btn>
+            >Receber</v-btn>
             <v-btn
               :style="{width:'50%', background: 'red'}"
               color="white"
-              ref="btnendorder"
+              ref="cancelReceive"
               text
               @click="cancelReceive"
             >Cancelar(Esc)</v-btn>
@@ -453,7 +466,7 @@
             <v-btn
               :style="{width:'100%', background: mainColor}"
               color="white"
-              ref="btnendorder"
+              ref="closeCashier"
               text
               @click="closeCashier(cashier)"
             >Ok</v-btn>
@@ -497,7 +510,7 @@
             <v-btn
               :style="{width:'100%', background: mainColor}"
               color="white"
-              ref="btnendorder"
+              ref="btnLogin"
               text
               :disabled="fieldsLogin"
               @click="login(username, password)"
@@ -543,7 +556,7 @@
             <v-btn
               :style="{width:'100%', background: mainColor}"
               color="white"
-              ref="btnendorder"
+              ref="btnResetPassword"
               text
               :disabled="password == '' || confirm_password == ''"
               @click="resetPassword(password, confirm_password)"
@@ -645,6 +658,7 @@ export default {
       statusCashier: false,
       total: 0,
       totalToReceive: 0,
+      amountToChange: 0,
       cashier: {
         debit: "0,00",
         credit: "0,00",
@@ -657,15 +671,11 @@ export default {
       //payment variables
       payment: {},
       payments: [],
-      paymentsFormats: [
-        { id: 1, name: "Dinheiro" },
-        { id: 2, name: "Débito" },
-        { id: 3, name: "Crédito" },
-        { id: 4, name: "Ticket" },
-      ],
+      paymentsFormats: ["Dinheiro", "Débito", "Crédito", "Ticket"],
       paymentType: 1,
       dialogReceive: false,
       amountMoney: 0.0,
+      type: '',
       //user variables
       username: "",
       password: "",
@@ -696,7 +706,7 @@ export default {
       delivery: false,
       fluxEnter: "quantity",
       donQuestionAgain: false,
-      nexStep: "",
+      nexStep: "selectProduct",
 
       // obs variables
       observation: "",
@@ -720,6 +730,7 @@ export default {
 
       isLoading: false,
       blockInputs: false,
+      falta: 0
     };
   },
 
@@ -759,15 +770,23 @@ export default {
     document.onkeydown = (e) => {
       // iniciar o recebimento
       if (e.key == "F9") {
+        if(this.dialogReceive){
+          return
+        }
         if (this.cart.length > 0) {
           this.dialogReceive = true;
           this.totalReceive = this.total;
+          this.amountToChange = this.totalReceive
+          this.type = 'Dinheiro'
           setTimeout(() => {
             var p = document.getElementById("payments");
             p.childNodes[this.paymentType - 1].style.color = this.mainColor;
             this.$refs.paymentType.focus();
           }, 200);
-          this.nexStep = "amountReceive";
+          
+          this.setNexStep('amountToReceive')
+          this.totalReceive.toFixed(2)
+          this.falta = this.totalReceive
         }
       }
 
@@ -791,30 +810,38 @@ export default {
         }
       }
       if (e.key == "Enter") {
-        if (this.nexStep == "InsertInCart") {
+        if (this.nexStep == "insertInCart") {
           this.insertInCart(this.product);
+          return
         }
 
-        if (this.nexStep == "paymentFormat") {
-          this.$refs.paymentType.focus();
-          this.nexStep = "amountReceive";
-          return;
+        if(this.nexStep == 'amountToChange'){
+          if(this.paymentType == 1){
+            this.$refs.amountToChange.focus();
+          }
+          this.setNexStep('insertInPayment')
+
+          return
         }
 
-        if (this.nexStep == "amountReceive") {
+        if(this.nexStep == 'insertInPayment'){
+          this.insertPayment()
+          return
+        }
+
+        if(this.nexStep == 'endOrder'){
+          alert('Finalizando o pedido')
+          return
+        }
+
+        if(this.nexStep == 'amountToReceive'){
           this.$refs.amountToReceive.focus();
-          this.nexStep = "insertInPayment";
+          if(this.paymentType == 1){
+            this.setNexStep('amountToChange')
+          }else{
+            this.setNexStep('insertInPayment')
+          }
           return;
-        }
-
-        if (this.nexStep == "insertInPayment") {
-          this.insertPayment();
-          return;
-        }
-
-        if (Object.keys(this.product).length > 0) {
-          this.$refs.quantity.focus();
-          this.nexStep = "InsertInCart";
         }
       }
     };
@@ -865,18 +892,59 @@ export default {
     donQuestionAgain(e) {
       console.log(e);
     },
-    product() {
-      this.nexStep = "";
+    product(e) {
       this.quantity = 1;
+      this.setNexStep('selectQuantity')
+      if (Object.keys(e).length > 0) {
+        setTimeout(()=>{
+          this.setNexStep('insertInCart')
+          this.$refs.quantity.focus()
+        }, 100)
+      }
+    },
+
+    amountToChange(){
+      // if(parseFloat(this.amountToChange) < parseFloat(this.falta)){
+      //   setTimeout(()=>{
+      //     this.amountToChange = parseFloat(this.falta)
+      //   }, 200)
+      // }
+    },
+
+    totalReceive(e){
+      console.log(parseFloat(this.totalReceive))
+      // console.log(parseFloat(e) + ' Digitado')
+      // console.log(parseFloat(this.totalReceive) + ' Total receive')
+      // console.log(parseFloat(this.falta) + ' O que falta')
+      if(parseFloat(this.totalReceive) > parseFloat(this.falta)){
+        setTimeout(()=>{
+          this.totalReceive = parseFloat(this.falta)
+        }, 200)
+      }
+      this.amountToChange = this.totalReceive
     },
 
     paymentType() {
-      this.nexStep == "paymentFormat";
+      if(this.paymentType == 1){
+        this.type = 'Dinheiro'
+        // this.setNexStep('amountToChange')
+      }else if(this.paymentType == 2){
+        this.type = 'Débito'
+        // this.setNexStep('insertPayment')
+      }else if(this.paymentType == 3){
+        this.type = 'Crédito'
+        // this.setNexStep('insertPayment')
+      }else{
+        this.type = 'Ticket'
+        // this.setNexStep('insertPayment')
+      }
       var p = document.getElementById("payments");
       p.childNodes.forEach((element) => {
         element.style.color = "";
       });
       p.childNodes[this.paymentType - 1].style.color = this.mainColor;
+
+      this.setNexStep('amountToReceive')
     },
 
     payment(e) {
@@ -891,23 +959,45 @@ export default {
   },
 
   methods: {
+    setNexStep(value){
+      this.nexStep = value
+
+      console.log(value)
+      return
+    },
+
     insertPayment() {
       if(this.totalReceive == 0){
+        this.setNexStep('endOrder')
+        return
+      }
+      if(parseFloat(this.amountToChange) < parseFloat(this.totalReceive)){
+        setTimeout(()=>{
+          this.amountToChange = parseFloat(this.totalReceive)
+        }, 200)
+
         return
       }
       let totalReceive = parseFloat(this.totalReceive);
       let total = parseFloat(this.total);
       this.$refs.paymentType.focus();
-      this.nexStep = "amountReceive";
-
-      this.payments.push(totalReceive);
+      
+      this.payments.push({
+        price: totalReceive,
+        paymentType: this.paymentType,
+        amountToChange : this.amountToChange
+      });
 
       let result = 0;
-      this.payments.forEach(element => {
-        result += element
+      this.payments.forEach((element) => {
+        result += element.price;
       });
       this.totalReceive = total - result;
 
+      this.totalReceive = this.totalReceive.toFixed(2)
+
+      this.falta = this.totalReceive
+      this.setNexStep('amountToReceive')
     },
 
     closeObs() {
@@ -929,6 +1019,8 @@ export default {
     },
 
     cancelReceive() {
+      this.payments = [];
+      this.paymentType = 1;
       this.dialogReceive = false;
     },
 
@@ -1055,6 +1147,8 @@ export default {
     },
 
     endOrder(order, items, payments) {
+      alert('Acionei o botao')
+      return
       order.cashier_id = this.cashier.id;
       if (!this.delivery) {
         order.order_type = 0;
@@ -1177,6 +1271,7 @@ export default {
         this.total += element.price * parseInt(element.quantity);
       });
 
+      this.setNexStep('selectProduct');
       this.clearForm();
     },
 
