@@ -37,18 +37,28 @@ export class User {
         return users
     }
 
-    async create(u) {
-        let resolved = false;
-        let sql = "insert into users (name,remote_id, phone ,password, role, created_at)values(?,?,?,?,?,?)";
-        let response = db.run(sql, [u.name, u.id, u.phone, u.password, u.role, u.created_at]);
+    async create(users){
+        let qtdLocal = await this.count();
+        if(qtdLocal < users.length){
+            await users.forEach(async e => { 
+                let sql = "insert into users (id, name, email, phone, password, role, token, created_at, updated_at, deleted_at)values(?,?,?,?,?,?,?,?,?,?)";
+                await db.run(sql, [e.id, e.name, e.email, e.phone, e.password, e.role, e.token, e.created_at, e.updated_at, e.deleted_at]).then(()=>{
+                    
+                }).catch((err)=>{
+                    console.log(err)
+                });
+            });
 
-        await response.then(() => {
-            resolved = true;
-        }).catch((error) => {
-            resolved = false;
-        })
+            db.close();
+        }
+    }
 
-        return resolved;
+    async count(){
+        let sql = "select count(*) as quantidade from users";
+
+        let result = await db.get(sql);
+
+        return result.quantidade;
     }
 
     resetPassword(u) {

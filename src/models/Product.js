@@ -31,18 +31,29 @@ export class Product {
         let resp = db.run(sql, [p.name, p.price, p.section_id, p.updated_at]);
     }
 
-    async create(p) {
-        let resolved = false;
-        let sql = "insert into products (name, remote_id, price,section_id, created_at)values(?,?,?,?,?)";
-        let response = db.run(sql, [p.name, p.id, p.price, p.section_id, p.created_at]);
+    async create(products) {
+        let qtdLocal = await this.count();
+        if(qtdLocal < products.length){
+            console.log('Atualizo')
+            await products.forEach(async e => { 
+                let sql = "insert into products (id, name, price, section_id, created_at, updated_at, deleted_at)values(?, ?, ?,?,?,?,?)";
+                await db.run(sql, [e.id, e.name, e.price, e.section_id, e.created_at, e.updated_at, e.deleted_at]).then(()=>{
+                    
+                }).catch((err)=>{
+                    
+                });
+            });
 
-        await response.then(() => {
-            resolved = true;
-        }).catch((error) => {
-            resolved = false
-        })
+            db.close();
+        }
+    }
 
-        return resolved
+    async count(){
+        let sql = "select count(*) as quantidade from products";
+
+        let result = await db.get(sql);
+
+        return result.quantidade;
     }
 
     async all() {

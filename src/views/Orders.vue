@@ -614,11 +614,13 @@
 
 <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>
+import { Section } from "../models/Section";
 import mixins from "../mixins/mixins";
 import axios from "axios";
 import { VMoney } from "v-money";
 import sqlite3 from "sqlite3";
 import { Product } from "../models/Product";
+import { Locality } from "../models/Locality";
 import { ProductController } from "../controllers/ProductController";
 import { LocalityController } from "../controllers/LocalityController";
 import { OrderController } from "../controllers/OrderController";
@@ -735,9 +737,17 @@ export default {
   },
 
   async mounted() {
+    this.loadSectionsFromServer();
+    // this.loadProductsFromServer();
+    // this.loadLocalitiesFromServer();
+    // this.loadUsersFromServer();
+
+
+
     var channel = pusher.subscribe("my-channel");
     channel.bind("App\\Events\\ProductEvent", (data) => {
-      this.updateProducts(data.product);
+      // this.updateProducts(data.product);
+      console.log(data);
     });
 
     channel.bind("App\\Events\\UserEvent", (data) => {
@@ -959,6 +969,46 @@ export default {
   },
 
   methods: {
+    async loadSectionsFromServer(){
+      axios.get('sections').then(async (response)=>{
+        let section = new Section();
+        await section.create(response.data)
+
+        await this.loadProductsFromServer();
+
+        console.log('Seções carregadas')
+      })
+    },
+
+    async loadProductsFromServer(){
+      axios.get('products').then(async (response)=>{
+        let product = new Product();
+        await product.create(response.data)
+
+        await this.loadLocalitiesFromServer();
+        console.log('Produtos carregados')
+      })
+    },
+
+    async loadLocalitiesFromServer(){
+      axios.get('localities').then(async (response)=>{
+        let locality = new Locality();
+        await locality.create(response.data)
+
+        await this.loadUsersFromServer();
+        console.log('Localidades carregadas')
+      })
+    },
+
+    loadUsersFromServer(){
+      axios.get('users').then((response)=>{
+        let user = new User();
+        user.create(response.data)
+
+        console.log('Usuarios carregados')
+      })
+    },
+
     setNexStep(value){
       this.nexStep = value
 

@@ -31,7 +31,10 @@ export default {
         if(localStorage.employees){
             this.employees = localStorage.employees
         }
-        // axios.defaults.headers.common["Host"] = "http://192.168.15.7:8000/api/";
+
+        axios.defaults.baseURL = 'http://192.168.1.87:8000/api/'
+        // axios.defaults.baseURL = 'https://api-api-api-api.herokuapp.com/api/'
+        // axios.defaults.headers.common["Host"] = "http://localhost:8000/api/";
         axios.defaults.headers.common["Content-Type"] = "application/json";
         axios.defaults.headers.common["Access-Control-Allow-Origin"] = "*";
         axios.defaults.headers.common["Access-Control-Allow-Headers"] =
