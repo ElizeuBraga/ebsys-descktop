@@ -1,3 +1,4 @@
+import { resolve } from "path";
 import sqlite3 from "sqlite3";
 const util    = require('util');
 
@@ -17,36 +18,43 @@ export class Helper{
         return result.max
     }
 
-    async sql(table, array){
-        let map = '';
-        let row = '';
-        let count = 0;
-        let sql = '';
-
-        console.log('STARTED');
-        let updated_at = null;
-        let deleted_at = null;
-        for (let e of array) {
-            const todo = await fetch(e);
-            count += 1;
-            updated_at = (e.updated_at == null) ? null : "'"+e.updated_at+"'";
-            deleted_at = (e.deleted_at == null) ? null : "'"+e.deleted_at+"'";
-            let separator = (count == array.length) ? ");" : "),";
-            if (table == 'products') {
-                row = "("+e.id+",'"+e.name+"',"+e.price+","+e.section_id+",'"+e.created_at+"',"+updated_at+","+deleted_at + separator;
-            }else if (table == 'sections') {
-                row = "("+e.id+",'"+e.name+"','"+e.created_at+"',"+updated_at+","+deleted_at + separator;
+    async insertMany(table, array){
+        let resolved = false
+        if(array.length > 0){
+            let map = '';
+            let row = '';
+            let count = 0;
+            let sql = '';
+        
+            let updated_at = null;
+            let deleted_at = null;
+            for (let e of array) {
+                const todo = await fetch(e);
+                count += 1;
+                updated_at = (e.updated_at == null) ? null : "'"+e.updated_at+"'";
+                deleted_at = (e.deleted_at == null) ? null : "'"+e.deleted_at+"'";
+                let separator = (count == array.length) ? ");" : "),";
+                if (table == 'products') {
+                    row = "("+e.id+",'"+e.name+"',"+e.price+","+e.section_id+","+e.ask_obs+",'"+e.created_at+"',"+updated_at+","+deleted_at + separator;
+                }else if (table == 'sections') {
+                    row = "("+e.id+",'"+e.name+"','"+e.created_at+"',"+updated_at+","+deleted_at + separator;
+                }
+                map += row;
             }
-            map += row;
-        }
-          console.log('FINISHED');
 
-        if (table == 'products') {
-            sql = 'INSERT INTO products (id, name, price, section_id, created_at, updated_at, deleted_at)values' + map;
-        }else if (table == 'sections') {
-            sql = 'INSERT INTO sections(id, name, created_at, updated_at, deleted_at)values' + map;
+            if (table == 'products') {
+                sql = 'INSERT INTO products values' + map;
+            }else if (table == 'sections') {
+                sql = 'INSERT INTO sections values' + map;
+            }
+
+            let res = await db.run(sql).then(()=>{
+                resolved = true;
+            }).catch((e)=>{
+                resolved = false;
+            })
         }
 
-        return sql;
+        return resolved;
     }
 }

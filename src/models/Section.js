@@ -22,11 +22,7 @@ export class Section{
     }
 
     async create(sections){
-
-        if (sections.length > 0) { 
-            let sql = await helper.sql('sections', sections)
-            console.log('AQUI')              
-            await db.run(sql);
-        }
+        let result = await helper.insertMany('sections', sections)
+        console.log(result)              
     }
 }

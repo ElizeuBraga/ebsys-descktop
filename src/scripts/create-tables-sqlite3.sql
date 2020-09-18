@@ -10,7 +10,7 @@ DROP table if exists cashiers;
 DROP table if exists users;
 
 CREATE table sections(
-	id integer primary key,
+	id integer primary key not null,
 	name varchar(50) not null,
 	created_at timestamp not null,
 	updated_at timestamp,
@@ -18,7 +18,7 @@ CREATE table sections(
 );
 
 create table products (
-	id integer primary key,
+	id integer primary key not null,
 	name varchar(50) not null,
 	price real not null,
 	section_id integer not null,
@@ -30,7 +30,7 @@ create table products (
 );
 
 CREATE table localities(
-	id integer primary key,
+	id integer primary key not null,
 	"name" varchar(20) not null,
 	product_id integer not null,
 	created_at timestamp not null,
@@ -41,13 +41,13 @@ CREATE table localities(
 );
 
 CREATE table users(
-	id integer primary key,
+	id integer primary key not null,
 	name varchar(20) not null,
 	email varchar(50) unique not null,
 	phone varchar(11) unique not null,
 	"password" varchar(60) not null,
 	"role" varchar(10)not null,
-	"token" varchar(60),
+	"token" varchar(60) not null,
 	created_at timestamp not null,
 	updated_at timestamp,
 	deleted_at timestamp

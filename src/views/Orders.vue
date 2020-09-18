@@ -994,7 +994,6 @@ export default {
         console.log('Iniciei o carregamento')
         let product = new Product();
         let res = await product.create(response.data)
-
         if(response.data.length == 50){
           // this.loadProductsFromServer()
         }

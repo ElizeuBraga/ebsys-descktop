@@ -37,10 +37,9 @@ export class Product {
     }
 
     async create(products) {
-        if(products.length > 0){
-            let sql = await helper.sql('products', products);
-            await db.run(sql);
-        }
+        let res = await helper.insertMany('products', products);
+
+        console.log(res)
     }
 
     async count(){
