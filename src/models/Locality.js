@@ -24,18 +24,15 @@ export class Locality {
     }
 
     async create(localities){
-        let qtdLocal = await this.count();
-        if(qtdLocal < localities.length){
+        if(localities.length > 0){
             await localities.forEach(async e => { 
                 let sql = "insert into localities (id, name, product_id, created_at, updated_at, deleted_at)values(?, ?, ?,?,?,?)";
                 await db.run(sql, [e.id, e.name, e.product_id, e.created_at, e.updated_at, e.deleted_at]).then(()=>{
-                    
+                    console.log('Localidades carregadas')
                 }).catch((err)=>{
-                    
+                    console.log(err)
                 });
             });
-
-            db.close();
         }
     }
 

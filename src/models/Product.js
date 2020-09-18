@@ -1,6 +1,9 @@
+import { Console } from "console";
+import { stringify } from "querystring";
 import sqlite3 from "sqlite3";
 import util from 'util'
 import { brotliDecompress } from "zlib";
+import { Helper } from "./Helper";
 const db = new sqlite3.Database(
     "/home/basis/Downloads/app-descktop/src/database/database.db"
 );
@@ -8,6 +11,8 @@ const db = new sqlite3.Database(
 db.run = util.promisify(db.run);
 db.get = util.promisify(db.get);
 db.all = util.promisify(db.all);
+
+const helper = new Helper();
 export class Product {
     constructor() {
 
@@ -15,7 +20,7 @@ export class Product {
 
     async find(id){
         let resolved = false;
-        let sql = "SELECT * FROM products where remote_id = " + id;
+        let sql = "SELECT * FROM products where id = " + id;
         let response = await db.get(sql);
 
         if(response){
@@ -32,19 +37,9 @@ export class Product {
     }
 
     async create(products) {
-        let qtdLocal = await this.count();
-        if(qtdLocal < products.length){
-            console.log('Atualizo')
-            await products.forEach(async e => { 
-                let sql = "insert into products (id, name, price, section_id, created_at, updated_at, deleted_at)values(?, ?, ?,?,?,?,?)";
-                await db.run(sql, [e.id, e.name, e.price, e.section_id, e.created_at, e.updated_at, e.deleted_at]).then(()=>{
-                    
-                }).catch((err)=>{
-                    
-                });
-            });
-
-            db.close();
+        if(products.length > 0){
+            let sql = await helper.sql('products', products);
+            await db.run(sql);
         }
     }
 

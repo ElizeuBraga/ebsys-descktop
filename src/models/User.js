@@ -38,18 +38,15 @@ export class User {
     }
 
     async create(users){
-        let qtdLocal = await this.count();
-        if(qtdLocal < users.length){
-            await users.forEach(async e => { 
+        if(users.length > 0){
+            await users.forEach(async e => {
                 let sql = "insert into users (id, name, email, phone, password, role, token, created_at, updated_at, deleted_at)values(?,?,?,?,?,?,?,?,?,?)";
                 await db.run(sql, [e.id, e.name, e.email, e.phone, e.password, e.role, e.token, e.created_at, e.updated_at, e.deleted_at]).then(()=>{
-                    
+                    console.log('Usuarios carregados')
                 }).catch((err)=>{
                     console.log(err)
                 });
             });
-
-            db.close();
         }
     }
 

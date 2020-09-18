@@ -632,6 +632,7 @@ import { UserController } from "../controllers/UserController";
 import bcryptjs from "bcryptjs";
 import { Cashier } from "../models/Cashier";
 import { User } from "../models/User";
+import { Helper } from "../models/Helper";
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -641,6 +642,8 @@ var pusher = new Pusher("a885cc143df63df6146a", {
   cluster: "us2",
 });
 
+var helper = new Helper();
+var section = new Section();
 export default {
   mixins: [mixins],
   directives: { money: VMoney },
@@ -732,17 +735,16 @@ export default {
 
       isLoading: false,
       blockInputs: false,
-      falta: 0
+      falta: 0,
+      chargingData: false
     };
   },
 
   async mounted() {
     this.loadSectionsFromServer();
-    // this.loadProductsFromServer();
-    // this.loadLocalitiesFromServer();
-    // this.loadUsersFromServer();
-
-
+    this.loadProductsFromServer();
+    this.loadLocalitiesFromServer();
+    this.loadUsersFromServer();
 
     var channel = pusher.subscribe("my-channel");
     channel.bind("App\\Events\\ProductEvent", (data) => {
@@ -899,6 +901,14 @@ export default {
   },
 
   watch: {
+    chargingData(e){
+      if(e == true){
+        console.log('Comecei a carregar')
+      }else{
+
+      }
+    },
+
     donQuestionAgain(e) {
       console.log(e);
     },
@@ -970,42 +980,42 @@ export default {
 
   methods: {
     async loadSectionsFromServer(){
-      axios.get('sections').then(async (response)=>{
-        let section = new Section();
+      let maxid = await helper.max('sections')
+      axios.get('sections/getGreaterThen/' + maxid).then(async (response)=>{
         await section.create(response.data)
-
-        await this.loadProductsFromServer();
-
-        console.log('Seções carregadas')
+      }).catch((e)=>{
+        console.log(e.message)
       })
     },
 
     async loadProductsFromServer(){
-      axios.get('products').then(async (response)=>{
+      let maxid = await helper.max('products')
+      axios.get('products/getGreaterThen/' + maxid).then(async (response)=>{
+        console.log('Iniciei o carregamento')
         let product = new Product();
-        await product.create(response.data)
+        let res = await product.create(response.data)
 
-        await this.loadLocalitiesFromServer();
-        console.log('Produtos carregados')
+        if(response.data.length == 50){
+          // this.loadProductsFromServer()
+        }
+
+        // console.log(response.data)
       })
     },
 
     async loadLocalitiesFromServer(){
-      axios.get('localities').then(async (response)=>{
+      let maxid = await helper.max('localities')
+      axios.get('localities/getGreaterThen/'+ maxid).then(async (response)=>{
         let locality = new Locality();
         await locality.create(response.data)
-
-        await this.loadUsersFromServer();
-        console.log('Localidades carregadas')
       })
     },
 
-    loadUsersFromServer(){
-      axios.get('users').then((response)=>{
+    async loadUsersFromServer(){
+      let maxid = await helper.max('users')
+      axios.get('users/getGreaterThen/'+ maxid).then((response)=>{
         let user = new User();
         user.create(response.data)
-
-        console.log('Usuarios carregados')
       })
     },
 
