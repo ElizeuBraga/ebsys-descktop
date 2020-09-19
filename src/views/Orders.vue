@@ -991,7 +991,6 @@ export default {
     async loadProductsFromServer(){
       let maxid = await helper.max('products')
       axios.get('products/getGreaterThen/' + maxid).then(async (response)=>{
-        console.log('Iniciei o carregamento')
         let product = new Product();
         let res = await product.create(response.data)
         if(response.data.length == 50){
@@ -1020,8 +1019,6 @@ export default {
 
     setNexStep(value){
       this.nexStep = value
-
-      console.log(value)
       return
     },
 

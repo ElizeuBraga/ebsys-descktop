@@ -1,6 +1,7 @@
 import { resolve } from "path";
 import sqlite3 from "sqlite3";
 import bcryptjs from 'bcryptjs'
+import {Helper} from './Helper'
 const util = require('util');
 
 const db = new sqlite3.Database(
@@ -11,6 +12,8 @@ db.run = util.promisify(db.run);
 db.get = util.promisify(db.get);
 db.all = util.promisify(db.all);
 bcryptjs.compare = util.promisify(bcryptjs.compare)
+
+const helper = new Helper();
 
 export class User {
     constructor() {
@@ -38,16 +41,8 @@ export class User {
     }
 
     async create(users){
-        if(users.length > 0){
-            await users.forEach(async e => {
-                let sql = "insert into users (id, name, email, phone, password, role, token, created_at, updated_at, deleted_at)values(?,?,?,?,?,?,?,?,?,?)";
-                await db.run(sql, [e.id, e.name, e.email, e.phone, e.password, e.role, e.token, e.created_at, e.updated_at, e.deleted_at]).then(()=>{
-                    console.log('Usuarios carregados')
-                }).catch((err)=>{
-                    console.log(err)
-                });
-            });
-        }
+        let res = await helper.insertMany('users', users);
+        console.log(res)
     }
 
     async count(){

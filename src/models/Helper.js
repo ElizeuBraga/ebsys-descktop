@@ -34,27 +34,28 @@ export class Helper{
                 updated_at = (e.updated_at == null) ? null : "'"+e.updated_at+"'";
                 deleted_at = (e.deleted_at == null) ? null : "'"+e.deleted_at+"'";
                 let separator = (count == array.length) ? ");" : "),";
-                if (table == 'products') {
-                    row = "("+e.id+",'"+e.name+"',"+e.price+","+e.section_id+","+e.ask_obs+",'"+e.created_at+"',"+updated_at+","+deleted_at + separator;
-                }else if (table == 'sections') {
+                if (table == 'sections') {
                     row = "("+e.id+",'"+e.name+"','"+e.created_at+"',"+updated_at+","+deleted_at + separator;
+                }else if (table == 'products') {
+                    row = "("+e.id+",'"+e.name+"',"+e.price+","+e.section_id+","+e.ask_obs+",'"+e.created_at+"',"+updated_at+","+deleted_at + separator;
+                }else if(table == 'localities'){
+                    row = "("+e.id+",'"+e.name+"',"+e.product_id+",'"+e.created_at+"',"+updated_at+","+deleted_at + separator;
+                }else if(table == 'users'){
+                    row = "("+e.id+",'"+e.name+"','"+e.email+"','"+e.phone+"','"+e.password+"',"+e.role+",'"+e.token+"','"+e.created_at+"',"+updated_at+","+deleted_at+ separator;
                 }
                 map += row;
             }
 
-            if (table == 'products') {
-                sql = 'INSERT INTO products values' + map;
-            }else if (table == 'sections') {
-                sql = 'INSERT INTO sections values' + map;
-            }
+            sql = 'INSERT INTO '+ table +' values' + map;
 
-            let res = await db.run(sql).then(()=>{
+            await db.run(sql).then(()=>{
                 resolved = true;
             }).catch((e)=>{
                 resolved = false;
+                console.log(e)
             })
-        }
 
-        return resolved;
+            return resolved;
+        }
     }
 }
