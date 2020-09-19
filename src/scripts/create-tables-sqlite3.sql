@@ -47,7 +47,7 @@ CREATE table users(
 	phone varchar(11) unique not null,
 	"password" varchar(60) not null,
 	"role" varchar(10)not null,
-	"token" varchar(60) not null,
+	"token" varchar(60),
 	created_at timestamp not null,
 	updated_at timestamp,
 	deleted_at timestamp
