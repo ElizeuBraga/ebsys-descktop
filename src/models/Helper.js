@@ -1,5 +1,6 @@
 import { count } from "console";
 import { resolve } from "path";
+import { stringify } from "querystring";
 import sqlite3 from "sqlite3";
 const util    = require('util');
 
@@ -21,18 +22,30 @@ export class Helper{
 
     async insertMany(table, array){
         let resolved = false;
-        let columns = []
-        let sqlinfotable = "PRAGMA table_info("+table+")";
-        await db.all(sqlinfotable).then((cols)=>{
-            if(cols.length > 0){
-                columns = cols
-            }else{
-                console.log(table + ' não existe')
+        if (array.length > 0) {   
+            let columns = []
+            
+            // get columns of a table
+            let sqlinfotable = "PRAGMA table_info("+table+")";        
+            await db.all(sqlinfotable).then(async (cols)=>{
+                if(cols.length > 0){
+                    for(let c of cols){
+                        const todo = await fetch(c);
+                        columns.push(c.name)
+                    }
+                }else{
+                    console.log(table + ' não existe')
+                }
+            }).catch((e)=>{
+                console.log(e)
+            });
+            
+            // compare if table keys is equals array keys
+            if(stringify(Object.keys(array[0])) !== stringify(columns)){
+                console.log('Dados não petencem a ' + table)
+                return
             }
-        }).catch((e)=>{
-            console.log(e)
-        });
-        if (columns.length > 0 && array.length > 0) {
+            
             let countcols = 0;
             let countelements = 0;
             let separator = ",";
@@ -45,23 +58,23 @@ export class Helper{
                     const todo = await fetch(c);
                     countcols += 1;
                     (countcols == columns.length) ? separator = ")," : separator =  ",";
-    
+                    
                     if (countelements == array.length && countcols == columns.length) {
                         separator = ");"
                     }
-                    map += (typeof e[c.name] == 'string') ? "'" +e[c.name]+ "'" + separator : (countcols == 1) ? "(" + e[c.name] + separator: e[c.name] + separator;
+                    map += (typeof e[c] == 'string') ? "'" +e[c]+ "'" + separator : (countcols == 1) ? "(" + e[c] + separator: e[c] + separator;
                 }
             }
-    
+            
             let sql = 'INSERT INTO '+ table +' values' + map;
-    
+            
             await db.run(sql).then(()=>{
                 resolved = true
             }).catch((err)=>{
                 console.log(err)
             })
+            
         }
-
-        return resolved
+            return resolved
     }
 }
