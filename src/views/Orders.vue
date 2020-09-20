@@ -423,7 +423,7 @@
             <v-row justify="center">
               <v-col cols="6">
                 <v-text-field
-                  maxlength="7"
+                  maxlength="10"
                   :color="mainColor"
                   v-money="money"
                   label="Dinheiro"
@@ -567,7 +567,7 @@
           <v-col align="center" cols="4">
             <v-btn
               v-if="!statusCashier"
-              @click="openCashier(loggedUser)"
+              @click="openCashier(user)"
               large
               :style="{color:'green'}"
             >Abrir</v-btn>
@@ -648,7 +648,7 @@ export default {
       money: {
         decimal: ",",
         thousands: ".",
-        precision: 2,
+        // precision: 2,
         masked: false, // doesn't work with directive
         // Waiting on https://github.com/vuejs-tips/v-money/pull/51 to be merged
         allowBlank: true,
@@ -682,7 +682,7 @@ export default {
       password: "",
       confirm_password: "",
       dialog: false,
-      unlogged: false,
+      unlogged: true,
       resetpassword: false,
 
       //messages variable
@@ -1134,12 +1134,10 @@ export default {
         this.showMessageErrorLogin("Senhas não conferem");
         return;
       }
-      let u = {
-        password: password,
-        id: this.loggedUser.id,
-      };
+  
+      this.user.password = password;
       let user = new UserController();
-      user.update(u);
+      user.update(this.user, true);
       this.resetpassword = false;
       this.showMessageSucess("Senha alterada com sucesso");
     },
@@ -1148,43 +1146,52 @@ export default {
       let user = new UserController();
       let result = await user.login(username, password);
 
-      if (!result) {
+      if (result) {
+        this.username = "";
+        this.password = "";
+        let user = new User();
+        this.user = await user.find(username)
+        this.unlogged = false;
+        this.$root.$emit("logged_user", this.user);
+        (this.user.change_password) ? this.resetpassword = true : this.resetpassword = false
+      }else{
         this.showMessageErrorLogin("Usuario e/ou senha estão incorretos");
-        return;
+        // return;
       }
+      
 
-      bcryptjs.compare(password, result.password, (err, res) => {
-        if (res === true) {
-          if (result.updated_at === null) {
-            this.resetpassword = true;
-          }
-          if (
-            result.id != this.userCashier.id &&
-            this.userCashier.id != undefined
-          ) {
-            this.showMessageErrorLogin(
-              "Este caixa foi aberto por outro usuario, contate o administrador."
-            );
-          } else {
-            this.loggedUser = result;
-            this.unlogged = false;
-            this.username = "";
-            this.password = "";
-            this.$root.$emit("logged_user", result);
-            this.$nextTick(() => {
-              const input = this.$refs.product.$el.querySelector("input");
-              input.focus();
-            });
-          }
-        } else {
-          this.showMessageErrorLogin("Usuario e/ou senha estão incorretos");
-        }
-      });
+      // bcryptjs.compare(password, result.password, (err, res) => {
+      //   if (res === true) {
+      //     if (result.updated_at === null) {
+      //       this.resetpassword = true;
+      //     }
+      //     if (
+      //       result.id != this.userCashier.id &&
+      //       this.userCashier.id != undefined
+      //     ) {
+      //       this.showMessageErrorLogin(
+      //         "Este caixa foi aberto por outro usuario, contate o administrador."
+      //       );
+      //     } else {
+      //       this.loggedUser = result;
+      //       this.unlogged = false;
+      //       this.username = "";
+      //       this.password = "";
+      //       this.$root.$emit("logged_user", result);
+      //       this.$nextTick(() => {
+      //         const input = this.$refs.product.$el.querySelector("input");
+      //         input.focus();
+      //       });
+      //     }
+      //   } else {
+      //     this.showMessageErrorLogin("Usuario e/ou senha estão incorretos");
+      //   }
+      // });
     },
 
-    openCashier(loggedUser) {
+    openCashier(user) {
       let cashier = new CashierController();
-      cashier.store(loggedUser);
+      cashier.store(user);
       this.cashierStatus();
       this.checkUserOpenedCashier();
     },

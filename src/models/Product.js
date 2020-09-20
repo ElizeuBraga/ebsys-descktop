@@ -38,7 +38,6 @@ export class Product {
 
     async create(products) {
         let res = await helper.insertMany('products', products);
-        console.log(res)
     }
 
     async count(){

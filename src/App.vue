@@ -98,12 +98,6 @@ export default {
       this.$root.$emit("logout", true);
     },
 
-    resetPassword(u) {
-      let user = new User()
-      user.resetPassword(u)
-
-    },
-
     clickedItem(item){
       if (item.title === 'Sair') {
         this.logout()
@@ -114,7 +108,8 @@ export default {
       }
       
       if (item.title === 'Trocar senha') {
-        this.resetPassword(this.loggedUser)
+        let user = new User()
+        user.resetPassword(this.loggedUser.id)
         this.logout()
       }
     },

@@ -18,10 +18,10 @@ export class UserController{
         return result;
     }
 
-    update(u){
+    update(u, resetpwd = false){
         console.log(u)
         let user = new User();
-        let result = user.update(u);
+        let result = user.update(u, resetpwd);
         return result
     }
 

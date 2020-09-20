@@ -48,6 +48,7 @@ CREATE table users(
 	"password" varchar(60) not null,
 	"role" varchar(10)not null,
 	"token" varchar(60),
+	change_password boolean default(true),
 	created_at timestamp not null,
 	updated_at timestamp,
 	deleted_at timestamp

@@ -33,7 +33,6 @@ export class Locality {
 
     async create(localities){
         let res = await helper.insertMany('localities', localities);
-        console.log(res)
     }
 
     async count(){

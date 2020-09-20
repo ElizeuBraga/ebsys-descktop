@@ -23,6 +23,5 @@ export class Section{
 
     async create(sections){
         let result = await helper.insertMany('sections', sections)
-        console.log(result)              
     }
 }

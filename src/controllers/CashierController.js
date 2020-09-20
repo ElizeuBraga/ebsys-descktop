@@ -21,9 +21,9 @@ export class CashierController{
         cashier.update(c);
     }
 
-    async store(loggedUser){
+    async store(user){
         let item = new Cashier();
-        item.create(loggedUser);
+        item.create(user);
     }
 
     destroy(){

@@ -2,6 +2,7 @@ import { resolve } from "path";
 import sqlite3 from "sqlite3";
 import bcryptjs from 'bcryptjs'
 import {Helper} from './Helper'
+import { Athena } from "aws-sdk";
 const util = require('util');
 
 const db = new sqlite3.Database(
@@ -21,17 +22,11 @@ export class User {
         let hashed = null
     }
 
-    async find(id){
-        let resolved = false
-        let sql = "select * from users where remote_id = " + id;
+    async find(username){
+        let sql = "select * from users where phone = '" + username + "' OR email = '" + username+"';";
         let result = await db.get(sql);
 
-        if(result){
-            resolved = true
-        }else{
-            resolved = false
-        }
-        return resolved
+        return result
     }
 
     async all() {
@@ -42,7 +37,6 @@ export class User {
 
     async create(users){
         let res = await helper.insertMany('users', users);
-        console.log(res)
     }
 
     async count(){
@@ -53,15 +47,26 @@ export class User {
         return result.quantidade;
     }
 
-    resetPassword(u) {
-        let sql = "update users set updated_at = NULL where id = ?";
-        db.run(sql, [u.id]);
+    resetPassword(id) {
+        let sql = "update users set change_password = true where id = " + id;
+
+        db.run(sql);
     }
 
-    async update(u) {
+    async update(u, resetpwd = false) {
+        var today = new Date();
         let resolved = false;
-        let sql = "update users set name = ?, phone = ?, role = ?, password = ?, updated_at = ? where remote_id = ?"
-        let response = db.run(sql, [u.name, u.phone, u.role, u.password, u.updated_at, u.id]);
+        if(resetpwd){
+            var salt = bcryptjs.genSaltSync(10);
+            var hash = bcryptjs.hashSync(u.password, salt);
+            u.password = hash
+            u.change_password = false
+        }
+
+        u.updated_at = new Date().toLocaleString().replace(/\//g,'-')
+
+        let sql = "update users set name = ?, phone = ?, role = ?, password = ?, change_password = ?, updated_at = ? where id = ?"
+        let response = db.run(sql, [u.name, u.phone, u.role, hash, u.change_password, u.updated_at, u.id]);
 
         await response.then(() => {
             resolved = true;
@@ -75,14 +80,12 @@ export class User {
     }
 
     async auth(user, password) {
-        let sql = "select * from users where phone = ?";
-        let result = await db.get(sql, [user]);
+        let sql = "select * from users where phone = '"+ user +"' OR email = '"+ user +"';";
+        let result = await db.get(sql);
 
-        if (result) {
-            return result
-        } else {
-            return false;
-        }
+        let auth = await bcryptjs.compareSync(password, result.password);
+
+        return auth;
 
     }
 
