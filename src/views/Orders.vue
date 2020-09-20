@@ -75,17 +75,15 @@
             </v-col>
           </v-row>
           <v-row v-if="delivery && customer.name != null" align="center" class="pb-0 pt-0">
-            <v-col cols="10" align="center">
+            <v-col cols="9" align="center">
               <span>{{customer.name}} - {{customer.address}} - {{customer.phone}}</span>
             </v-col>
-            <v-col align="center" cols="1" class="pb-0 pt-0">
-              <a @click="dialog = true">
-                <v-icon>edit</v-icon>
+            <v-col align="center" cols="3" class="pb-0 pt-0">
+              <a @click="showModalUpdateCustomer()">
+                <v-icon color="blue">edit</v-icon>
               </a>
-            </v-col>
-            <v-col align="center" cols="1" class="pb-0 pt-0">
               <a @click="cancelarForm">
-                <v-icon>edit</v-icon>
+                <v-icon color="red">remove_circle_outline</v-icon>
               </a>
             </v-col>
           </v-row>
@@ -132,11 +130,10 @@
                 </template>
                 <span>Total parcial</span>
               </v-tooltip>
-              <v-tooltip top>
+              <v-tooltip v-if="c.name != 'Taxa de entrega'" top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-col v-on="on" cols="1" class="pt-0 pb-0" v-bind="attrs">
                     <a
-                      v-if="c.name != 'Taxa de entrega'"
                       @click="removeFromCart(i, (c.price * c.quantity))"
                     >
                       <v-icon color="red" align="center">remove_circle_outline</v-icon>
@@ -145,10 +142,10 @@
                 </template>
                 <span>Remover</span>
               </v-tooltip>
-              <v-tooltip top>
+              <v-tooltip v-if="c.name != 'Taxa de entrega'" top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-col v-on="on" cols="1" class="pt-0 pb-0" v-bind="attrs">
-                    <a v-if="c.name != 'Taxa de entrega'" @click="setObs(c)">
+                    <a @click="setObs(c)">
                       <v-icon color="blue" align="center">edit</v-icon>
                     </a>
                   </v-col>
@@ -247,9 +244,9 @@
       </v-dialog>
 
       <!-- modal new  cliente or update cliente -->
-      <v-dialog v-model="modalCustomer" width="500" :persistent="true">
+      <v-dialog v-model="modalCustomer" width="500">
         <v-card>
-          <v-card-title class="headline grey lighten-2 text-center" primary-title>Novo cliente</v-card-title>
+          <v-card-title class="headline grey lighten-2 text-center" primary-title>{{modalCustomerTitle}}</v-card-title>
 
           <v-card-text>
             <v-row justify="center">
@@ -257,7 +254,6 @@
                 <p class="text-center bold">Novo cliente</p>
                 <v-text-field
                   :color="mainColor"
-                  :disabled="updatingCustomer"
                   v-model="customer.phone"
                   label="Telefone"
                 />
@@ -279,7 +275,6 @@
                   return-object
                   :disabled="blockInputs"
                   item-text="name"
-                  item-value="rowId"
                   v-model="locObj"
                   label="Localidades"
                 ></v-select>
@@ -632,6 +627,7 @@ import { UserController } from "../controllers/UserController";
 import bcryptjs from "bcryptjs";
 import { Cashier } from "../models/Cashier";
 import { User } from "../models/User";
+import { Customer } from "../models/Customer";
 import { Helper } from "../models/Helper";
 
 const db = new sqlite3.Database(
@@ -732,6 +728,7 @@ export default {
       dialog: false,
       modalFindCustomer: false,
       modalCustomer: false,
+      modalCustomerTitle: "",
 
       isLoading: false,
       blockInputs: false,
@@ -822,6 +819,11 @@ export default {
         }
       }
       if (e.key == "Enter") {
+        if(this.modalFindCustomer){
+          this.findCustomer(this.customer.phone)
+          alert('Buscar')
+          return
+        }
         if (this.nexStep == "insertInCart") {
           this.insertInCart(this.product);
           return
@@ -1072,6 +1074,7 @@ export default {
       this.product = {};
       this.quantity = 1;
       this.$refs.product.focus();
+      this.locObj = {}
     },
 
     cancelReceive() {
@@ -1264,13 +1267,17 @@ export default {
         this.success = false;
         this.error = false;
       }, 3000);
-      this.customer.locality_id = 1;
+      this.customer.locality_id = this.locObj.id;
       let customer = new CustomerController();
       let result = await customer.store(this.customer);
 
       if (result === true) {
         this.success = true;
         this.msg = "Salvo com sucesso!";
+        let p = new Product();
+        let deliveryRate = await p.deliveryRate(this.customer.phone);
+        this.customer = await customer.show(this.customer.phone);
+        this.deliveryRate(deliveryRate);
       } else {
         this.error = true;
         if (result == 19) {
@@ -1280,30 +1287,22 @@ export default {
         }
       }
       this.modalCustomer = false;
+      this.clearForm()
     },
 
-    updateCustomer() {
-      this.customer.locality_id = this.locObj.id;
-      let sql =
-        "UPDATE customers SET name = ?, address = ?, locality_id = ? where phone = ?";
-      db.run(
-        sql,
-        [
-          this.customer.name,
-          this.customer.address,
-          this.customer.locality_id,
-          this.customer.phone,
-        ],
-        (err) => {
-          if (err) {
-            return console.log(err.message);
-          }
-          // get the last insert id
-          // this.blockInputs = true;
-          alert("Cliente atualizado!");
-          this.dialog = false;
-        }
-      );
+    async updateCustomer() {
+      this.customer.locality_id = this.locObj.id
+      let customer = new Customer();
+      let res = await customer.update(this.customer);
+
+      let p = new Product();
+      let deliveryRate = await p.deliveryRate(this.customer.phone);
+
+      this.cart.shift()
+      this.insertInCart(deliveryRate);
+      this.modalCustomer = false;
+
+      console.log(this.updatingCustomer)
     },
 
     hasFocus() {
@@ -1319,8 +1318,13 @@ export default {
       }
       product.observation = this.observation;
       product.quantity = this.quantity;
+
       let prod = JSON.stringify(product);
-      this.cart.push(JSON.parse(prod));
+      if(this.updatingCustomer){
+        this.cart.unshift(JSON.parse(prod));
+      }else{
+        this.cart.push(JSON.parse(prod));
+      }
 
       this.total = 0;
       this.cart.forEach((element) => {
@@ -1332,14 +1336,15 @@ export default {
     },
 
     async findCustomer(phone) {
-      let customer = new CustomerController();
-      let customerresult = await customer.show(phone);
+      let customer = new Customer();
+      let customerresult = await customer.find(phone);
+
       if (customerresult != undefined) {
         this.customer = customerresult;
         this.modalFindCustomer = false;
-        let p2 = new ProductController();
-        let result = await p2.showByLocality(customerresult.locality_id);
-        this.insertInCart(result);
+        let p = new Product();
+        let deliveryRate = await p.deliveryRate(customerresult.phone);
+        this.insertInCart(deliveryRate);
 
         return;
       }
@@ -1348,6 +1353,17 @@ export default {
       this.modalCustomer = true;
       this.newCustomer = true;
     },
+
+    async showModalUpdateCustomer(){
+      this.modalCustomer = true;
+      this.updatingCustomer = true;
+      this.modalFindCustomer = false;
+      this.newCustomer = false;
+      this.modalCustomerTitle = "Atualizar Cliente"
+      let locality = new Locality();
+      this.locObj = await locality.find(this.customer.locality_id)
+       
+    }
   },
 };
 </script>

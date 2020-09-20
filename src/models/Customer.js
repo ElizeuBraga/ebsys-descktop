@@ -30,4 +30,15 @@ export class Customer{
 
         return response;
     }
+
+    async update(customer){
+        let resolved = false;
+        let sql = "UPDATE customers SET name = ? ,address = ?, phone = ?, locality_id = ? where phone = ?";
+
+        await db.run(sql, [customer.name, customer.address, customer.phone, customer.locality_id, customer.phone]).then(()=>{
+            resolved = true
+        })
+
+        return resolved;
+    }
 }

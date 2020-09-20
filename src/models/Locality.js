@@ -7,6 +7,7 @@ const db = new sqlite3.Database(
 
 db.all = util.promisify(db.all);
 db.run = util.promisify(db.run);
+db.get = util.promisify(db.get);
 
 const helper = new Helper();
 
@@ -22,8 +23,12 @@ export class Locality {
         return localities;
     }
 
-    find(id) {
+    async find(id) {
+        let sql = "select * from localities where id = " + id;
 
+        let result = await db.get(sql);
+
+        return result
     }
 
     async create(localities){

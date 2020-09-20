@@ -15,6 +15,7 @@
     "aws-sdk": "^2.708.0",
     "axios": "^0.19.2",
     "bcryptjs": "^2.4.3",
+    "console": "^0.7.2",
     "material-design-icons-iconfont": "^5.0.1",
     "pg": "^8.2.1",
     "pusher": "^3.0.1",

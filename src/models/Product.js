@@ -55,11 +55,10 @@ export class Product {
         return products;
     }
 
-    async findByLocality(id) {
-        let sql = "select p.*, l.id as locality_id from products p join localities l on l.product_id = p.id where l.id = ?";
+    async deliveryRate(phone) {
+        let sql = "select p.*, l.id as locality_id from products p join localities l on l.product_id = p.id join customers c on c.locality_id = l.id where c.phone = " + phone;
 
-        let product = await db.get(sql, [id]);
-
+        let product = await db.get(sql);
         return product;
     }
 
