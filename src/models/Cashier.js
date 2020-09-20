@@ -1,5 +1,7 @@
 import { userInfo } from "os";
 import sqlite3 from "sqlite3";
+
+import { Helper } from "./Helper";
 const util    = require('util');
 
 const db = new sqlite3.Database(
@@ -8,6 +10,8 @@ const db = new sqlite3.Database(
 
 db.get = util.promisify(db.get);
 db.run = util.promisify(db.run);
+
+const helper = new Helper();
 
 export class Cashier {
     constructor() {
@@ -26,10 +30,10 @@ export class Cashier {
     }
 
     async update(cashier) {
-        let money = cashier.money.replace('.','')
-        let credit = cashier.credit.replace('.','')
-        let debit = cashier.debit.replace('.','')
-        let ticket = cashier.ticket.replace('.','')
+        let money = helper.formatMonetaryForDB(cashier.money)
+        let credit = helper.formatMonetaryForDB(cashier.credit)
+        let debit = helper.formatMonetaryForDB(cashier.debit)
+        let ticket = helper.formatMonetaryForDB(cashier.ticket)
 
         let sql = "update cashiers set updated_at = datetime('now', 'localtime'), money = ?, credit = ?, debit = ?, ticket = ? where id = ?";
         db.run(sql, [money.replace(',', '.'), credit.replace(',', '.'), debit.replace(',', '.'), ticket.replace(',', '.'), cashier.id], err => {

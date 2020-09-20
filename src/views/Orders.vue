@@ -244,7 +244,7 @@
       </v-dialog>
 
       <!-- modal new  cliente or update cliente -->
-      <v-dialog v-model="modalCustomer" width="500">
+      <v-dialog v-model="modalCustomer" width="500" :persistent="true">
         <v-card>
           <v-card-title class="headline grey lighten-2 text-center" primary-title>{{modalCustomerTitle}}</v-card-title>
 
@@ -323,7 +323,7 @@
               color="primary"
               ref="btnOk"
               text
-              @click="dialog = false"
+              @click="modalCustomer = false"
             >Cancelar</v-btn>
             <v-btn v-else color="primary" ref="btnOk" text @click="cancelarForm">Cancelar</v-btn>
           </v-card-actions>
@@ -582,12 +582,12 @@
             <span
               :style="{color: mainColor}"
               v-if="userCashier"
-            >Caixa aberto por {{userCashier.name}}</span>
+            >Caixa aberto por <b>{{userCashier.name}}</b></span>
             <span :style="{color: 'red'}" v-else>Caixa fechado</span>
           </v-col>
           <v-col align="center" cols="4">
-            <v-btn v-if="delivery" large :style="{color:'blue'}" @click="typeOrderBalcao">Balcão</v-btn>
-            <v-btn v-else large :style="{color:'blue'}" @click="typeOrderDelivery">Entregas</v-btn>
+            <v-btn v-if="delivery" large :style="{color:lastColor}" @click="typeOrderBalcao">Balcão</v-btn>
+            <v-btn v-else large :style="{color:lastColor}" @click="typeOrderDelivery">Entregas</v-btn>
           </v-col>
         </v-row>
       </v-col>
@@ -678,8 +678,8 @@ export default {
       amountMoney: 0.0,
       type: '',
       //user variables
-      username: "",
-      password: "",
+      username: "user0@gmail.com",
+      password: "123456",
       confirm_password: "",
       dialog: false,
       unlogged: true,
@@ -708,6 +708,9 @@ export default {
       fluxEnter: "quantity",
       donQuestionAgain: false,
       nexStep: "selectProduct",
+      lastColor: "red",
+      deliveryColor:"red",
+      countertopColor:"green",
 
       // obs variables
       observation: "",
@@ -738,6 +741,9 @@ export default {
   },
 
   async mounted() {
+    setTimeout(()=>{
+      this.lastColor = this.deliveryColor
+    }, 200)
     this.loadSectionsFromServer();
     this.loadProductsFromServer();
     this.loadLocalitiesFromServer();
@@ -1143,6 +1149,7 @@ export default {
     },
 
     async login(username, password) {
+      this.lastColor = this.deliveryColor
       let user = new UserController();
       let result = await user.login(username, password);
 
@@ -1233,24 +1240,26 @@ export default {
     },
 
     typeOrderDelivery() {
+      this.lastColor = this.mainColor
       this.delivery = true;
       this.deliveryTitle = "Entregas";
       this.btnDesc = "Balcão";
       this.cart = [];
       this.total = 0;
-      this.mainColor = "greenyellow";
+      this.mainColor = this.deliveryColor;
       this.modalFindCustomer = true;
 
       this.$root.$emit("change_color", this.mainColor);
     },
 
     typeOrderBalcao() {
+      this.lastColor = this.mainColor
       this.cancelOrder();
       this.customer = {};
       this.delivery = false;
       this.deliveryTitle = "Balcão";
       this.btnDesc = "Delivery";
-      this.mainColor = "orange";
+      this.mainColor = this.countertopColor;
       this.$root.$emit("change_color", this.mainColor);
       this.modalFindCustomer = false;
     },
@@ -1284,7 +1293,7 @@ export default {
         let p = new Product();
         let deliveryRate = await p.deliveryRate(this.customer.phone);
         this.customer = await customer.show(this.customer.phone);
-        this.deliveryRate(deliveryRate);
+        this.insertInCart(deliveryRate);
       } else {
         this.error = true;
         if (result == 19) {
@@ -1357,6 +1366,7 @@ export default {
       }
 
       this.modalFindCustomer = false;
+      this.updatingCustomer = false
       this.modalCustomer = true;
       this.newCustomer = true;
     },

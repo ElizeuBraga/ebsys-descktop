@@ -63,10 +63,8 @@ export class User {
             u.change_password = false
         }
 
-        u.updated_at = new Date().toLocaleString().replace(/\//g,'-')
-
-        let sql = "update users set name = ?, phone = ?, role = ?, password = ?, change_password = ?, updated_at = ? where id = ?"
-        let response = db.run(sql, [u.name, u.phone, u.role, hash, u.change_password, u.updated_at, u.id]);
+        let sql = "update users set name = ?, phone = ?, role = ?, password = ?, change_password = ?, updated_at = datetime('now', 'localtime') where id = ?"
+        let response = db.run(sql, [u.name, u.phone, u.role, hash, u.change_password, u.id]);
 
         await response.then(() => {
             resolved = true;

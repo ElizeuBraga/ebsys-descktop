@@ -20,6 +20,10 @@ export class Helper{
         return result.max
     }
 
+    formatMonetaryForDB(value){
+        return value.replace('.', '').replace(',', '.')
+    }
+
     async insertMany(table, array){
         let resolved = false;
         if (array.length > 0) {   
