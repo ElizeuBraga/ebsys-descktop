@@ -50,7 +50,7 @@
             type="success"
           >{{msg}}</v-alert>
           <v-row
-            v-if="cart.length == 0"
+            v-if="order.items.length == 0"
             :style="{background:'', height:'600px'}"
             align="center"
             justify="space-around"
@@ -74,9 +74,9 @@
               >shopping_cart</v-icon>
             </v-col>
           </v-row>
-          <v-row v-if="delivery && customer.name != null" align="center" class="pb-0 pt-0">
+          <v-row v-if="delivery && order.customer.name != null" align="center" class="pb-0 pt-0">
             <v-col cols="9" align="center">
-              <span>{{customer.name}} - {{customer.address}} - {{customer.phone}}</span>
+              <span>{{order.customer.name}} - {{order.customer.address}} - {{order.customer.phone}}</span>
             </v-col>
             <v-col align="center" cols="3" class="pb-0 pt-0">
               <a @click="showModalUpdateCustomer()">
@@ -89,8 +89,8 @@
           </v-row>
           <br />
           <v-row class="pl-6 pr-6">
-            <v-row class="pl-1 pr-1 text-center" v-for="(c, i) in cart" :key="i">
-              <v-col cols="1" class="text-left pt-0 pb-0">{{i + 1}}</v-col>
+            <v-row class="pl-1 pr-1 text-center" v-for="(i, index) in order.items" :key="index">
+              <v-col cols="1" class="text-left pt-0 pb-0">{{index + 1}}</v-col>
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-col
@@ -98,13 +98,13 @@
                     v-on="on"
                     cols="3"
                     class="text-left pt-0 pb-0 text-truncate"
-                  >{{c.name}}</v-col>
+                  >{{i.name}}</v-col>
                 </template>
-                <span>{{c.name}}</span>
+                <span>{{i.name}}</span>
               </v-tooltip>
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
-                  <v-col v-bind="attrs" v-on="on" cols="2" class="pt-0 pb-0">{{c.quantity}}</v-col>
+                  <v-col v-bind="attrs" v-on="on" cols="2" class="pt-0 pb-0">{{i.quantity}}</v-col>
                 </template>
                 <span>Quantidade</span>
               </v-tooltip>
@@ -115,7 +115,7 @@
                     v-on="on"
                     cols="2"
                     class="pt-0 pb-0"
-                  >{{String(c.price).replace('.', ',')}}</v-col>
+                  >{{String(i.price).replace('.', ',')}}</v-col>
                 </template>
                 <span>Preço unitario</span>
               </v-tooltip>
@@ -126,15 +126,15 @@
                     v-on="on"
                     cols="2"
                     class="pt-0 pb-0"
-                  >{{parseFloat(c.price * c.quantity).toFixed(2).replace('.', ',')}}</v-col>
+                  >{{parseFloat(i.price * i.quantity).toFixed(2).replace('.', ',')}}</v-col>
                 </template>
                 <span>Total parcial</span>
               </v-tooltip>
-              <v-tooltip v-if="c.name != 'Taxa de entrega'" top>
+              <v-tooltip v-if="i.name != 'Taxa de entrega'" top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-col v-on="on" cols="1" class="pt-0 pb-0" v-bind="attrs">
                     <a
-                      @click="removeFromCart(i, (c.price * c.quantity))"
+                      @click="removeFromOrderItems(i, (i.price * i.quantity))"
                     >
                       <v-icon color="red" align="center">remove_circle_outline</v-icon>
                     </a>
@@ -142,10 +142,10 @@
                 </template>
                 <span>Remover</span>
               </v-tooltip>
-              <v-tooltip v-if="c.name != 'Taxa de entrega'" top>
+              <v-tooltip v-if="i.name != 'Taxa de entrega'" top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-col v-on="on" cols="1" class="pt-0 pb-0" v-bind="attrs">
-                    <a @click="setObs(c)">
+                    <a @click="setObs(i)">
                       <v-icon color="blue" align="center">edit</v-icon>
                     </a>
                   </v-col>
@@ -153,7 +153,7 @@
                 <span>Observação</span>
               </v-tooltip>
               <v-col cols="9" :style="{color:'gray'}" class="text-left pt-0 pb-0">
-                <span>{{c.observation}}</span>
+                <span>{{i.observation}}</span>
               </v-col>
               <v-col class="pt-0 pb-0 pr-0 pl-0" cols="12">
                 <hr />
@@ -210,7 +210,7 @@
                   max-length="11"
                   clearable
                   :color="mainColor"
-                  v-model="customer.phone"
+                  v-model="order.customer.phone"
                   label="Telefone"
                 />
               </v-col>
@@ -218,10 +218,10 @@
                 <v-btn
                   :style="{background:mainColor, color:'white'}"
                   rounded
-                  @click="findCustomer(customer.phone)"
+                  @click="findCustomer(order.customer.phone)"
                   label="Preço"
                   width="100%"
-                  :disabled="!customer.phone"
+                  :disabled="!order.customer.phone"
                 >Buscar</v-btn>
               </v-col>
             </v-row>
@@ -254,19 +254,19 @@
                 <p class="text-center bold">Novo cliente</p>
                 <v-text-field
                   :color="mainColor"
-                  v-model="customer.phone"
+                  v-model="order.customer.phone"
                   label="Telefone"
                 />
                 <v-text-field
                   :color="mainColor"
                   :disabled="blockInputs"
-                  v-model="customer.name"
+                  v-model="order.customer.name"
                   label="Nome"
                 />
                 <v-text-field
                   :color="mainColor"
                   :disabled="blockInputs"
-                  v-model="customer.address"
+                  v-model="order.customer.address"
                   label="Endereço"
                 />
                 <v-select
@@ -287,7 +287,7 @@
                   max-length="11"
                   clearable
                   :color="mainColor"
-                  v-model="customer.phone"
+                  v-model="order.customer.phone"
                   label="Telefone"
                 />
               </v-col>
@@ -401,7 +401,7 @@
               color="white"
               ref="btnendorder"
               text
-              @click="endOrder(order, cart, payments)"
+              @click="endOrder(order, order.items, payments)"
             >Receber</v-btn>
             <v-btn
               :style="{width:'50%', background: 'red'}"
@@ -696,12 +696,17 @@ export default {
       interval: {},
       value: 0,
       hasFocusQuantity: true,
-      order: {},
+      order: {
+        customer:{},
+        cashier_id: null,
+        customer_id: null,
+        order_type: 0,
+        items:[],
+      },
       locObj: {},
       locality: [],
       product: {},
       products: [],
-      cart: [],
       quantity: 1,
       deliveryTitle: "Balcão",
       delivery: false,
@@ -788,7 +793,7 @@ export default {
         if(this.dialogReceive){
           return
         }
-        if (this.cart.length > 0) {
+        if (this.order.items.length > 0) {
           this.dialogReceive = true;
           this.totalReceive = this.total;
           this.amountToChange = this.totalReceive
@@ -806,14 +811,14 @@ export default {
       }
 
       if (e.key == "F1") {
-        if (this.cart.length > 0) {
+        if (this.order.items.length > 0) {
           this.dialogObs = true;
         }
       }
 
       if (e.key == "F11") {
         this.clearForm();
-        this.cart = [];
+        this.order.items = [];
         this.total = 0;
       }
 
@@ -826,12 +831,12 @@ export default {
       }
       if (e.key == "Enter") {
         if(this.modalFindCustomer){
-          this.findCustomer(this.customer.phone)
+          this.findCustomer(this.order.customer.phone)
           alert('Buscar')
           return
         }
-        if (this.nexStep == "insertInCart") {
-          this.insertInCart(this.product);
+        if (this.nexStep == "insertInOrderItems") {
+          this.insertInOrderItems(this.product);
           return
         }
 
@@ -879,9 +884,9 @@ export default {
 
     inputs() {
       return (
-        !this.customer.phone ||
-        !this.customer.name ||
-        !this.customer.address ||
+        !this.order.customer.phone ||
+        !this.order.customer.name ||
+        !this.order.customer.address ||
         this.blockInputs ||
         Object.keys(this.locObj).length === 0
       );
@@ -925,7 +930,7 @@ export default {
       this.setNexStep('selectQuantity')
       if (Object.keys(e).length > 0) {
         setTimeout(()=>{
-          this.setNexStep('insertInCart')
+          this.setNexStep('insertInOrderItems')
           this.$refs.quantity.focus()
         }, 100)
       }
@@ -1214,37 +1219,32 @@ export default {
       this.modalCloseCashier = false;
     },
 
-    removeFromCart(i, parcialPrice) {
+    removeFromOrderItems(i, parcialPrice) {
       this.total = this.total - parcialPrice;
-      this.cart.splice(i, 1);
+      this.order.items.splice(i, 1);
     },
 
-    endOrder(order, items, payments) {
-      alert('Acionei o botao')
-      return
+    endOrder(order) {
       order.cashier_id = this.cashier.id;
-      if (!this.delivery) {
-        order.order_type = 0;
-      } else {
-        order.customer_id = this.customer.id;
-        order.order_type = 1;
-      }
+      console.log(order)
+      return
       let o = new OrderController();
       o.store(order, items, payments);
       this.dialogReceive = false;
-      this.cart = [];
-      this.customer = {};
+      this.order.items = [];
+      this.order.customer = {};
       this.amountMoney = 0;
       this.payments = [];
       this.typeOrderBalcao();
     },
 
     typeOrderDelivery() {
+      this.order.order_type = 1;
       this.lastColor = this.mainColor
       this.delivery = true;
       this.deliveryTitle = "Entregas";
       this.btnDesc = "Balcão";
-      this.cart = [];
+      this.order.items = [];
       this.total = 0;
       this.mainColor = this.deliveryColor;
       this.modalFindCustomer = true;
@@ -1253,9 +1253,10 @@ export default {
     },
 
     typeOrderBalcao() {
+      this.order.order_type = 0;
       this.lastColor = this.mainColor
       this.cancelOrder();
-      this.customer = {};
+      this.order.customer = {};
       this.delivery = false;
       this.deliveryTitle = "Balcão";
       this.btnDesc = "Delivery";
@@ -1265,7 +1266,7 @@ export default {
     },
 
     cancelOrder() {
-      this.cart = [];
+      this.order.items = [];
       this.total = 0;
       this.product = {};
       this.dialogObs = false;
@@ -1273,7 +1274,7 @@ export default {
     cancelarForm() {
       this.typeOrderBalcao();
       this.locObj = {};
-      this.customer = {};
+      this.order.customer = {};
       this.modalFindCustomer = false;
       this.modalCustomer = false;
     },
@@ -1283,17 +1284,17 @@ export default {
         this.success = false;
         this.error = false;
       }, 3000);
-      this.customer.locality_id = this.locObj.id;
+      this.order.customer.locality_id = this.locObj.id;
       let customer = new CustomerController();
-      let result = await customer.store(this.customer);
+      let result = await customer.store(this.order.customer);
 
       if (result === true) {
         this.success = true;
         this.msg = "Salvo com sucesso!";
         let p = new Product();
-        let deliveryRate = await p.deliveryRate(this.customer.phone);
-        this.customer = await customer.show(this.customer.phone);
-        this.insertInCart(deliveryRate);
+        let deliveryRate = await p.deliveryRate(this.order.customer.phone);
+        this.order.customer = await customer.show(this.order.customer.phone);
+        this.insertInOrderItems(deliveryRate);
       } else {
         this.error = true;
         if (result == 19) {
@@ -1307,15 +1308,15 @@ export default {
     },
 
     async updateCustomer() {
-      this.customer.locality_id = this.locObj.id
+      this.order.customer.locality_id = this.locObj.id
       let customer = new Customer();
-      let res = await customer.update(this.customer);
+      let res = await customer.update(this.order.customer);
 
       let p = new Product();
-      let deliveryRate = await p.deliveryRate(this.customer.phone);
+      let deliveryRate = await p.deliveryRate(this.order.customer.phone);
 
-      this.cart.shift()
-      this.insertInCart(deliveryRate);
+      this.order.items.shift()
+      this.insertInOrderItems(deliveryRate);
       this.modalCustomer = false;
 
       console.log(this.updatingCustomer)
@@ -1327,7 +1328,7 @@ export default {
       }, 300);
     },
 
-    insertInCart(product) {
+    insertInOrderItems(product) {
       if (this.donQuestionAgain) {
         let p = new Product();
         p.dontAskAgain(product.id);
@@ -1337,13 +1338,13 @@ export default {
 
       let prod = JSON.stringify(product);
       if(this.updatingCustomer){
-        this.cart.unshift(JSON.parse(prod));
+        this.order.items.unshift(JSON.parse(prod));
       }else{
-        this.cart.push(JSON.parse(prod));
+        this.order.items.push(JSON.parse(prod));
       }
 
       this.total = 0;
-      this.cart.forEach((element) => {
+      this.order.items.forEach((element) => {
         this.total += element.price * parseInt(element.quantity);
       });
 
@@ -1356,11 +1357,11 @@ export default {
       let customerresult = await customer.find(phone);
 
       if (customerresult != undefined) {
-        this.customer = customerresult;
+        this.order.customer = customerresult;
         this.modalFindCustomer = false;
         let p = new Product();
         let deliveryRate = await p.deliveryRate(customerresult.phone);
-        this.insertInCart(deliveryRate);
+        this.insertInOrderItems(deliveryRate);
 
         return;
       }
@@ -1378,7 +1379,7 @@ export default {
       this.newCustomer = false;
       this.modalCustomerTitle = "Atualizar Cliente"
       let locality = new Locality();
-      this.locObj = await locality.find(this.customer.locality_id)
+      this.locObj = await locality.find(this.order.customer.locality_id)
        
     }
   },
