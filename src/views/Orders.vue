@@ -168,7 +168,7 @@
               <b>Total</b>
             </v-col>-->
             <v-col :style="{color: 'green'}" cols="12" class="text-right">
-              <b>R$ {{total.toFixed(2).replace('.', ',')}}</b>
+              <b>R$ {{total}}</b>
             </v-col>
           </v-card-actions>
         </v-card>
@@ -335,7 +335,7 @@
         <v-card>
           <v-card-title class="headline grey lighten-2" primary-title>
             <v-col cols="6">Receber</v-col>
-            <v-col :style="{color: 'green'}" class="text-right" cols="6">{{formatMoney(total)}}</v-col>
+            <v-col :style="{color: 'green'}" class="text-right" cols="6">R$ {{formatMoney(total)}}</v-col>
           </v-card-title>
 
           <v-card-text>
@@ -351,16 +351,17 @@
                   v-model="paymentType"
                 ></v-text-field>
               </v-col>
-              <v-col cols="5">
+              <v-col cols="8">
                 <v-text-field
-                  :max="falta"
+                  maxlength="10"
+                  v-money="money"
                   ref="amountToReceive"
                   label="A receber"
                   :color="mainColor"
                   v-model="totalReceive"
                 ></v-text-field>
               </v-col>
-              <v-col cols="5">
+              <!-- <v-col cols="5">
                 <v-text-field
                   :disabled="(paymentType != 1)"
                   ref="amountToChange"
@@ -368,7 +369,7 @@
                   :color="mainColor"
                   v-model="amountToChange"
                 ></v-text-field>
-              </v-col>
+              </v-col> -->
               <v-col cols="12">
                 <p class="text-center" id="payments">
                   <span ref="money">1-Dinheiro</span>
@@ -377,9 +378,9 @@
                   <span>4-Ticket</span>
                 </p>
                 <p
-                  v-for="(p, i) in payments"
+                  v-for="(p, i) in order.payments"
                   :key="i"
-                >{{paymentsFormats[p.paymentType - 1]}} - {{formatMoney(p.price)}} <span v-if="p.paymentType == 1"><span :style="{'font-size': 1, color: ''}">(Troco para <b>{{formatMoney(p.amountToChange)}}</b> é <b>{{formatMoney(p.amountToChange - p.price)}}</b>)</span></span></p>
+                >{{paymentsFormats[p.paymentType - 1]}} - {{formatMoney(p.totalReceive)}}</p>
               </v-col>
               <div>
                 <!-- <span
@@ -430,21 +431,21 @@
                   v-model="cashier.money"
                 ></v-text-field>
                 <v-text-field
-                  maxlength="7"
+                  maxlength="10"
                   :color="mainColor"
                   v-money="money"
                   label="Débito"
                   v-model="cashier.credit"
                 ></v-text-field>
                 <v-text-field
-                  maxlength="7"
+                  maxlength="10"
                   :color="mainColor"
                   v-money="money"
                   label="Crédito"
                   v-model="cashier.debit"
                 ></v-text-field>
                 <v-text-field
-                  maxlength="7"
+                  maxlength="10"
                   :color="mainColor"
                   v-money="money"
                   label="Ticket"
@@ -655,9 +656,10 @@ export default {
       },
 
       //cashier variables
-      totalReceive: 0.0,
+      totalReceive: "0,00",
       statusCashier: false,
       total: 0,
+      totalMissing: "",
       totalToReceive: 0,
       amountToChange: 0,
       cashier: {
@@ -697,11 +699,17 @@ export default {
       value: 0,
       hasFocusQuantity: true,
       order: {
-        customer:{},
         cashier_id: null,
         customer_id: null,
         order_type: 0,
+        payments:[],
         items:[],
+        customer:{
+          name: "",
+          phone: "",
+          address: "",
+          locality_id: null
+        }
       },
       locObj: {},
       locality: [],
@@ -790,14 +798,15 @@ export default {
     document.onkeydown = (e) => {
       // iniciar o recebimento
       if (e.key == "F9") {
+        this.totalReceive = this.formatMoney(this.total)
         if(this.dialogReceive){
           return
         }
         if (this.order.items.length > 0) {
           this.dialogReceive = true;
-          this.totalReceive = this.total;
-          this.amountToChange = this.totalReceive
-          this.type = 'Dinheiro'
+          // this.totalReceive = this.total;
+          // this.amountToChange = this.totalReceive
+          // this.type = 'Dinheiro'
           setTimeout(() => {
             var p = document.getElementById("payments");
             p.childNodes[this.paymentType - 1].style.color = this.mainColor;
@@ -805,8 +814,8 @@ export default {
           }, 200);
           
           this.setNexStep('amountToReceive')
-          this.totalReceive.toFixed(2)
-          this.falta = this.totalReceive
+          // this.totalReceive.toFixed(2)
+          // this.falta = this.totalReceive
         }
       }
 
@@ -830,6 +839,7 @@ export default {
         }
       }
       if (e.key == "Enter") {
+        console.log(this.nexStep)
         if(this.modalFindCustomer){
           this.findCustomer(this.order.customer.phone)
           alert('Buscar')
@@ -861,11 +871,18 @@ export default {
 
         if(this.nexStep == 'amountToReceive'){
           this.$refs.amountToReceive.focus();
-          if(this.paymentType == 1){
-            this.setNexStep('amountToChange')
+
+          if(1 == 1){
+            this.setNexStep('insertInPayment');
           }else{
-            this.setNexStep('insertInPayment')
+            this.setNexStep('paymentType');
           }
+
+          // if(this.paymentType == 1){
+          //   this.setNexStep('amountToChange')
+          // }else{
+          //   this.setNexStep('insertInPayment')
+          // }
           return;
         }
       }
@@ -944,18 +961,18 @@ export default {
       // }
     },
 
-    totalReceive(e){
-      console.log(parseFloat(this.totalReceive))
-      // console.log(parseFloat(e) + ' Digitado')
-      // console.log(parseFloat(this.totalReceive) + ' Total receive')
-      // console.log(parseFloat(this.falta) + ' O que falta')
-      if(parseFloat(this.totalReceive) > parseFloat(this.falta)){
-        setTimeout(()=>{
-          this.totalReceive = parseFloat(this.falta)
-        }, 200)
-      }
-      this.amountToChange = this.totalReceive
-    },
+    // totalReceive(e){
+    //   console.log(parseFloat(this.totalReceive))
+    //   // console.log(parseFloat(e) + ' Digitado')
+    //   // console.log(parseFloat(this.totalReceive) + ' Total receive')
+    //   // console.log(parseFloat(this.falta) + ' O que falta')
+    //   if(parseFloat(this.totalReceive) > parseFloat(this.falta)){
+    //     setTimeout(()=>{
+    //       this.totalReceive = parseFloat(this.falta)
+    //     }, 200)
+    //   }
+    //   this.amountToChange = this.totalReceive
+    // },
 
     paymentType() {
       if(this.paymentType == 1){
@@ -1035,38 +1052,26 @@ export default {
       return
     },
 
-    insertPayment() {
-      if(this.totalReceive == 0){
-        this.setNexStep('endOrder')
-        return
-      }
-      if(parseFloat(this.amountToChange) < parseFloat(this.totalReceive)){
-        setTimeout(()=>{
-          this.amountToChange = parseFloat(this.totalReceive)
-        }, 200)
-
-        return
-      }
-      let totalReceive = parseFloat(this.totalReceive);
-      let total = parseFloat(this.total);
+    async insertPayment() {
       this.$refs.paymentType.focus();
-      
-      this.payments.push({
-        price: totalReceive,
-        paymentType: this.paymentType,
-        amountToChange : this.amountToChange
-      });
 
-      let result = 0;
-      this.payments.forEach((element) => {
-        result += element.price;
-      });
-      this.totalReceive = total - result;
+      this.order.payments.push({paymentType: this.paymentType, totalReceive: this.totalReceive});
 
-      this.totalReceive = this.totalReceive.toFixed(2)
+      let total = 0;
+      for (const p of this.order.payments) {
+          const todo = await fetch(p)
 
-      this.falta = this.totalReceive
-      this.setNexStep('amountToReceive')
+          total += parseFloat(await helper.formatMonetaryForDB(p.totalReceive))
+      }
+
+      let res = await parseFloat(await helper.formatMonetaryForDB(this.total))
+
+      setTimeout(()=>{
+        this.totalReceive = this.formatMoney(res - total)
+
+
+        console.log(this.totalReceive)
+      }, 200)
     },
 
     closeObs() {
@@ -1343,11 +1348,12 @@ export default {
         this.order.items.push(JSON.parse(prod));
       }
 
-      this.total = 0;
+      let total = 0;
       this.order.items.forEach((element) => {
-        this.total += element.price * parseInt(element.quantity);
+        total += element.price * parseInt(element.quantity);
       });
 
+      this.total = this.formatMoney(total)
       this.setNexStep('selectProduct');
       this.clearForm();
     },
