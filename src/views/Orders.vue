@@ -401,7 +401,7 @@
               color="white"
               ref="btnendorder"
               text
-              @click="endOrder(order, order.items, payments)"
+              @click="endOrder(order)"
             >Receber</v-btn>
             <v-btn
               :style="{width:'50%', background: 'red'}"
