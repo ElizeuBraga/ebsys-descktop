@@ -361,15 +361,6 @@
                   v-model="totalReceive"
                 ></v-text-field>
               </v-col>
-              <!-- <v-col cols="5">
-                <v-text-field
-                  :disabled="(paymentType != 1)"
-                  ref="amountToChange"
-                  :label="'Quantidade em ' + type"
-                  :color="mainColor"
-                  v-model="amountToChange"
-                ></v-text-field>
-              </v-col> -->
               <v-col cols="12">
                 <p class="text-center" id="payments">
                   <span ref="money">1-Dinheiro</span>
@@ -381,6 +372,7 @@
                   v-for="(p, i) in order.payments"
                   :key="i"
                 >{{paymentsFormats[p.paymentType - 1]}} - {{formatMoney(p.totalReceive)}}</p>
+                <p>{{amountToChange}}</p>
               </v-col>
               <div>
                 <!-- <span
@@ -650,7 +642,7 @@ export default {
         decimal: ",",
         thousands: ".",
         // precision: 2,
-        masked: false, // doesn't work with directive
+        // masked: false, // doesn't work with directive
         // Waiting on https://github.com/vuejs-tips/v-money/pull/51 to be merged
         allowBlank: true,
       },
@@ -754,6 +746,8 @@ export default {
   },
 
   async mounted() {
+    let value = 15.50;
+    helper.formatMonetaryForDB(value)
     setTimeout(()=>{
       this.lastColor = this.deliveryColor
     }, 200)
@@ -859,8 +853,10 @@ export default {
           return
         }
 
-        if(this.nexStep == 'insertInPayment'){
+        if(this.nexStep == 'insertPayment'){
           this.insertPayment()
+
+          this.setNexStep('amountToReceive')
           return
         }
 
@@ -869,19 +865,19 @@ export default {
           return
         }
 
+        if(this.nexStep == 'paymentType'){
+          this.$refs.paymentType.focus();
+          this.setNexStep('amountToReceive')
+          return
+        }
+
         if(this.nexStep == 'amountToReceive'){
           this.$refs.amountToReceive.focus();
-
-          if(1 == 1){
-            this.setNexStep('insertInPayment');
-          }else{
-            this.setNexStep('paymentType');
-          }
+          this.setNexStep('insertPayment')
 
           // if(this.paymentType == 1){
           //   this.setNexStep('amountToChange')
           // }else{
-          //   this.setNexStep('insertInPayment')
           // }
           return;
         }
@@ -1061,17 +1057,23 @@ export default {
       for (const p of this.order.payments) {
           const todo = await fetch(p)
 
-          total += parseFloat(await helper.formatMonetaryForDB(p.totalReceive))
+          total += parseFloat(helper.formatMonetaryForDB(p.totalReceive))
       }
 
-      let res = await parseFloat(await helper.formatMonetaryForDB(this.total))
 
-      setTimeout(()=>{
-        this.totalReceive = this.formatMoney(res - total)
+      let totalMissing = parseFloat(helper.formatMonetaryForDB(this.total)) - total
 
+      const input = this.$refs.amountToReceive.$el.querySelector("input");
 
-        console.log(this.totalReceive)
-      }, 200)
+      if(totalMissing <= 0){
+        input.value = "0,00"
+        this.totalReceive = "0,00"
+        this.amountToChange = "0,00"
+      }else{
+        this.totalReceive = this.formatMoney(totalMissing)
+        input.value = this.formatMoney(totalMissing)
+        this.amountToChange = this.formatMoney(totalMissing)
+      }
     },
 
     closeObs() {
@@ -1231,7 +1233,6 @@ export default {
 
     endOrder(order) {
       order.cashier_id = this.cashier.id;
-      console.log(order)
       return
       let o = new OrderController();
       o.store(order, items, payments);

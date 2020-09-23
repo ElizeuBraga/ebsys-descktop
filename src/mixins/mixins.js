@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { Helper } from "../models/Helper";
 // import sqlite3  from 'sqlite3';
 // let db =  new sqlite3.Database('/home/basis/Downloads/app-descktop/src/database/database.db')
 
+let helper = new Helper();
 export default {
     data() {
         return {
@@ -54,7 +56,7 @@ export default {
 
     methods: {
         formatMoney(value) {
-            return String(parseFloat(value).toFixed(2)).replace('.', ',');
+            return helper.formatMonetaryForDB(value).replace('.', ',');
         },
         showMessageError(msg){
             this.error = true

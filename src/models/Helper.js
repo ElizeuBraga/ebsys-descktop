@@ -20,9 +20,24 @@ export class Helper{
         return result.max
     }
 
-    async formatMonetaryForDB(value){
-        let result = await value.replace('.', '').replace(',', '.')  
+    formatMonetaryForDB(value){
+        let result = null;
+        if(this.isString(value)){
+            result = value.replace('.', '').replace(',', '.')  
+        }else if (this.isFloat(value)) {
+            result = value.toFixed(2)  
+        }else{
+            result = parseFloat(value).toFixed(2)
+        }
         return result
+    }
+
+    isString (value) {
+        return typeof value === 'string' || value instanceof String;
+    }
+
+    isFloat(n){
+        return Number(n) === n && n % 1 !== 0;
     }
 
     async insertMany(table, array){
