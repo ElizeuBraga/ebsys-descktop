@@ -6,6 +6,7 @@
           ref="product"
           v-model="product"
           :items="items"
+          @click="setNexStep('quantity')"
           :loading="isLoading"
           :color="mainColor"
           hide-no-data
@@ -74,7 +75,7 @@
               >shopping_cart</v-icon>
             </v-col>
           </v-row>
-          <v-row v-if="delivery && order.customer.name != null" align="center" class="pb-0 pt-0">
+          <v-row v-if="delivery && order.customer.name != null" align="center" class="pb-0 pt-0 ml-0 mr-0" :style="{'background-color': '#f5f5f5'}">
             <v-col cols="9" align="center">
               <span>{{order.customer.name}} - {{order.customer.address}} - {{order.customer.phone}}</span>
             </v-col>
@@ -471,10 +472,10 @@
             <v-row justify="center">
               <v-col cols="12">
                 <v-text-field
-                  :ref="'username'"
                   label="Telefone ou email"
                   :color="mainColor"
                   v-model="username"
+                  ref="username"
                 ></v-text-field>
                 <v-text-field
                   ref="password"
@@ -622,6 +623,7 @@ import { Cashier } from "../models/Cashier";
 import { User } from "../models/User";
 import { Customer } from "../models/Customer";
 import { Helper } from "../models/Helper";
+import { Order } from '../models/Order';
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -746,11 +748,11 @@ export default {
   },
 
   async mounted() {
-    let value = 15.50;
-    helper.formatMonetaryForDB(value)
+    let statusCashier = await this.cashierStatus();
     setTimeout(()=>{
+      this.$refs.username.focus();
       this.lastColor = this.deliveryColor
-    }, 200)
+    }, 600)
     this.loadSectionsFromServer();
     this.loadProductsFromServer();
     this.loadLocalitiesFromServer();
@@ -791,6 +793,16 @@ export default {
     //keyboard events
     document.onkeydown = (e) => {
       // iniciar o recebimento
+      if(e.key == 'F5'){
+        if(!this.unlogged){
+          if(this.delivery){
+            this.typeOrderBalcao()
+          }else{
+            this.typeOrderDelivery()
+          }
+        }
+      }
+
       if (e.key == "F9") {
         this.totalReceive = this.formatMoney(this.total)
         if(this.dialogReceive){
@@ -833,10 +845,24 @@ export default {
         }
       }
       if (e.key == "Enter") {
-        console.log(this.nexStep)
+        if(this.nexStep == 'quantity'){
+          this.$refs.quantity.focus();
+
+          this.setNexStep('insertInOrderItems')
+          return
+        }
+
+        if(this.dialogObs){
+          this.closeObs()
+          return;
+        }
+
+        if(this.unlogged){
+          this.login(this.username, this.password)
+          return
+        }
         if(this.modalFindCustomer){
           this.findCustomer(this.order.customer.phone)
-          alert('Buscar')
           return
         }
         if (this.nexStep == "insertInOrderItems") {
@@ -1080,12 +1106,22 @@ export default {
       this.productInEditMode.observation = this.observation;
       this.observation = "";
       this.dialogObs = false;
+
+      this.$nextTick(()=>{
+        let input = this.$refs.product.$el.querySelector('input')
+        input.focus();
+      })
+
     },
 
     setObs(p) {
       this.productInEditMode = p;
       this.dialogObs = true;
       this.observation = this.productInEditMode.observation;
+
+      setTimeout(()=>{
+        this.$refs.observation.focus()
+      }, 200)
     },
 
     clearForm() {
@@ -1173,6 +1209,11 @@ export default {
         this.unlogged = false;
         this.$root.$emit("logged_user", this.user);
         (this.user.change_password) ? this.resetpassword = true : this.resetpassword = false
+        
+        this.$nextTick(()=>{
+          const input = this.$refs.product.$el.querySelector("input");
+          input.focus();
+        })
       }else{
         this.showMessageErrorLogin("Usuario e/ou senha estão incorretos");
         // return;
@@ -1231,10 +1272,12 @@ export default {
       this.order.items.splice(i, 1);
     },
 
-    endOrder(order) {
+    async endOrder(order) {
       order.cashier_id = this.cashier.id;
+
+      let o = new Order();
+      let response = await o.create(order);
       return
-      let o = new OrderController();
       o.store(order, items, payments);
       this.dialogReceive = false;
       this.order.items = [];
@@ -1256,6 +1299,10 @@ export default {
       this.modalFindCustomer = true;
 
       this.$root.$emit("change_color", this.mainColor);
+
+      setTimeout(()=>{
+        this.$refs.phone.focus();
+      }, 200)
     },
 
     typeOrderBalcao() {
@@ -1269,6 +1316,10 @@ export default {
       this.mainColor = this.countertopColor;
       this.$root.$emit("change_color", this.mainColor);
       this.modalFindCustomer = false;
+
+      this.$nextTick(()=>{
+        this.$refs.product.focus();
+      })
     },
 
     cancelOrder() {
@@ -1335,6 +1386,10 @@ export default {
     },
 
     insertInOrderItems(product) {
+      if(!this.statusCashier){
+        alert('Caixa fechado')
+        return
+      }
       if (this.donQuestionAgain) {
         let p = new Product();
         p.dontAskAgain(product.id);
