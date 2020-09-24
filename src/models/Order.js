@@ -3,11 +3,14 @@ import {ItemController} from '../controllers/ItemController'
 import {PaymentController} from '../controllers/PaymentController'
 import util from 'util'
 import { stringify } from "querystring";
+import { Helper } from "./Helper";
 const db = new sqlite3.Database(
     "/home/basis/Downloads/app-descktop/src/database/database.db"
     );
 db.run = util.promisify(db.run);
 db.get = util.promisify(db.get);
+
+const helper = new Helper();
 export class Order {
     constructor() {
 
@@ -24,27 +27,31 @@ export class Order {
         let sql = "insert into orders (cashier_id, customer_id, order_type, created_at) values(?, ?, ?, datetime('now', 'localtime'));";
         
         
-        // await db.run('BEGIN TRANSACTION'); 
+        // db.run('BEGIN TRANSACTION');
         await db.run(sql, [o.cashier_id, customer_id, o.order_type]).then(async ()=>{
-            let sqlLastRowId = "SELECT LAST_INSERT_ROWID()";
-
+            let sqlLastRowId = "SELECT LAST_INSERT_ROWID() as order_id";
             let order_id = await db.get(sqlLastRowId)
-            console.log(order_id)
             for (const i of o.items) {
                 let todo = await fetch(i)
+                item.id = null
                 item.quantity = i.quantity
                 item.product_id = i.id
                 item.price = i.price
-                item.order_id = i.order_id
+                item.order_id = order_id.order_id
+                item.created_at =  new Date().toISOString();
+                item.updated_at = null
+                item.deleted_at = null
                 
-                items.push(stringify(item))
+                let itemCopy = Object.assign({}, item)
+                items.push(itemCopy)
             }
-            console.log('Feito')
-        })
-
-        // console.log(items)
+            
         
-        // console.log(o)
+            await helper.insertMany('items', items)
+        })
+        // db.run('COMMIT');
+        
+        console.log(o)
         if(Object.keys(o.customer).length > 0){
             customer_id = o.customer.id
         }

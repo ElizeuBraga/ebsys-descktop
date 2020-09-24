@@ -87,7 +87,7 @@ export class Helper{
             }
             
             let sql = 'INSERT INTO '+ table +' values' + map;
-            
+    
             await db.run(sql).then(()=>{
                 resolved = true
             }).catch((err)=>{
