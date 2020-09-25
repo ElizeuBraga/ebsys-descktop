@@ -341,7 +341,7 @@
 
           <v-card-text>
             <v-row justify="center">
-              <v-col cols="2">
+              <v-col cols="2" class="mb-0 pb-0">
                 <v-text-field
                   type="number"
                   min="1"
@@ -352,7 +352,7 @@
                   v-model="paymentType"
                 ></v-text-field>
               </v-col>
-              <v-col cols="8">
+              <v-col cols="8" class="mb-0 pb-0">
                 <v-text-field
                   maxlength="10"
                   v-money="money"
@@ -362,18 +362,26 @@
                   v-model="totalReceive"
                 ></v-text-field>
               </v-col>
-              <v-col cols="12">
+              <v-col cols="12" class="mb-0 mt-0 pb-0 pt-0">
                 <p class="text-center" id="payments">
-                  <span ref="money">1-Dinheiro</span>
-                  <span ref="debit">2-Débito</span>
-                  <span>3-Crédito</span>
-                  <span>4-Ticket</span>
+                  <span ref="money">1-Dinheiro </span>
+                  <span ref="debit">2-Débito </span>
+                  <span>3-Crédito </span>
+                  <span>4-Ticket </span>
                 </p>
-                <p
-                  v-for="(p, i) in order.payments"
-                  :key="i"
-                >{{paymentsFormats[p.paymentType - 1]}} - {{formatMoney(p.totalReceive)}}</p>
-                <p>{{amountToChange}}</p>
+              </v-col>
+              <v-col cols="12">
+                <p v-if="order.money > 0"  class="mb-0">Dinheiro - {{formatMoney(order.money)}}</p>
+                <p v-if="order.debit > 0"  class="mb-0">Debito - {{formatMoney(order.debit)}}</p>
+                <p v-if="order.credit > 0" class="mb-0">Credito - {{formatMoney(order.credit)}}</p>
+                <p v-if="order.ticket > 0" class="mb-0">Ticket - {{formatMoney(order.ticket)}}</p>
+                <br>
+                <hr>
+                <p :style="{color:'green'}" class="resume-end-order mb-0">Total - {{formatMoney(order.total_received)}}</p>
+                <p :style="{color:'red'}" class="resume-end-order mb-0" v-if="this.total - order.total_received > 0">Falta - {{formatMoney(this.total - order.total_received)}}</p>
+                <p :style="{color:'red'}" class="resume-end-order mb-0" v-else>Falta - 0,00</p>
+                <p :style="{color:'red'}" class="resume-end-order mb-0" v-if="order.total_received > total">Troco - {{formatMoney(order.total_received - this.total)}}</p>
+                <p :style="{color:'red'}" class="resume-end-order mb-0" v-else>Troco - 0,00</p>
               </v-col>
               <div>
                 <!-- <span
@@ -698,12 +706,17 @@ export default {
         order_type: 0,
         payments:[],
         items:[],
+        debit: 0,
+        credit: 0,
+        ticket: 0,
+        money: 0,
         customer:{
           name: "",
           phone: "",
           address: "",
           locality_id: null
-        }
+        },
+        total_received: 0.00
       },
       locObj: {},
       locality: [],
@@ -899,6 +912,14 @@ export default {
 
         if(this.nexStep == 'amountToReceive'){
           this.$refs.amountToReceive.focus();
+
+
+          let inputEl = this.$refs.amountToReceive.$el.querySelector('input')
+
+          setTimeout(()=>{
+            inputEl.select()
+          }, 150)
+          // this.$refs.amountToReceive.select()
           this.setNexStep('insertPayment')
 
           // if(this.paymentType == 1){
@@ -975,47 +996,19 @@ export default {
       }
     },
 
-    amountToChange(){
-      // if(parseFloat(this.amountToChange) < parseFloat(this.falta)){
-      //   setTimeout(()=>{
-      //     this.amountToChange = parseFloat(this.falta)
-      //   }, 200)
-      // }
-    },
-
-    // totalReceive(e){
-    //   console.log(parseFloat(this.totalReceive))
-    //   // console.log(parseFloat(e) + ' Digitado')
-    //   // console.log(parseFloat(this.totalReceive) + ' Total receive')
-    //   // console.log(parseFloat(this.falta) + ' O que falta')
-    //   if(parseFloat(this.totalReceive) > parseFloat(this.falta)){
-    //     setTimeout(()=>{
-    //       this.totalReceive = parseFloat(this.falta)
-    //     }, 200)
-    //   }
-    //   this.amountToChange = this.totalReceive
-    // },
-
-    paymentType() {
-      if(this.paymentType == 1){
-        this.type = 'Dinheiro'
-        // this.setNexStep('amountToChange')
-      }else if(this.paymentType == 2){
-        this.type = 'Débito'
-        // this.setNexStep('insertPayment')
-      }else if(this.paymentType == 3){
-        this.type = 'Crédito'
-        // this.setNexStep('insertPayment')
+    paymentType(e) {
+      if(parseInt(e) > 4){
+        setTimeout(()=>{
+          this.paymentType = 1
+        },200)
       }else{
-        this.type = 'Ticket'
-        // this.setNexStep('insertPayment')
-      }
-      var p = document.getElementById("payments");
-      p.childNodes.forEach((element) => {
-        element.style.color = "";
-      });
-      p.childNodes[this.paymentType - 1].style.color = this.mainColor;
 
+        var p = document.getElementById("payments");
+        p.childNodes.forEach((element) => {
+          element.style.color = "";
+        });
+        p.childNodes[this.paymentType - 1].style.color = this.mainColor;
+      }
       this.setNexStep('amountToReceive')
     },
 
@@ -1048,8 +1041,6 @@ export default {
         if(response.data.length == 50){
           // this.loadProductsFromServer()
         }
-
-        // console.log(response.data)
       })
     },
 
@@ -1077,17 +1068,20 @@ export default {
     async insertPayment() {
       this.$refs.paymentType.focus();
 
-      this.order.payments.push({paymentType: this.paymentType, totalReceive: this.totalReceive});
-
-      let total = 0;
-      for (const p of this.order.payments) {
-          const todo = await fetch(p)
-
-          total += parseFloat(helper.formatMonetaryForDB(p.totalReceive))
+      if(this.paymentType == 1){
+        this.order.money += parseFloat(helper.formatMonetaryForDB(this.totalReceive))
+      }else if(this.paymentType == 2){
+        this.order.debit += parseFloat(helper.formatMonetaryForDB(this.totalReceive))
+      }else if(this.paymentType == 3){
+        this.order.credit = parseFloat(helper.formatMonetaryForDB(this.totalReceive))
+      }else{
+        this.order.ticket += parseFloat(helper.formatMonetaryForDB(this.totalReceive))
       }
 
 
-      let totalMissing = parseFloat(helper.formatMonetaryForDB(this.total)) - total
+      this.order.total_received = this.order.money + this.order.debit + this.order.credit + this.order.ticket
+
+      let totalMissing = parseFloat(helper.formatMonetaryForDB(this.total)) - this.order.total_received
 
       const input = this.$refs.amountToReceive.$el.querySelector("input");
 
@@ -1218,35 +1212,6 @@ export default {
         this.showMessageErrorLogin("Usuario e/ou senha estão incorretos");
         // return;
       }
-      
-
-      // bcryptjs.compare(password, result.password, (err, res) => {
-      //   if (res === true) {
-      //     if (result.updated_at === null) {
-      //       this.resetpassword = true;
-      //     }
-      //     if (
-      //       result.id != this.userCashier.id &&
-      //       this.userCashier.id != undefined
-      //     ) {
-      //       this.showMessageErrorLogin(
-      //         "Este caixa foi aberto por outro usuario, contate o administrador."
-      //       );
-      //     } else {
-      //       this.loggedUser = result;
-      //       this.unlogged = false;
-      //       this.username = "";
-      //       this.password = "";
-      //       this.$root.$emit("logged_user", result);
-      //       this.$nextTick(() => {
-      //         const input = this.$refs.product.$el.querySelector("input");
-      //         input.focus();
-      //       });
-      //     }
-      //   } else {
-      //     this.showMessageErrorLogin("Usuario e/ou senha estão incorretos");
-      //   }
-      // });
     },
 
     openCashier(user) {
@@ -1409,7 +1374,7 @@ export default {
         total += element.price * parseInt(element.quantity);
       });
 
-      this.total = this.formatMoney(total)
+      this.total = total
       this.setNexStep('selectProduct');
       this.clearForm();
     },
@@ -1448,4 +1413,8 @@ export default {
 };
 </script>
 <style scoped>
+.resume-end-order{
+  font-weight: bold;
+  font-size: 50;
+}
 </style>
