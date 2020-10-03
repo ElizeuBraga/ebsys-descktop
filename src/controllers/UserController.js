@@ -19,7 +19,6 @@ export class UserController{
     }
 
     update(u, resetpwd = false){
-        console.log(u)
         let user = new User();
         let result = user.update(u, resetpwd);
         return result

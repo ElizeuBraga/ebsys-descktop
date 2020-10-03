@@ -21,11 +21,12 @@
     "pusher": "^3.0.1",
     "pusher-js": "^6.0.0",
     "spectron": "^11.1.0",
-    "sqlite3": "^4.2.0",
+    "sqlite3": "^5.0.0",
     "v-money": "^0.8.1",
     "vue": "^2.6.11",
     "vue-router": "^3.1.5",
     "vue-shortkey": "^3.1.7",
+    "vue-simple-alert": "^1.1.1",
     "vuetify": "^2.2.11"
   },
   "devDependencies": {

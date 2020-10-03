@@ -1,6 +1,10 @@
 <template>
-  <v-container fill-height fluid :style="{background:backgroundColor, 'align-items': 'stretch'}">
-    <v-row :style="{background:backgroundColor, height:'93%'}">
+  <v-container
+    fill-height
+    fluid
+    :style="{ background: backgroundColor, 'align-items': 'stretch' }"
+  >
+    <v-row :style="{ background: backgroundColor, height: '93%' }">
       <v-col cols="5">
         <v-autocomplete
           ref="product"
@@ -11,7 +15,15 @@
           :color="mainColor"
           hide-no-data
           hide-selected
-          :hint="product.price ? quantity + ' X '+product.price.toFixed(2).replace('.', ',') + ' = ' + (quantity*product.price).toFixed(2).replace('.', ',') : ''"
+          :hint="
+            product.price
+              ? quantity +
+                ' X ' +
+                product.price.toFixed(2).replace('.', ',') +
+                ' = ' +
+                (quantity * product.price).toFixed(2).replace('.', ',')
+              : ''
+          "
           item-text="Description"
           item-value="API"
           label="Buscar um produto"
@@ -33,26 +45,31 @@
       </v-col>
 
       <!-- coluna do Pedido inicio-->
-      <v-col cols="5" :style="{background:backgroundColor}">
-        <v-card elevation="10" height="95%" :style="{background: ''}">
-          <v-card-title :style="{background:'', color:mainColor}" class="justify-center pb-0 pt-0">
-            <b>{{deliveryTitle}}</b>
+      <v-col cols="5" :style="{ background: backgroundColor }">
+        <v-card elevation="10" height="95%" :style="{ background: '' }">
+          <v-card-title
+            :style="{ background: '', color: mainColor }"
+            class="justify-center pb-0 pt-0"
+          >
+            <b>{{ deliveryTitle }}</b>
           </v-card-title>
           <v-alert
             :value="error"
             class="ml-2 mr-2"
             transition="scale-transition"
             type="error"
-          >{{msg}}</v-alert>
+            >{{ msg }}</v-alert
+          >
           <v-alert
             :value="success"
             class="ml-2 mr-2"
             transition="scale-transition"
             type="success"
-          >{{msg}}</v-alert>
+            >{{ msg }}</v-alert
+          >
           <v-row
             v-if="order.items.length == 0"
-            :style="{background:'', height:'600px'}"
+            :style="{ background: '', height: '600px' }"
             align="center"
             justify="space-around"
           >
@@ -64,20 +81,30 @@
                 :width="15"
                 :value="value"
                 color="pink"
-              >{{ value }}</v-progress-circular>
+                >{{ value }}</v-progress-circular
+              >
 
               <v-icon
                 v-else
-                :style="{opacity: 0.4}"
+                :style="{ opacity: 0.4 }"
                 :disabled="true"
                 size="200"
                 align="center"
-              >shopping_cart</v-icon>
+                >shopping_cart</v-icon
+              >
             </v-col>
           </v-row>
-          <v-row v-if="delivery && order.customer.name != null" align="center" class="pb-0 pt-0 ml-0 mr-0" :style="{'background-color': '#f5f5f5'}">
+          <v-row
+            v-if="delivery && order.customer.name != null"
+            align="center"
+            class="pb-0 pt-0 ml-0 mr-0"
+            :style="{ 'background-color': '#f5f5f5' }"
+          >
             <v-col cols="9" align="center">
-              <span>{{order.customer.name}} - {{order.customer.address}} - {{order.customer.phone}}</span>
+              <span
+                >{{ order.customer.name }} - {{ order.customer.address }} -
+                {{ order.customer.phone }}</span
+              >
             </v-col>
             <v-col align="center" cols="3" class="pb-0 pt-0">
               <a @click="showModalUpdateCustomer()">
@@ -90,8 +117,14 @@
           </v-row>
           <br />
           <v-row class="pl-6 pr-6">
-            <v-row class="pl-1 pr-1 text-center" v-for="(i, index) in order.items" :key="index">
-              <v-col cols="1" class="text-left pt-0 pb-0">{{index + 1}}</v-col>
+            <v-row
+              class="pl-1 pr-1 text-center"
+              v-for="(i, index) in order.items"
+              :key="index"
+            >
+              <v-col cols="1" class="text-left pt-0 pb-0">{{
+                index + 1
+              }}</v-col>
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-col
@@ -99,45 +132,44 @@
                     v-on="on"
                     cols="3"
                     class="text-left pt-0 pb-0 text-truncate"
-                  >{{i.name}}</v-col>
+                    >{{ i.name }}</v-col
+                  >
                 </template>
-                <span>{{i.name}}</span>
+                <span>{{ i.name }}</span>
               </v-tooltip>
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
-                  <v-col v-bind="attrs" v-on="on" cols="2" class="pt-0 pb-0">{{i.quantity}}</v-col>
+                  <v-col v-bind="attrs" v-on="on" cols="2" class="pt-0 pb-0">{{
+                    i.quantity
+                  }}</v-col>
                 </template>
                 <span>Quantidade</span>
               </v-tooltip>
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
-                  <v-col
-                    v-bind="attrs"
-                    v-on="on"
-                    cols="2"
-                    class="pt-0 pb-0"
-                  >{{String(i.price).replace('.', ',')}}</v-col>
+                  <v-col v-bind="attrs" v-on="on" cols="2" class="pt-0 pb-0">{{
+                    String(i.price).replace(".", ",")
+                  }}</v-col>
                 </template>
                 <span>Preço unitario</span>
               </v-tooltip>
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
-                  <v-col
-                    v-bind="attrs"
-                    v-on="on"
-                    cols="2"
-                    class="pt-0 pb-0"
-                  >{{parseFloat(i.price * i.quantity).toFixed(2).replace('.', ',')}}</v-col>
+                  <v-col v-bind="attrs" v-on="on" cols="2" class="pt-0 pb-0">{{
+                    parseFloat(i.price * i.quantity)
+                      .toFixed(2)
+                      .replace(".", ",")
+                  }}</v-col>
                 </template>
                 <span>Total parcial</span>
               </v-tooltip>
               <v-tooltip v-if="i.name != 'Taxa de entrega'" top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-col v-on="on" cols="1" class="pt-0 pb-0" v-bind="attrs">
-                    <a
-                      @click="removeFromOrderItems(i, (i.price * i.quantity))"
-                    >
-                      <v-icon color="red" align="center">remove_circle_outline</v-icon>
+                    <a @click="removeFromOrderItems(i, i.price * i.quantity)">
+                      <v-icon color="red" align="center"
+                        >remove_circle_outline</v-icon
+                      >
                     </a>
                   </v-col>
                 </template>
@@ -153,8 +185,12 @@
                 </template>
                 <span>Observação</span>
               </v-tooltip>
-              <v-col cols="9" :style="{color:'gray'}" class="text-left pt-0 pb-0">
-                <span>{{i.observation}}</span>
+              <v-col
+                cols="9"
+                :style="{ color: 'gray' }"
+                class="text-left pt-0 pb-0"
+              >
+                <span>{{ i.observation }}</span>
               </v-col>
               <v-col class="pt-0 pb-0 pr-0 pl-0" cols="12">
                 <hr />
@@ -163,13 +199,19 @@
           </v-row>
 
           <v-card-actions
-            :style="{'font-size': '20px', color:mainColor, position:'absolute', bottom:0, width:'100%'}"
+            :style="{
+              'font-size': '20px',
+              color: mainColor,
+              position: 'absolute',
+              bottom: 0,
+              width: '100%',
+            }"
           >
             <!-- <v-col cols="4" class="text-center">
               <b>Total</b>
             </v-col>-->
-            <v-col :style="{color: 'green'}" cols="12" class="text-right">
-              <b>R$ {{total}}</b>
+            <v-col :style="{ color: 'green' }" cols="12" class="text-right">
+              <b>R$ {{ formatMoney(total) }}</b>
             </v-col>
           </v-card-actions>
         </v-card>
@@ -179,7 +221,9 @@
       <!-- observações -->
       <v-dialog v-model="dialogObs" width="500" :persistent="true">
         <v-card>
-          <v-card-title class="headline grey lighten-2" primary-title>Alguma Observação?</v-card-title>
+          <v-card-title class="headline grey lighten-2" primary-title
+            >Alguma Observação?</v-card-title
+          >
           <v-card-text>
             <v-text-field
               :color="mainColor"
@@ -192,7 +236,9 @@
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" ref="btnOkobs" text @click="closeObs">Ok</v-btn>
+            <v-btn color="primary" ref="btnOkobs" text @click="closeObs"
+              >Ok</v-btn
+            >
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -200,7 +246,11 @@
       <!-- modal find customer -->
       <v-dialog v-model="modalFindCustomer" width="500" :persistent="true">
         <v-card>
-          <v-card-title class="headline grey lighten-2 text-center" primary-title>Buscar cliente</v-card-title>
+          <v-card-title
+            class="headline grey lighten-2 text-center"
+            primary-title
+            >Buscar cliente</v-card-title
+          >
           <v-card-text>
             <v-row justify="center">
               <v-col cols="10">
@@ -217,13 +267,14 @@
               </v-col>
               <v-col cols="10">
                 <v-btn
-                  :style="{background:mainColor, color:'white'}"
+                  :style="{ background: mainColor, color: 'white' }"
                   rounded
                   @click="findCustomer(order.customer.phone)"
                   label="Preço"
                   width="100%"
                   :disabled="!order.customer.phone"
-                >Buscar</v-btn>
+                  >Buscar</v-btn
+                >
               </v-col>
             </v-row>
           </v-card-text>
@@ -238,8 +289,11 @@
               ref="btnOk"
               text
               @click="dialog = false"
-            >Cancelar</v-btn>
-            <v-btn v-else color="primary" ref="btnOk" text @click="cancelarForm">Cancelar</v-btn>
+              >Cancelar</v-btn
+            >
+            <v-btn v-else color="primary" ref="btnOk" text @click="cancelarForm"
+              >Cancelar</v-btn
+            >
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -247,7 +301,11 @@
       <!-- modal new  cliente or update cliente -->
       <v-dialog v-model="modalCustomer" width="500" :persistent="true">
         <v-card>
-          <v-card-title class="headline grey lighten-2 text-center" primary-title>{{modalCustomerTitle}}</v-card-title>
+          <v-card-title
+            class="headline grey lighten-2 text-center"
+            primary-title
+            >{{ modalCustomerTitle }}</v-card-title
+          >
 
           <v-card-text>
             <v-row justify="center">
@@ -294,23 +352,25 @@
               </v-col>
               <v-col v-if="newCustomer" cols="10">
                 <v-btn
-                  :style="{background:color, color:'white'}"
+                  :style="{ background: color, color: 'white' }"
                   rounded
                   @click="saveCustomer"
                   label="Preço"
                   width="100%"
                   :disabled="inputs"
-                >Salvar</v-btn>
+                  >Salvar</v-btn
+                >
               </v-col>
               <v-col v-if="updatingCustomer" cols="10">
                 <v-btn
-                  :style="{background:mainColor, color:'white'}"
+                  :style="{ background: mainColor, color: 'white' }"
                   rounded
                   @click="updateCustomer"
                   label="Preço"
                   width="100%"
                   :disabled="inputs"
-                >Atualizar</v-btn>
+                  >Atualizar</v-btn
+                >
               </v-col>
             </v-row>
           </v-card-text>
@@ -325,8 +385,11 @@
               ref="btnOk"
               text
               @click="modalCustomer = false"
-            >Cancelar</v-btn>
-            <v-btn v-else color="primary" ref="btnOk" text @click="cancelarForm">Cancelar</v-btn>
+              >Cancelar</v-btn
+            >
+            <v-btn v-else color="primary" ref="btnOk" text @click="cancelarForm"
+              >Cancelar</v-btn
+            >
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -336,7 +399,9 @@
         <v-card>
           <v-card-title class="headline grey lighten-2" primary-title>
             <v-col cols="6">Receber</v-col>
-            <v-col :style="{color: 'green'}" class="text-right" cols="6">R$ {{formatMoney(total)}}</v-col>
+            <v-col :style="{ color: 'green' }" class="text-right" cols="6"
+              >R$ {{ formatMoney(total) }}</v-col
+            >
           </v-card-title>
 
           <v-card-text>
@@ -371,17 +436,51 @@
                 </p>
               </v-col>
               <v-col cols="12">
-                <p v-if="order.money > 0"  class="mb-0">Dinheiro - {{formatMoney(order.money)}}</p>
-                <p v-if="order.debit > 0"  class="mb-0">Debito - {{formatMoney(order.debit)}}</p>
-                <p v-if="order.credit > 0" class="mb-0">Credito - {{formatMoney(order.credit)}}</p>
-                <p v-if="order.ticket > 0" class="mb-0">Ticket - {{formatMoney(order.ticket)}}</p>
-                <br>
-                <hr>
-                <p :style="{color:'green'}" class="resume-end-order mb-0">Total - {{formatMoney(order.total_received)}}</p>
-                <p :style="{color:'red'}" class="resume-end-order mb-0" v-if="this.total - order.total_received > 0">Falta - {{formatMoney(this.total - order.total_received)}}</p>
-                <p :style="{color:'red'}" class="resume-end-order mb-0" v-else>Falta - 0,00</p>
-                <p :style="{color:'red'}" class="resume-end-order mb-0" v-if="order.total_received > total">Troco - {{formatMoney(order.total_received - this.total)}}</p>
-                <p :style="{color:'red'}" class="resume-end-order mb-0" v-else>Troco - 0,00</p>
+                <p v-if="order.money > 0" class="mb-0">
+                  Dinheiro - {{ formatMoney(order.money) }}
+                </p>
+                <p v-if="order.debit > 0" class="mb-0">
+                  Debito - {{ formatMoney(order.debit) }}
+                </p>
+                <p v-if="order.credit > 0" class="mb-0">
+                  Credito - {{ formatMoney(order.credit) }}
+                </p>
+                <p v-if="order.ticket > 0" class="mb-0">
+                  Ticket - {{ formatMoney(order.ticket) }}
+                </p>
+                <br />
+                <hr />
+                <p :style="{ color: 'green' }" class="resume-end-order mb-0">
+                  Total - {{ formatMoney(order.total_received) }}
+                </p>
+                <p
+                  :style="{ color: 'red' }"
+                  class="resume-end-order mb-0"
+                  v-if="this.total - order.total_received > 0"
+                >
+                  Falta - {{ formatMoney(this.total - order.total_received) }}
+                </p>
+                <p
+                  :style="{ color: 'red' }"
+                  class="resume-end-order mb-0"
+                  v-else
+                >
+                  Falta - 0,00
+                </p>
+                <p
+                  :style="{ color: 'red' }"
+                  class="resume-end-order mb-0"
+                  v-if="order.total_received > total"
+                >
+                  Troco - {{ formatMoney(order.total_received - this.total) }}
+                </p>
+                <p
+                  :style="{ color: 'red' }"
+                  class="resume-end-order mb-0"
+                  v-else
+                >
+                  Troco - 0,00
+                </p>
               </v-col>
               <div>
                 <!-- <span
@@ -399,19 +498,21 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
-              :style="{width:'50%', background: 'green'}"
+              :style="{ width: '50%', background: 'green' }"
               color="white"
               ref="btnendorder"
               text
               @click="endOrder(order)"
-            >Receber</v-btn>
+              >Receber</v-btn
+            >
             <v-btn
-              :style="{width:'50%', background: 'red'}"
+              :style="{ width: '50%', background: 'red' }"
               color="white"
               ref="cancelReceive"
               text
               @click="cancelReceive"
-            >Cancelar(Esc)</v-btn>
+              >Cancelar(Esc)</v-btn
+            >
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -419,7 +520,11 @@
       <!-- modal close cahiser-->
       <v-dialog v-model="modalCloseCashier" width="500" :persistent="false">
         <v-card>
-          <v-card-title class="headline grey lighten-2 text-center" primary-title>Fechar caixa</v-card-title>
+          <v-card-title
+            class="headline grey lighten-2 text-center"
+            primary-title
+            >Fechar caixa</v-card-title
+          >
 
           <v-card-text>
             <v-row justify="center">
@@ -461,12 +566,13 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
-              :style="{width:'100%', background: mainColor}"
+              :style="{ width: '100%', background: mainColor }"
               color="white"
               ref="closeCashier"
               text
               @click="closeCashier(cashier)"
-            >Ok</v-btn>
+              >Ok</v-btn
+            >
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -474,7 +580,11 @@
       <!-- modal login -->
       <v-dialog v-model="unlogged" width="500" :persistent="true">
         <v-card>
-          <v-card-title class="headline grey lighten-2 text-center" primary-title>Login</v-card-title>
+          <v-card-title
+            class="headline grey lighten-2 text-center"
+            primary-title
+            >Login</v-card-title
+          >
 
           <v-card-text>
             <v-row justify="center">
@@ -500,18 +610,26 @@
             class="ml-2 mr-2"
             transition="scale-transition"
             type="error"
-          >{{msgloginerror}}</v-alert>
+            >{{ msgloginerror }}</v-alert
+          >
           <v-divider></v-divider>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
-              :style="{width:'100%', background: mainColor}"
+              :style="{ width: '100%', background: mainColor }"
               color="white"
               ref="btnLogin"
               text
-              :disabled="fieldsLogin"
+              :disabled="fieldsLogin || loading"
               @click="login(username, password)"
-            >Entrar</v-btn>
+            >
+              <v-progress-linear
+                v-if="loading"
+                indeterminate
+                color="white"
+              ></v-progress-linear>
+              <span v-else>Entrar</span>
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -519,7 +637,11 @@
       <!-- modal reset password -->
       <v-dialog v-model="resetpassword" width="500" :persistent="true">
         <v-card>
-          <v-card-title class="headline grey lighten-2 text-center" primary-title>Trocar senha</v-card-title>
+          <v-card-title
+            class="headline grey lighten-2 text-center"
+            primary-title
+            >Trocar senha</v-card-title
+          >
 
           <v-card-text>
             <v-row justify="center">
@@ -546,24 +668,30 @@
             class="ml-2 mr-2"
             transition="scale-transition"
             type="error"
-          >{{msgloginerror}}</v-alert>
+            >{{ msgloginerror }}</v-alert
+          >
           <v-divider></v-divider>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
-              :style="{width:'100%', background: mainColor}"
+              :style="{ width: '100%', background: mainColor }"
               color="white"
               ref="btnResetPassword"
               text
               :disabled="password == '' || confirm_password == ''"
               @click="resetPassword(password, confirm_password)"
-            >Entrar</v-btn>
+              >Entrar</v-btn
+            >
           </v-card-actions>
         </v-card>
       </v-dialog>
     </v-row>
     <!-- rodapé -->
-    <v-footer :style="{background: backgroundColor}" absolute class="font-weight-medium">
+    <v-footer
+      :style="{ background: backgroundColor }"
+      absolute
+      class="font-weight-medium"
+    >
       <v-col class="text-center" cols="12">
         <v-row align="center">
           <v-col align="center" cols="4">
@@ -571,25 +699,38 @@
               v-if="!statusCashier"
               @click="openCashier(user)"
               large
-              :style="{color:'green'}"
-            >Abrir</v-btn>
+              :style="{ color: 'green' }"
+              >Abrir</v-btn
+            >
             <v-btn
               v-else
               @click="modalCloseCashier = true"
               large
-              :style="{color:'red'}"
-            >Fechar caixa</v-btn>
+              :style="{ color: 'red' }"
+              >Fechar caixa</v-btn
+            >
           </v-col>
           <v-col align="center" cols="4">
-            <span
-              :style="{color: mainColor}"
-              v-if="userCashier"
-            >Caixa aberto por <b>{{userCashier.name}}</b></span>
-            <span :style="{color: 'red'}" v-else>Caixa fechado</span>
+            <span :style="{ color: mainColor }" v-if="userCashier"
+              >Caixa aberto por <b>{{ userCashier.name }}</b></span
+            >
+            <span :style="{ color: 'red' }" v-else>Caixa fechado</span>
           </v-col>
           <v-col align="center" cols="4">
-            <v-btn v-if="delivery" large :style="{color:lastColor}" @click="typeOrderBalcao">Balcão</v-btn>
-            <v-btn v-else large :style="{color:lastColor}" @click="typeOrderDelivery">Entregas</v-btn>
+            <v-btn
+              v-if="delivery"
+              large
+              :style="{ color: lastColor }"
+              @click="typeOrderBalcao"
+              >Balcão</v-btn
+            >
+            <v-btn
+              v-else
+              large
+              :style="{ color: lastColor }"
+              @click="typeOrderDelivery"
+              >Entregas</v-btn
+            >
           </v-col>
         </v-row>
       </v-col>
@@ -631,7 +772,7 @@ import { Cashier } from "../models/Cashier";
 import { User } from "../models/User";
 import { Customer } from "../models/Customer";
 import { Helper } from "../models/Helper";
-import { Order } from '../models/Order';
+import { Order } from "../models/Order";
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -643,6 +784,7 @@ var pusher = new Pusher("a885cc143df63df6146a", {
 
 var helper = new Helper();
 var section = new Section();
+const user = new User();
 export default {
   mixins: [mixins],
   directives: { money: VMoney },
@@ -680,7 +822,7 @@ export default {
       paymentType: 1,
       dialogReceive: false,
       amountMoney: 0.0,
-      type: '',
+      type: "",
       //user variables
       username: "user0@gmail.com",
       password: "123456",
@@ -704,19 +846,19 @@ export default {
         cashier_id: null,
         customer_id: null,
         order_type: 0,
-        payments:[],
-        items:[],
+        payments: [],
+        items: [],
         debit: 0,
         credit: 0,
         ticket: 0,
         money: 0,
-        customer:{
+        customer: {
           name: "",
           phone: "",
           address: "",
-          locality_id: null
+          locality_id: null,
         },
-        total_received: 0.00
+        total_received: 0.0,
       },
       locObj: {},
       locality: [],
@@ -729,8 +871,8 @@ export default {
       donQuestionAgain: false,
       nexStep: "selectProduct",
       lastColor: "red",
-      deliveryColor:"red",
-      countertopColor:"green",
+      deliveryColor: "red",
+      countertopColor: "green",
 
       // obs variables
       observation: "",
@@ -756,21 +898,26 @@ export default {
       isLoading: false,
       blockInputs: false,
       falta: 0,
-      chargingData: false
+      chargingData: false,
+      loading: true,
     };
   },
 
   async mounted() {
+    if ((await user.count()) > 0) {
+      this.loading = false;
+    }
+
     let statusCashier = await this.cashierStatus();
-    setTimeout(()=>{
+    setTimeout(() => {
       this.$refs.username.focus();
-      this.lastColor = this.deliveryColor
-    }, 600)
+      this.lastColor = this.deliveryColor;
+    }, 600);
+
     this.loadSectionsFromServer();
     this.loadProductsFromServer();
     this.loadLocalitiesFromServer();
     this.loadUsersFromServer();
-
     var channel = pusher.subscribe("my-channel");
     channel.bind("App\\Events\\ProductEvent", (data) => {
       // this.updateProducts(data.product);
@@ -806,20 +953,20 @@ export default {
     //keyboard events
     document.onkeydown = (e) => {
       // iniciar o recebimento
-      if(e.key == 'F5'){
-        if(!this.unlogged){
-          if(this.delivery){
-            this.typeOrderBalcao()
-          }else{
-            this.typeOrderDelivery()
+      if (e.key == "F5") {
+        if (!this.unlogged) {
+          if (this.delivery) {
+            this.typeOrderBalcao();
+          } else {
+            this.typeOrderDelivery();
           }
         }
       }
 
       if (e.key == "F9") {
-        this.totalReceive = this.formatMoney(this.total)
-        if(this.dialogReceive){
-          return
+        this.totalReceive = this.formatMoney(this.total);
+        if (this.dialogReceive) {
+          return;
         }
         if (this.order.items.length > 0) {
           this.dialogReceive = true;
@@ -831,8 +978,8 @@ export default {
             p.childNodes[this.paymentType - 1].style.color = this.mainColor;
             this.$refs.paymentType.focus();
           }, 200);
-          
-          this.setNexStep('amountToReceive')
+
+          this.setNexStep("amountToReceive");
           // this.totalReceive.toFixed(2)
           // this.falta = this.totalReceive
         }
@@ -857,70 +1004,75 @@ export default {
           return;
         }
       }
+
+      if(e.key == "F2" && !this.unlogged){
+        this.modalCloseCashier = true
+        return;
+      }
+
       if (e.key == "Enter") {
-        if(this.nexStep == 'quantity'){
+        if (this.nexStep == "quantity") {
           this.$refs.quantity.focus();
 
-          this.setNexStep('insertInOrderItems')
-          return
-        }
-
-        if(this.dialogObs){
-          this.closeObs()
+          this.setNexStep("insertInOrderItems");
           return;
         }
 
-        if(this.unlogged){
-          this.login(this.username, this.password)
-          return
+        if (this.dialogObs) {
+          this.closeObs();
+          return;
         }
-        if(this.modalFindCustomer){
-          this.findCustomer(this.order.customer.phone)
-          return
+
+        if (this.unlogged) {
+          this.login(this.username, this.password);
+          return;
+        }
+        if (this.modalFindCustomer) {
+          this.findCustomer(this.order.customer.phone);
+          return;
         }
         if (this.nexStep == "insertInOrderItems") {
           this.insertInOrderItems(this.product);
-          return
+          return;
         }
 
-        if(this.nexStep == 'amountToChange'){
-          if(this.paymentType == 1){
+        if (this.nexStep == "amountToChange") {
+          if (this.paymentType == 1) {
             this.$refs.amountToChange.focus();
           }
-          this.setNexStep('insertInPayment')
+          this.setNexStep("insertInPayment");
 
-          return
+          return;
         }
 
-        if(this.nexStep == 'insertPayment'){
-          this.insertPayment()
+        if (this.nexStep == "insertPayment") {
+          this.insertPayment();
 
-          this.setNexStep('amountToReceive')
-          return
+          this.setNexStep("amountToReceive");
+          return;
         }
 
-        if(this.nexStep == 'endOrder'){
-          alert('Finalizando o pedido')
-          return
+        if (this.nexStep == "endOrder") {
+          alert("Finalizando o pedido");
+          return;
         }
 
-        if(this.nexStep == 'paymentType'){
+        if (this.nexStep == "paymentType") {
           this.$refs.paymentType.focus();
-          this.setNexStep('amountToReceive')
-          return
+          this.setNexStep("amountToReceive");
+          return;
         }
 
-        if(this.nexStep == 'amountToReceive'){
+        if (this.nexStep == "amountToReceive") {
           this.$refs.amountToReceive.focus();
 
+          let inputEl = this.$refs.amountToReceive.$el.querySelector("input");
 
-          let inputEl = this.$refs.amountToReceive.$el.querySelector('input')
-
-          setTimeout(()=>{
-            inputEl.select()
-          }, 150)
+          setTimeout(() => {
+            inputEl.select();
+          }, 150);
           // this.$refs.amountToReceive.select()
-          this.setNexStep('insertPayment')
+          this.setNexStep("insertPayment");
 
           // if(this.paymentType == 1){
           //   this.setNexStep('amountToChange')
@@ -974,11 +1126,10 @@ export default {
   },
 
   watch: {
-    chargingData(e){
-      if(e == true){
-        console.log('Comecei a carregar')
-      }else{
-
+    chargingData(e) {
+      if (e == true) {
+        console.log("Comecei a carregar");
+      } else {
       }
     },
 
@@ -987,29 +1138,28 @@ export default {
     },
     product(e) {
       this.quantity = 1;
-      this.setNexStep('selectQuantity')
+      this.setNexStep("selectQuantity");
       if (Object.keys(e).length > 0) {
-        setTimeout(()=>{
-          this.setNexStep('insertInOrderItems')
-          this.$refs.quantity.focus()
-        }, 100)
+        setTimeout(() => {
+          this.setNexStep("insertInOrderItems");
+          this.$refs.quantity.focus();
+        }, 100);
       }
     },
 
     paymentType(e) {
-      if(parseInt(e) > 4){
-        setTimeout(()=>{
-          this.paymentType = 1
-        },200)
-      }else{
-
+      if (parseInt(e) > 4) {
+        setTimeout(() => {
+          this.paymentType = 1;
+        }, 200);
+      } else {
         var p = document.getElementById("payments");
         p.childNodes.forEach((element) => {
           element.style.color = "";
         });
         p.childNodes[this.paymentType - 1].style.color = this.mainColor;
       }
-      this.setNexStep('amountToReceive')
+      this.setNexStep("amountToReceive");
     },
 
     payment(e) {
@@ -1024,75 +1174,98 @@ export default {
   },
 
   methods: {
-    async loadSectionsFromServer(){
-      let maxid = await helper.max('sections')
-      axios.get('sections/getGreaterThen/' + maxid).then(async (response)=>{
-        await section.create(response.data)
-      }).catch((e)=>{
-        console.log(e.message)
-      })
+    preventLoadUsersForInitApp() {
+      this.$root.$emit("loading", false);
+      this.loading = false;
     },
 
-    async loadProductsFromServer(){
-      let maxid = await helper.max('products')
-      axios.get('products/getGreaterThen/' + maxid).then(async (response)=>{
+    async loadSectionsFromServer() {
+      let maxid = await helper.max("sections");
+      axios
+        .get("sections/getGreaterThen/" + maxid)
+        .then(async (response) => {
+          await section.create(response.data);
+        })
+        .catch((e) => {
+          console.log(e.message);
+        });
+    },
+
+    async loadProductsFromServer() {
+      let maxid = await helper.max("products");
+      axios.get("products/getGreaterThen/" + maxid).then(async (response) => {
         let product = new Product();
-        let res = await product.create(response.data)
-        if(response.data.length == 50){
+        let res = await product.create(response.data);
+        if (response.data.length == 50) {
           // this.loadProductsFromServer()
         }
-      })
+      });
     },
 
-    async loadLocalitiesFromServer(){
-      let maxid = await helper.max('localities')
-      axios.get('localities/getGreaterThen/'+ maxid).then(async (response)=>{
+    async loadLocalitiesFromServer() {
+      let maxid = await helper.max("localities");
+      axios.get("localities/getGreaterThen/" + maxid).then(async (response) => {
         let locality = new Locality();
-        await locality.create(response.data)
-      })
+        await locality.create(response.data);
+      });
     },
 
-    async loadUsersFromServer(){
-      let maxid = await helper.max('users')
-      axios.get('users/getGreaterThen/'+ maxid).then((response)=>{
+    async loadUsersFromServer() {
+      let maxid = await helper.max("users");
+      axios.get("users/getGreaterThen/" + maxid).then((response) => {
         let user = new User();
-        user.create(response.data)
-      })
+        user.create(response.data);
+
+        this.preventLoadUsersForInitApp();
+      });
     },
 
-    setNexStep(value){
-      this.nexStep = value
-      return
+    setNexStep(value) {
+      this.nexStep = value;
+      return;
     },
 
     async insertPayment() {
       this.$refs.paymentType.focus();
 
-      if(this.paymentType == 1){
-        this.order.money += parseFloat(helper.formatMonetaryForDB(this.totalReceive))
-      }else if(this.paymentType == 2){
-        this.order.debit += parseFloat(helper.formatMonetaryForDB(this.totalReceive))
-      }else if(this.paymentType == 3){
-        this.order.credit = parseFloat(helper.formatMonetaryForDB(this.totalReceive))
-      }else{
-        this.order.ticket += parseFloat(helper.formatMonetaryForDB(this.totalReceive))
+      if (this.paymentType == 1) {
+        this.order.money += parseFloat(
+          helper.formatMonetaryForDB(this.totalReceive)
+        );
+      } else if (this.paymentType == 2) {
+        this.order.debit += parseFloat(
+          helper.formatMonetaryForDB(this.totalReceive)
+        );
+      } else if (this.paymentType == 3) {
+        this.order.credit = parseFloat(
+          helper.formatMonetaryForDB(this.totalReceive)
+        );
+      } else {
+        this.order.ticket += parseFloat(
+          helper.formatMonetaryForDB(this.totalReceive)
+        );
       }
 
+      this.order.total_received =
+        this.order.money +
+        this.order.debit +
+        this.order.credit +
+        this.order.ticket;
 
-      this.order.total_received = this.order.money + this.order.debit + this.order.credit + this.order.ticket
-
-      let totalMissing = parseFloat(helper.formatMonetaryForDB(this.total)) - this.order.total_received
+      let totalMissing =
+        parseFloat(helper.formatMonetaryForDB(this.total)) -
+        this.order.total_received;
 
       const input = this.$refs.amountToReceive.$el.querySelector("input");
 
-      if(totalMissing <= 0){
-        input.value = "0,00"
-        this.totalReceive = "0,00"
-        this.amountToChange = "0,00"
-      }else{
-        this.totalReceive = this.formatMoney(totalMissing)
-        input.value = this.formatMoney(totalMissing)
-        this.amountToChange = this.formatMoney(totalMissing)
+      if (totalMissing <= 0) {
+        input.value = "0,00";
+        this.totalReceive = "0,00";
+        this.amountToChange = "0,00";
+      } else {
+        this.totalReceive = this.formatMoney(totalMissing);
+        input.value = this.formatMoney(totalMissing);
+        this.amountToChange = this.formatMoney(totalMissing);
       }
     },
 
@@ -1101,11 +1274,10 @@ export default {
       this.observation = "";
       this.dialogObs = false;
 
-      this.$nextTick(()=>{
-        let input = this.$refs.product.$el.querySelector('input')
+      this.$nextTick(() => {
+        let input = this.$refs.product.$el.querySelector("input");
         input.focus();
-      })
-
+      });
     },
 
     setObs(p) {
@@ -1113,22 +1285,34 @@ export default {
       this.dialogObs = true;
       this.observation = this.productInEditMode.observation;
 
-      setTimeout(()=>{
-        this.$refs.observation.focus()
-      }, 200)
+      setTimeout(() => {
+        this.$refs.observation.focus();
+      }, 200);
     },
 
     clearForm() {
       this.product = {};
       this.quantity = 1;
       this.$refs.product.focus();
-      this.locObj = {}
+      this.locObj = {};
     },
 
     cancelReceive() {
-      this.payments = [];
-      this.paymentType = 1;
-      this.dialogReceive = false;
+      this.$fire({
+        title:"Cancelar recebimento!",
+        text:"Deseja realmente cancelar o recebimento?",
+        type:"warning",
+        showCloseButton: true,
+        showCancelButton: true,
+        confirmButtonText:"Sim",
+        cancelButtonText:"Não"
+      }).then((r)=>{
+        if(r.value === true){
+          this.payments = [];
+          this.paymentType = 1;
+          this.dialogReceive = false;
+        }
+      })
     },
 
     async updateUsers(u) {
@@ -1182,16 +1366,20 @@ export default {
         this.showMessageErrorLogin("Senhas não conferem");
         return;
       }
-  
+
       this.user.password = password;
       let user = new UserController();
       user.update(this.user, true);
       this.resetpassword = false;
-      this.showMessageSucess("Senha alterada com sucesso");
+      this.$fire({
+        title:"Feito!",
+        text:"Senha alterada com sucesso!",
+        type: 'success'
+      })
     },
 
     async login(username, password) {
-      this.lastColor = this.deliveryColor
+      this.lastColor = this.deliveryColor;
       let user = new UserController();
       let result = await user.login(username, password);
 
@@ -1199,42 +1387,85 @@ export default {
         this.username = "";
         this.password = "";
         let user = new User();
-        this.user = await user.find(username)
+        this.user = await user.find(username);
         this.unlogged = false;
         this.$root.$emit("logged_user", this.user);
-        (this.user.change_password) ? this.resetpassword = true : this.resetpassword = false
-        
-        this.$nextTick(()=>{
+        this.user.change_password
+          ? (this.resetpassword = true)
+          : (this.resetpassword = false);
+
+        this.$nextTick(() => {
           const input = this.$refs.product.$el.querySelector("input");
           input.focus();
-        })
-      }else{
+        });
+      } else {
         this.showMessageErrorLogin("Usuario e/ou senha estão incorretos");
         // return;
       }
     },
 
     openCashier(user) {
-      let cashier = new CashierController();
-      cashier.store(user);
-      this.cashierStatus();
-      this.checkUserOpenedCashier();
+      this.$fire({
+        title: "Abrir o caixa?",
+        text: "Você será responsavel pelas movimentações até o fechamento.",
+        type: "question",
+        showCloseButton: true,
+        showCancelButton: true,
+      }).then((r) => {
+        if (r.value === true) {
+          let cashier = new CashierController();
+          cashier.store(user);
+          this.cashierStatus();
+          this.checkUserOpenedCashier();
+        }
+      });
     },
 
     closeCashier(c) {
-      let cashier = new CashierController();
-      cashier.update(c);
       if (this.cashierStatus()) {
-        this.showMessageSucess("Caixa fechado com sucesso");
-      }
+        this.$fire({
+          title: "Fechar caixa?",
+          text: "Esta ação não pode ser desfeita",
+          type: "question",
+          showCloseButton: true,
+          showCancelButton: true,
+        }).then((r) => {
+          if (r.value === true) {
+            let cashier = new CashierController();
+            cashier.update(c);
+            this.checkUserOpenedCashier();
+            this.modalCloseCashier = false;
+            this.statusCashier = false;
 
-      this.checkUserOpenedCashier();
-      this.modalCloseCashier = false;
+            setTimeout(() => {
+              this.$fire({
+                title: "Caixa fechado com sucesso",
+                // text: "Esta ação não pode ser desfeita",
+                type: "success",
+              });
+            });
+          }
+        });
+      }
     },
 
     removeFromOrderItems(i, parcialPrice) {
-      this.total = this.total - parcialPrice;
-      this.order.items.splice(i, 1);
+      this.$fire({
+        title:"Remover",
+        text:"Deseja realmente remover este item?",
+        type:"warning",
+        showCancelButton: true,
+        showCloseButton: true,
+        focusConfirm: true,
+        focusCancel: false,
+        confirmButtonText: "Sim",
+        cancelButtonText: "Não"
+      }).then((r)=>{
+        if(r.value === true){
+          this.total = this.total - parcialPrice;
+          this.order.items.splice(i, 1);
+        }
+      })
     },
 
     async endOrder(order) {
@@ -1242,7 +1473,7 @@ export default {
 
       let o = new Order();
       let response = await o.create(order);
-      return
+      return;
       o.store(order, items, payments);
       this.dialogReceive = false;
       this.order.items = [];
@@ -1254,7 +1485,7 @@ export default {
 
     typeOrderDelivery() {
       this.order.order_type = 1;
-      this.lastColor = this.mainColor
+      this.lastColor = this.mainColor;
       this.delivery = true;
       this.deliveryTitle = "Entregas";
       this.btnDesc = "Balcão";
@@ -1265,14 +1496,14 @@ export default {
 
       this.$root.$emit("change_color", this.mainColor);
 
-      setTimeout(()=>{
+      setTimeout(() => {
         this.$refs.phone.focus();
-      }, 200)
+      }, 200);
     },
 
     typeOrderBalcao() {
       this.order.order_type = 0;
-      this.lastColor = this.mainColor
+      this.lastColor = this.mainColor;
       this.cancelOrder();
       this.order.customer = {};
       this.delivery = false;
@@ -1282,9 +1513,9 @@ export default {
       this.$root.$emit("change_color", this.mainColor);
       this.modalFindCustomer = false;
 
-      this.$nextTick(()=>{
+      this.$nextTick(() => {
         this.$refs.product.focus();
-      })
+      });
     },
 
     cancelOrder() {
@@ -1326,22 +1557,22 @@ export default {
         }
       }
       this.modalCustomer = false;
-      this.clearForm()
+      this.clearForm();
     },
 
     async updateCustomer() {
-      this.order.customer.locality_id = this.locObj.id
+      this.order.customer.locality_id = this.locObj.id;
       let customer = new Customer();
       let res = await customer.update(this.order.customer);
 
       let p = new Product();
       let deliveryRate = await p.deliveryRate(this.order.customer.phone);
 
-      this.order.items.shift()
+      this.order.items.shift();
       this.insertInOrderItems(deliveryRate);
       this.modalCustomer = false;
 
-      console.log(this.updatingCustomer)
+      console.log(this.updatingCustomer);
     },
 
     hasFocus() {
@@ -1351,9 +1582,19 @@ export default {
     },
 
     insertInOrderItems(product) {
-      if(!this.statusCashier){
-        alert('Caixa fechado')
-        return
+      if (!this.statusCashier) {
+        this.$fire({
+          title: "Caixa fechado",
+          text: "Deseja abri-lo?",
+          type: "question",
+          // timer: 3000,
+          showCloseButton: true,
+          showCancelButton: true,
+        }).then((r) => {
+          if (r.value === true) {
+            this.openCashier(this.user);
+          }
+        });
       }
       if (this.donQuestionAgain) {
         let p = new Product();
@@ -1363,9 +1604,9 @@ export default {
       product.quantity = this.quantity;
 
       let prod = JSON.stringify(product);
-      if(this.updatingCustomer){
+      if (this.updatingCustomer) {
         this.order.items.unshift(JSON.parse(prod));
-      }else{
+      } else {
         this.order.items.push(JSON.parse(prod));
       }
 
@@ -1374,8 +1615,8 @@ export default {
         total += element.price * parseInt(element.quantity);
       });
 
-      this.total = total
-      this.setNexStep('selectProduct');
+      this.total = total;
+      this.setNexStep("selectProduct");
       this.clearForm();
     },
 
@@ -1394,26 +1635,25 @@ export default {
       }
 
       this.modalFindCustomer = false;
-      this.updatingCustomer = false
+      this.updatingCustomer = false;
       this.modalCustomer = true;
       this.newCustomer = true;
     },
 
-    async showModalUpdateCustomer(){
+    async showModalUpdateCustomer() {
       this.modalCustomer = true;
       this.updatingCustomer = true;
       this.modalFindCustomer = false;
       this.newCustomer = false;
-      this.modalCustomerTitle = "Atualizar Cliente"
+      this.modalCustomerTitle = "Atualizar Cliente";
       let locality = new Locality();
-      this.locObj = await locality.find(this.order.customer.locality_id)
-       
-    }
+      this.locObj = await locality.find(this.order.customer.locality_id);
+    },
   },
 };
 </script>
 <style scoped>
-.resume-end-order{
+.resume-end-order {
   font-weight: bold;
   font-size: 50;
 }

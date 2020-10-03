@@ -22,6 +22,14 @@ export class User {
         let hashed = null
     }
 
+    async count(){
+        let sql = "select COUNT(*) as quantity from users";
+
+        let result = await db.get(sql);
+
+        return result;
+    }
+
     async find(username){
         let sql = "select * from users where phone = '" + username + "' OR email = '" + username+"';";
         let result = await db.get(sql);
@@ -71,8 +79,6 @@ export class User {
         }).catch((error) => {
             resolved = false;
         })
-
-        console.log(resolved)
 
         return resolved;
     }

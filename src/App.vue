@@ -16,12 +16,13 @@
           </v-list-item>
         </v-list>
       </v-menu>
-
-
-
-
     </v-app-bar>
     <v-container fill-height fluid :style="{width:'1800px', background:backgroundColor}">
+      <v-progress-linear
+      v-if="loading"
+      indeterminate
+      :color="mainColor"
+    ></v-progress-linear>
       <v-navigation-drawer v-model="drawer" absolute temporary>
         <v-list nav dense>
           <v-list-item-group :color="myColor">
@@ -67,13 +68,18 @@ export default {
       items: [{ title: "Trocar senha" }, {title: 'Atualizar'}, { title: "Sair"}],
       loggedUser: {},
       pageTitle: "Skiltys FastFood",
-      drawer: false
+      drawer: false,
+      loading: true,
     };
   },
 
   created() {
     this.$root.$on("change_color", e => {
       this.mainColor = e;
+    });
+
+    this.$root.$on("loading", e => {
+      this.loading = e
     });
 
     this.$root.$on("logged_user", e => {
@@ -108,9 +114,19 @@ export default {
       }
       
       if (item.title === 'Trocar senha') {
-        let user = new User()
-        user.resetPassword(this.loggedUser.id)
-        this.logout()
+        this.$fire({
+          title:"Deseja mudar sua senha?",
+          text:"Será necessário realizar login novamente para completar esta ação",
+          type:"question",
+          showCloseButton: true,
+          showCancelButton: true,
+        }).then((r)=>{
+          if(r.value === true){
+            let user = new User()
+            user.resetPassword(this.loggedUser.id)
+            this.logout()
+          }
+        })
       }
     },
     returnPageTitle(e) {
