@@ -10,6 +10,7 @@ const db = new sqlite3.Database(
 
 db.get = util.promisify(db.get);
 db.run = util.promisify(db.run);
+db.all = util.promisify(db.all);
 
 const helper = new Helper();
 
@@ -18,8 +19,13 @@ export class Cashier {
 
     }
 
-    async all() {
-
+    async all(user_id) {
+        let sql = "select * from cashiers c where user_id = " + user_id + " order by updated_at DESC";
+        let cashiers = []
+        await db.all(sql).then((rows)=>{
+            cashiers = rows
+        })
+        return cashiers
     }
 
     remove_character(str, char_pos) 
@@ -61,6 +67,28 @@ export class Cashier {
                 moneyamount: "0,00"
               }
         }
+    }
+
+    async items(cashier_id){
+        let sql = `select
+                        p.name,
+                        SUM(i.quantity) as quantity,
+                        (i.quantity * i.price) as total_parcial,
+                        c.money,
+                        c.debit,
+                        c.credit,
+                        c.ticket
+                        from items i join orders o on o.id = i.order_id
+                    join cashiers c on c.id = o.cashier_id
+                    join products p on p.id = i.product_id 
+                    where c.id = ? GROUP BY p.id`;
+        let items = []
+
+        await db.all(sql, [cashier_id]).then((rows)=>{
+            items = rows
+        })
+
+        return items;
     }
 
     async checkUserOpenedCashier(){

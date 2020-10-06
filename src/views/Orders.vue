@@ -130,7 +130,7 @@
                   <v-col
                     v-bind="attrs"
                     v-on="on"
-                    cols="3"
+                    cols="5"
                     class="text-left pt-0 pb-0 text-truncate"
                     >{{ i.name }}</v-col
                   >
@@ -163,37 +163,15 @@
                 </template>
                 <span>Total parcial</span>
               </v-tooltip>
-              <v-tooltip v-if="i.name != 'Taxa de entrega'" top>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-col v-on="on" cols="1" class="pt-0 pb-0" v-bind="attrs">
-                    <a @click="removeFromOrderItems(i, i.price * i.quantity)">
-                      <v-icon color="red" align="center"
-                        >remove_circle_outline</v-icon
-                      >
-                    </a>
-                  </v-col>
-                </template>
-                <span>Remover</span>
-              </v-tooltip>
-              <v-tooltip v-if="i.name != 'Taxa de entrega'" top>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-col v-on="on" cols="1" class="pt-0 pb-0" v-bind="attrs">
-                    <a @click="setObs(i)">
-                      <v-icon color="blue" align="center">edit</v-icon>
-                    </a>
-                  </v-col>
-                </template>
-                <span>Observação</span>
-              </v-tooltip>
               <v-col
-                cols="9"
+                cols="12"
                 :style="{ color: 'gray' }"
                 class="text-left pt-0 pb-0"
               >
                 <span>{{ i.observation }}</span>
               </v-col>
-              <v-col class="pt-0 pb-0 pr-0 pl-0" cols="12">
-                <hr />
+              <v-col class="pt-0 pr-0 pl-0" cols="12">
+                <hr :style="{ color: 'gray' }" />
               </v-col>
             </v-row>
           </v-row>
@@ -577,6 +555,41 @@
         </v-card>
       </v-dialog>
 
+      <!-- modal cashiers closeds -->
+      <v-dialog v-model="modalClosedsCashiers" width="500" :persistent="true">
+        <v-card>
+          <v-card-title class="text-center">
+            <v-row>
+              <v-col cols="10">Meus fechamentos</v-col>
+              <v-col cols="2" @click="cashierDetail = false"><v-icon class="my_cashier">mdi-close</v-icon></v-col>
+            </v-row>
+          </v-card-title>
+          <v-card-text v-if="!cashierDetail">
+            <v-row class="my_cashier" v-for="mc in mycashiers" :key="mc.id" @click="showCashierDetail(mc)">
+              <v-col class="pt-0" cols="12" v-if="mc.updated_at != null">{{new Date(mc.updated_at).toLocaleDateString()}}</v-col>
+            </v-row>
+          </v-card-text>
+
+          <v-card-text v-else>
+            <span>Caixa do dia <b>{{new Date(cashierDetailObject.updated_at).toLocaleDateString()}}</b></span>
+            <hr>
+            <v-row class="pb-0" v-for="coitems in cashierDetailObject.items" :key="coitems.id">
+              <v-col class="pb-0" cols="6">{{coitems.name}}</v-col>
+              <v-col class="pb-0" cols="4">{{coitems.quantity}} Und(s)</v-col>
+              <v-col class="pb-0" cols="2">{{formatMoney(coitems.total_parcial)}}</v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                Dinheiro: {{formatMoney(cashierDetailObject.items[0].money)}}<br>
+                Débito: {{formatMoney(cashierDetailObject.items[0].debit)}}<br>
+                Crédito: {{formatMoney(cashierDetailObject.items[0].credit)}}<br>
+                Ticket: {{formatMoney(cashierDetailObject.items[0].ticket)}}<br>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+
       <!-- modal login -->
       <v-dialog v-model="unlogged" width="500" :persistent="true">
         <v-card>
@@ -773,6 +786,7 @@ import { User } from "../models/User";
 import { Customer } from "../models/Customer";
 import { Helper } from "../models/Helper";
 import { Order } from "../models/Order";
+import Swal from "sweetalert2";
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -785,6 +799,7 @@ var pusher = new Pusher("a885cc143df63df6146a", {
 var helper = new Helper();
 var section = new Section();
 const user = new User();
+const cashier = new Cashier;
 export default {
   mixins: [mixins],
   directives: { money: VMoney },
@@ -800,6 +815,12 @@ export default {
       },
 
       //cashier variables
+      cashierDetailObject: {
+        items:[]
+      },
+      cashierDetail: false,
+      mycashiers:[],
+      modalClosedsCashiers: false,
       totalReceive: "0,00",
       statusCashier: false,
       total: 0,
@@ -935,6 +956,11 @@ export default {
       this.password = "";
     });
 
+    this.$root.$on("cashiers_closeds", async(e) => {
+      this.modalClosedsCashiers = true;
+      this.mycashiers = await cashier.all(this.user.id);
+    });
+
     this.$root.$on("update_products", async (e) => {
       this.updateProducts();
     });
@@ -951,7 +977,7 @@ export default {
     this.locality = await l.index();
 
     //keyboard events
-    document.onkeydown = (e) => {
+    document.onkeydown = async (e) => {
       // iniciar o recebimento
       if (e.key == "F5") {
         if (!this.unlogged) {
@@ -1005,8 +1031,27 @@ export default {
         }
       }
 
-      if(e.key == "F2" && !this.unlogged){
-        this.modalCloseCashier = true
+      if (e.key == "F2" && !this.unlogged) {
+        this.modalCloseCashier = true;
+        return;
+      }
+
+      if (e.key == "F10" && !this.unlogged) {
+        const { value: index } = await Swal.fire({
+          title: "Qual item deseja remover?",
+          icon: "question",
+          input: "number",
+          inputPlaceholder: "informe o item",
+        });
+
+        if (index) {
+          this.order.items.splice(parseInt(index - 1), 1);
+          console.log(index);
+          Swal.fire({
+            title: `Item ${index} foi removido!`,
+            icon: "success",
+          });
+        }
         return;
       }
 
@@ -1174,6 +1219,12 @@ export default {
   },
 
   methods: {
+    async showCashierDetail(c){
+      this.cashierDetailObject = c
+      this.cashierDetailObject.items = await cashier.items(c.id);
+      this.cashierDetail = true
+    },
+
     preventLoadUsersForInitApp() {
       this.$root.$emit("loading", false);
       this.loading = false;
@@ -1299,20 +1350,20 @@ export default {
 
     cancelReceive() {
       this.$fire({
-        title:"Cancelar recebimento!",
-        text:"Deseja realmente cancelar o recebimento?",
-        type:"warning",
+        title: "Cancelar recebimento!",
+        text: "Deseja realmente cancelar o recebimento?",
+        type: "warning",
         showCloseButton: true,
         showCancelButton: true,
-        confirmButtonText:"Sim",
-        cancelButtonText:"Não"
-      }).then((r)=>{
-        if(r.value === true){
+        confirmButtonText: "Sim",
+        cancelButtonText: "Não",
+      }).then((r) => {
+        if (r.value === true) {
           this.payments = [];
           this.paymentType = 1;
           this.dialogReceive = false;
         }
-      })
+      });
     },
 
     async updateUsers(u) {
@@ -1372,10 +1423,10 @@ export default {
       user.update(this.user, true);
       this.resetpassword = false;
       this.$fire({
-        title:"Feito!",
-        text:"Senha alterada com sucesso!",
-        type: 'success'
-      })
+        title: "Feito!",
+        text: "Senha alterada com sucesso!",
+        type: "success",
+      });
     },
 
     async login(username, password) {
@@ -1449,23 +1500,23 @@ export default {
       }
     },
 
-    removeFromOrderItems(i, parcialPrice) {
+    removeFromOrderItems(i) {
       this.$fire({
-        title:"Remover",
-        text:"Deseja realmente remover este item?",
-        type:"warning",
+        title: "Remover",
+        text: "Deseja realmente remover este item?",
+        type: "warning",
         showCancelButton: true,
         showCloseButton: true,
         focusConfirm: true,
         focusCancel: false,
         confirmButtonText: "Sim",
-        cancelButtonText: "Não"
-      }).then((r)=>{
-        if(r.value === true){
+        cancelButtonText: "Não",
+      }).then((r) => {
+        if (r.value === true) {
           this.total = this.total - parcialPrice;
           this.order.items.splice(i, 1);
         }
-      })
+      });
     },
 
     async endOrder(order) {
@@ -1542,8 +1593,11 @@ export default {
       let result = await customer.store(this.order.customer);
 
       if (result === true) {
-        this.success = true;
-        this.msg = "Salvo com sucesso!";
+        Swal.fire({
+          icon: "success",
+          title: "Feito!",
+          text: "Novo cliente inserido com sucesso!",
+        });
         let p = new Product();
         let deliveryRate = await p.deliveryRate(this.order.customer.phone);
         this.order.customer = await customer.show(this.order.customer.phone);
@@ -1572,7 +1626,12 @@ export default {
       this.insertInOrderItems(deliveryRate);
       this.modalCustomer = false;
 
-      console.log(this.updatingCustomer);
+      Swal.fire({
+        title: "Feito!",
+        text: "Cliente atualizado",
+        icon: "success",
+        timer: 1500,
+      });
     },
 
     hasFocus() {
@@ -1656,5 +1715,13 @@ export default {
 .resume-end-order {
   font-weight: bold;
   font-size: 50;
+}
+
+.my_cashier{
+  cursor: pointer;
+}
+
+.my_cashier:hover{
+  background: #F5F5F5;
 }
 </style>

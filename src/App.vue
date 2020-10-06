@@ -65,7 +65,12 @@ export default {
   },
   data() {
     return {
-      items: [{ title: "Trocar senha" }, {title: 'Atualizar'}, { title: "Sair"}],
+      items: [
+        {title:"Meus fechamentos"},
+        { title: "Trocar senha" },
+        {title: 'Atualizar'},
+        { title: "Sair"},
+      ],
       loggedUser: {},
       pageTitle: "Skiltys FastFood",
       drawer: false,
@@ -111,6 +116,10 @@ export default {
 
       if (item.title === 'Atualizar') {
         this.$root.$emit("update_products", true);
+      }
+
+      if (item.title === 'Meus fechamentos') {
+        this.$root.$emit("cashiers_closeds", true);
       }
       
       if (item.title === 'Trocar senha') {
