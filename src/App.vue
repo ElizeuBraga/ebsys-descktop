@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-app-bar :style="{background: mainColor}">
-      <v-app-bar-nav-icon v-show="logged" @click="drawer = true"></v-app-bar-nav-icon>
+      <!-- <v-app-bar-nav-icon v-show="1 == 1" @click="drawer = true"></v-app-bar-nav-icon> -->
       <v-toolbar-title :style="{color:textColor}" v-on:logged="teste($event)">{{pageTitle}}</v-toolbar-title>
       <v-spacer></v-spacer>
 

@@ -556,37 +556,83 @@
       </v-dialog>
 
       <!-- modal cashiers closeds -->
-      <v-dialog v-model="modalClosedsCashiers" width="500" :persistent="true">
+      <v-dialog
+        scrollable
+        v-model="modalClosedsCashiers"
+        max-width="800"
+        :persistent="false"
+        open-delay=3000
+        origin="top right"
+      >
         <v-card>
           <v-card-title class="text-center">
-            <v-row>
-              <v-col cols="10">Meus fechamentos</v-col>
-              <v-col cols="2" @click="cashierDetail = false"><v-icon class="my_cashier">mdi-close</v-icon></v-col>
-            </v-row>
+            <v-toolbar flat>
+              <v-toolbar-title v-if="!cashierDetail">Meus fechamentos</v-toolbar-title>
+              <v-toolbar-title v-else>Data de fechamento <b>{{new Date(cashierDetailObject.updated_at).toLocaleDateString()}}</b></v-toolbar-title>
+              <div v-if="cashierDetail">
+              <a :style="[detailsType == 'all' ? {color:mainColor} : {color:''}]" class="links-card-title" @click="showCashierDetail(cashierDetailObject, 'all')">Todos</a>
+              <a :style="[detailsType == 'deliveries' ? {color:mainColor} : {color:''}]" class="links-card-title" @click="showCashierDetail(cashierDetailObject, 'deliveries')">Deliveries</a>
+              <a :style="[detailsType == 'contertop' ? {color:mainColor} : {color:''}]" class="links-card-title" @click="showCashierDetail(cashierDetailObject, 'contertop')">Balcão</a>
+              </div>
+              <v-spacer></v-spacer>
+              <v-btn
+                v-if="cashierDetail"
+                @click="cashierDetail = false"
+                title="Voltar"
+                icon
+              >
+                <v-icon class="heading grey--text text--darken-4"
+                  >mdi-arrow-right</v-icon
+                >
+              </v-btn>
+              <v-btn
+                v-else
+                @click="modalClosedsCashiers = false"
+                title="Fechar"
+                icon
+              >
+                <v-icon class="heading grey--text text--darken-4">close</v-icon>
+              </v-btn>
+              <!-- <v-row>
+              <v-col cols="2" v-if="cashierDetail" @click="cashierDetail = false" title="Voltar"><v-icon class="my_cashier">mdi-arrow-right</v-icon></v-col>
+              <v-col cols="2" v-else @click="modalClosedsCashiers = false" title="Fechar"><v-icon class="my_cashier">mdi-close</v-icon></v-col>
+            </v-row> -->
+            </v-toolbar>
           </v-card-title>
           <v-card-text v-if="!cashierDetail">
-            <v-row class="my_cashier" v-for="mc in mycashiers" :key="mc.id" @click="showCashierDetail(mc)">
-              <v-col class="pt-0" cols="12" v-if="mc.updated_at != null">{{new Date(mc.updated_at).toLocaleDateString()}}</v-col>
+            <v-row
+              class="my_cashier"
+              v-for="mc in mycashiers"
+              :key="mc.id"
+              @click="showCashierDetail(mc, 'all')"
+            >
+              <v-col class="pt-0" cols="12" v-if="mc.updated_at != null">{{
+                new Date(mc.updated_at).toLocaleDateString()
+              }}</v-col>
             </v-row>
           </v-card-text>
 
           <v-card-text v-else>
-            <span>Caixa do dia <b>{{new Date(cashierDetailObject.updated_at).toLocaleDateString()}}</b></span>
-            <hr>
-            <v-row class="pb-0" v-for="coitems in cashierDetailObject.items" :key="coitems.id">
-              <v-col class="pb-0" cols="6">{{coitems.name}}</v-col>
-              <v-col class="pb-0" cols="4">{{coitems.quantity}} Und(s)</v-col>
-              <v-col class="pb-0" cols="2">{{formatMoney(coitems.total_parcial)}}</v-col>
+            <hr />
+            <v-row
+              class="pb-0"
+              v-for="coitems in cashierDetailObject.items"
+              :key="coitems.id"
+            >
+              <v-col class="pb-0" cols="6">{{ coitems.name }}</v-col>
+              <v-col class="pb-0" cols="4">{{ coitems.quantity }} Und(s)</v-col>
+              <v-col class="pb-0 justify-end" cols="2">{{
+                formatMoney(coitems.total_parcial)
+              }}</v-col>
             </v-row>
-            <v-row>
-              <v-col>
-                Dinheiro: {{formatMoney(cashierDetailObject.items[0].money)}}<br>
-                Débito: {{formatMoney(cashierDetailObject.items[0].debit)}}<br>
-                Crédito: {{formatMoney(cashierDetailObject.items[0].credit)}}<br>
-                Ticket: {{formatMoney(cashierDetailObject.items[0].ticket)}}<br>
-              </v-col>
-            </v-row>
+            <hr />
           </v-card-text>
+          <v-card-actions class="justify-center" :style="{color:mainColor}" v-if="cashierDetail">
+              <b style="color:black">(</b>Dinheiro: <b>{{ formatMoney(cashierDetailObject.items[0].money)}}</b><b style="color:black">)</b>
+              <b style="color:black">(</b>Débito: <b>{{ formatMoney(cashierDetailObject.items[0].debit)}}</b><b style="color:black">)</b>
+              <b style="color:black">(</b>Crédito: <b>{{ formatMoney(cashierDetailObject.items[0].credit)}}</b><b style="color:black">)</b>
+              <b style="color:black">(</b>Ticket: <b>{{ formatMoney(cashierDetailObject.items[0].ticket)}}</b><b style="color:black">)</b>
+          </v-card-actions>
         </v-card>
       </v-dialog>
 
@@ -799,7 +845,7 @@ var pusher = new Pusher("a885cc143df63df6146a", {
 var helper = new Helper();
 var section = new Section();
 const user = new User();
-const cashier = new Cashier;
+const cashier = new Cashier();
 export default {
   mixins: [mixins],
   directives: { money: VMoney },
@@ -815,11 +861,12 @@ export default {
       },
 
       //cashier variables
+      detailsType: 'all',
       cashierDetailObject: {
-        items:[]
+        items: [],
       },
       cashierDetail: false,
-      mycashiers:[],
+      mycashiers: [],
       modalClosedsCashiers: false,
       totalReceive: "0,00",
       statusCashier: false,
@@ -956,7 +1003,8 @@ export default {
       this.password = "";
     });
 
-    this.$root.$on("cashiers_closeds", async(e) => {
+    this.$root.$on("cashiers_closeds", async (e) => {
+      this.cashierDetail = false;
       this.modalClosedsCashiers = true;
       this.mycashiers = await cashier.all(this.user.id);
     });
@@ -1219,10 +1267,12 @@ export default {
   },
 
   methods: {
-    async showCashierDetail(c){
-      this.cashierDetailObject = c
-      this.cashierDetailObject.items = await cashier.items(c.id);
-      this.cashierDetail = true
+    async showCashierDetail(c, type) {
+      this.detailsType = type
+      this.cashierDetailObject = c;
+      this.cashierDetailObject.items = await cashier.items(c.id, type);
+      console.log(this.cashierDetailObject.items.length)
+      this.cashierDetail = true;
     },
 
     preventLoadUsersForInitApp() {
@@ -1717,11 +1767,16 @@ export default {
   font-size: 50;
 }
 
-.my_cashier{
+.my_cashier {
   cursor: pointer;
 }
 
-.my_cashier:hover{
-  background: #F5F5F5;
+.my_cashier:hover {
+  background: #f5f5f5;
+}
+
+.links-card-title{
+  /* padding-left: 20px; */
+  margin-left: 20px;
 }
 </style>

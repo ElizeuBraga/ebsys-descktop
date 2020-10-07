@@ -69,7 +69,16 @@ export class Cashier {
         }
     }
 
-    async items(cashier_id){
+    async items(cashier_id, type){
+        let orderType = [];
+        if(type == 'deliveries'){
+            orderType = [1]
+        }else if (type == 'all') {
+            orderType = [0,1]
+        }else{
+            orderType = [0]
+        }
+
         let sql = `select
                         p.name,
                         SUM(i.quantity) as quantity,
@@ -81,13 +90,12 @@ export class Cashier {
                         from items i join orders o on o.id = i.order_id
                     join cashiers c on c.id = o.cashier_id
                     join products p on p.id = i.product_id 
-                    where c.id = ? GROUP BY p.id`;
+                    where c.id = `+cashier_id+` and o.order_type in(`+orderType+`) GROUP BY p.id`;
         let items = []
 
-        await db.all(sql, [cashier_id]).then((rows)=>{
+        await db.all(sql).then((rows)=>{
             items = rows
         })
-
         return items;
     }
 
