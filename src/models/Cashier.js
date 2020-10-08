@@ -91,11 +91,26 @@ export class Cashier {
                     join cashiers c on c.id = o.cashier_id
                     join products p on p.id = i.product_id 
                     where c.id = `+cashier_id+` and o.order_type in(`+orderType+`) GROUP BY p.id`;
+
+        let sql2 = `select
+                        CASE WHEN SUM(o.money) IS NULL THEN 0 ELSE SUM(o.money) END money,
+                        CASE WHEN SUM(o.debit) IS NULL THEN 0 ELSE SUM(o.debit) END debit,
+                        CASE WHEN SUM(o.credit) IS NULL THEN 0 ELSE SUM(o.credit) END credit,
+                        CASE WHEN SUM(o.ticket) IS NULL THEN 0 ELSE SUM(o.ticket) END ticket
+                    from orders o
+                    join cashiers c
+                    on c.id = o.cashier_id
+                    where c.id = `+cashier_id+` AND o.order_type in (`+orderType+`)`;
         let items = []
 
         await db.all(sql).then((rows)=>{
-            items = rows
+            items.push(rows)
         })
+
+        await db.get(sql2).then((rows)=>{
+            items.push(rows)
+        })
+
         return items;
     }
 

@@ -541,7 +541,7 @@
 
           <v-divider></v-divider>
 
-          <v-card-actions>
+          <v-card-actions :style="{'background-color':'red'}">
             <v-spacer></v-spacer>
             <v-btn
               :style="{ width: '100%', background: mainColor }"
@@ -564,7 +564,7 @@
         open-delay=3000
         origin="top right"
       >
-        <v-card>
+        <v-card height="80vh">
           <v-card-title class="text-center">
             <v-toolbar flat>
               <v-toolbar-title v-if="!cashierDetail">Meus fechamentos</v-toolbar-title>
@@ -616,22 +616,22 @@
             <hr />
             <v-row
               class="pb-0"
-              v-for="coitems in cashierDetailObject.items"
-              :key="coitems.id"
+              v-for="(i, index) in itemsCashierDetails[0]"
+              :key="index"
             >
-              <v-col class="pb-0" cols="6">{{ coitems.name }}</v-col>
-              <v-col class="pb-0" cols="4">{{ coitems.quantity }} Und(s)</v-col>
+              <v-col class="pb-0" cols="6">{{ i.name }}</v-col>
+              <v-col class="pb-0" cols="4">{{ i.quantity }} Und(s)</v-col>
               <v-col class="pb-0 justify-end" cols="2">{{
-                formatMoney(coitems.total_parcial)
+                formatMoney(i.total_parcial)
               }}</v-col>
             </v-row>
             <hr />
           </v-card-text>
           <v-card-actions class="justify-center" :style="{color:mainColor}" v-if="cashierDetail">
-              <b style="color:black">(</b>Dinheiro: <b>{{ formatMoney(cashierDetailObject.items[0].money)}}</b><b style="color:black">)</b>
-              <b style="color:black">(</b>Débito: <b>{{ formatMoney(cashierDetailObject.items[0].debit)}}</b><b style="color:black">)</b>
-              <b style="color:black">(</b>Crédito: <b>{{ formatMoney(cashierDetailObject.items[0].credit)}}</b><b style="color:black">)</b>
-              <b style="color:black">(</b>Ticket: <b>{{ formatMoney(cashierDetailObject.items[0].ticket)}}</b><b style="color:black">)</b>
+              <b style="color:black">(</b>Dinheiro: <b>{{ formatMoney(itemsCashierDetails[1].money)}}</b><b style="color:black">)</b>
+              <b style="color:black">(</b>Débito: <b>{{ formatMoney(itemsCashierDetails[1].debit)}}</b><b style="color:black">)</b>
+              <b style="color:black">(</b>Crédito: <b>{{ formatMoney(itemsCashierDetails[1].credit)}}</b><b style="color:black">)</b>
+              <b style="color:black">(</b>Ticket: <b>{{ formatMoney(itemsCashierDetails[1].ticket)}}</b><b style="color:black">)</b>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -861,6 +861,7 @@ export default {
       },
 
       //cashier variables
+      itemsCashierDetails:[],
       detailsType: 'all',
       cashierDetailObject: {
         items: [],
@@ -1268,10 +1269,9 @@ export default {
 
   methods: {
     async showCashierDetail(c, type) {
+      this.cashierDetailObject = c
       this.detailsType = type
-      this.cashierDetailObject = c;
-      this.cashierDetailObject.items = await cashier.items(c.id, type);
-      console.log(this.cashierDetailObject.items.length)
+      this.itemsCashierDetails = await cashier.items(c.id, type);
       this.cashierDetail = true;
     },
 

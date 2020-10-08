@@ -21,14 +21,15 @@ export class Order {
     }
 
     async create(o) {
+        console.log(o)
         let customer_id = null
         let item = {}
         let items =[]
-        let sql = "insert into orders (cashier_id, customer_id, order_type, created_at) values(?, ?, ?, datetime('now', 'localtime'));";
+        let sql = "insert into orders (cashier_id, customer_id, money, debit, credit, ticket, order_type, created_at) values(?, ?, ?, ?, ?, ?, ?,  datetime('now', 'localtime'));";
         
         
         // db.run('BEGIN TRANSACTION');
-        await db.run(sql, [o.cashier_id, customer_id, o.order_type]).then(async ()=>{
+        await db.run(sql, [o.cashier_id, customer_id, o.money, o.debit, o.credit, o.ticket, o.order_type]).then(async ()=>{
             let sqlLastRowId = "SELECT LAST_INSERT_ROWID() as order_id";
             let order_id = await db.get(sqlLastRowId)
             for (const i of o.items) {
