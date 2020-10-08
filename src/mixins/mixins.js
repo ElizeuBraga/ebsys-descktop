@@ -8,7 +8,7 @@ export default {
     data() {
         return {
             //colors
-            backgroundColor:"f5f5f5",
+            backgroundColor:"#f5f5f5",
             mainColor: "orange",
 
 

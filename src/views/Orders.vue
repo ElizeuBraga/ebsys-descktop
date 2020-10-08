@@ -373,17 +373,29 @@
       </v-dialog>
 
       <!-- modal Receive-->
-      <v-dialog v-model="dialogReceive" width="500" :persistent="true">
-        <v-card>
-          <v-card-title class="headline grey lighten-2" primary-title>
-            <v-col cols="6">Receber</v-col>
-            <v-col :style="{ color: 'green' }" class="text-right" cols="6"
-              >R$ {{ formatMoney(total) }}</v-col
-            >
+      <v-dialog
+        v-model="dialogReceive"
+        max-width="800"
+        :persistent="true"
+        scrollable
+      >
+        <v-card height="80vh">
+          <v-card-title class="headline lighten-2" primary-title>
+            <v-toolbar flat>
+              <v-toolbar-title> Receber </v-toolbar-title>
+            </v-toolbar>
           </v-card-title>
 
           <v-card-text>
-            <v-row justify="center">
+            <v-row align="center" justify="center">
+              <v-col cols="12">
+                <v-icon
+                  style="vertical-align: middle"
+                  :disabled="true"
+                  size="200"
+                  >attach_money</v-icon
+                >
+              </v-col>
               <v-col cols="2" class="mb-0 pb-0">
                 <v-text-field
                   type="number"
@@ -460,14 +472,6 @@
                   Troco - 0,00
                 </p>
               </v-col>
-              <div>
-                <!-- <span
-                  cols="4"
-                  v-for="(p, i) in payments"
-                  :key="i"
-                >{{p.name}} - {{p.price.toFixed(2).replace('.', ',')}}</span>-->
-                <br />
-              </div>
             </v-row>
           </v-card-text>
 
@@ -541,7 +545,7 @@
 
           <v-divider></v-divider>
 
-          <v-card-actions :style="{'background-color':'red'}">
+          <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
               :style="{ width: '100%', background: mainColor }"
@@ -561,18 +565,50 @@
         v-model="modalClosedsCashiers"
         max-width="800"
         :persistent="false"
-        open-delay=3000
+        open-delay="3000"
         origin="top right"
       >
         <v-card height="80vh">
           <v-card-title class="text-center">
             <v-toolbar flat>
-              <v-toolbar-title v-if="!cashierDetail">Meus fechamentos</v-toolbar-title>
-              <v-toolbar-title v-else>Data de fechamento <b>{{new Date(cashierDetailObject.updated_at).toLocaleDateString()}}</b></v-toolbar-title>
+              <v-toolbar-title v-if="!cashierDetail"
+                >Meus fechamentos</v-toolbar-title
+              >
+              <v-toolbar-title v-else
+                >Data de fechamento
+                <b>{{
+                  new Date(cashierDetailObject.updated_at).toLocaleDateString()
+                }}</b></v-toolbar-title
+              >
               <div v-if="cashierDetail">
-              <a :style="[detailsType == 'all' ? {color:mainColor} : {color:''}]" class="links-card-title" @click="showCashierDetail(cashierDetailObject, 'all')">Todos</a>
-              <a :style="[detailsType == 'deliveries' ? {color:mainColor} : {color:''}]" class="links-card-title" @click="showCashierDetail(cashierDetailObject, 'deliveries')">Deliveries</a>
-              <a :style="[detailsType == 'contertop' ? {color:mainColor} : {color:''}]" class="links-card-title" @click="showCashierDetail(cashierDetailObject, 'contertop')">Balcão</a>
+                <a
+                  :style="[
+                    detailsType == 'all' ? { color: mainColor } : { color: '' },
+                  ]"
+                  class="links-card-title"
+                  @click="showCashierDetail(cashierDetailObject, 'all')"
+                  >Todos</a
+                >
+                <a
+                  :style="[
+                    detailsType == 'deliveries'
+                      ? { color: mainColor }
+                      : { color: '' },
+                  ]"
+                  class="links-card-title"
+                  @click="showCashierDetail(cashierDetailObject, 'deliveries')"
+                  >Deliveries</a
+                >
+                <a
+                  :style="[
+                    detailsType == 'contertop'
+                      ? { color: mainColor }
+                      : { color: '' },
+                  ]"
+                  class="links-card-title"
+                  @click="showCashierDetail(cashierDetailObject, 'contertop')"
+                  >Balcão</a
+                >
               </div>
               <v-spacer></v-spacer>
               <v-btn
@@ -627,11 +663,20 @@
             </v-row>
             <hr />
           </v-card-text>
-          <v-card-actions class="justify-center" :style="{color:mainColor}" v-if="cashierDetail">
-              <b style="color:black">(</b>Dinheiro: <b>{{ formatMoney(itemsCashierDetails[1].money)}}</b><b style="color:black">)</b>
-              <b style="color:black">(</b>Débito: <b>{{ formatMoney(itemsCashierDetails[1].debit)}}</b><b style="color:black">)</b>
-              <b style="color:black">(</b>Crédito: <b>{{ formatMoney(itemsCashierDetails[1].credit)}}</b><b style="color:black">)</b>
-              <b style="color:black">(</b>Ticket: <b>{{ formatMoney(itemsCashierDetails[1].ticket)}}</b><b style="color:black">)</b>
+          <v-card-actions
+            class="justify-center"
+            :style="{ color: mainColor, 'background-color': backgroundColor }"
+            v-if="cashierDetail"
+          >
+            <b style="color: black">(</b>Dinheiro:
+            <b>{{ formatMoney(itemsCashierDetails[1].money) }}</b
+            ><b style="color: black">)</b> <b style="color: black">(</b>Débito:
+            <b>{{ formatMoney(itemsCashierDetails[1].debit) }}</b
+            ><b style="color: black">)</b> <b style="color: black">(</b>Crédito:
+            <b>{{ formatMoney(itemsCashierDetails[1].credit) }}</b
+            ><b style="color: black">)</b> <b style="color: black">(</b>Ticket:
+            <b>{{ formatMoney(itemsCashierDetails[1].ticket) }}</b
+            ><b style="color: black">)</b>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -861,11 +906,12 @@ export default {
       },
 
       //cashier variables
-      itemsCashierDetails:[],
-      detailsType: 'all',
+      itemsCashierDetails: [],
+      detailsType: "all",
       cashierDetailObject: {
         items: [],
       },
+      totalReceiving: 0,
       cashierDetail: false,
       mycashiers: [],
       modalClosedsCashiers: false,
@@ -1039,24 +1085,8 @@ export default {
       }
 
       if (e.key == "F9") {
-        this.totalReceive = this.formatMoney(this.total);
-        if (this.dialogReceive) {
-          return;
-        }
-        if (this.order.items.length > 0) {
-          this.dialogReceive = true;
-          // this.totalReceive = this.total;
-          // this.amountToChange = this.totalReceive
-          // this.type = 'Dinheiro'
-          setTimeout(() => {
-            var p = document.getElementById("payments");
-            p.childNodes[this.paymentType - 1].style.color = this.mainColor;
-            this.$refs.paymentType.focus();
-          }, 200);
-
-          this.setNexStep("amountToReceive");
-          // this.totalReceive.toFixed(2)
-          // this.falta = this.totalReceive
+        if (this.total > 0) {
+          this.receivePayment();
         }
       }
 
@@ -1268,9 +1298,52 @@ export default {
   },
 
   methods: {
+    async receivePayment() {
+      const { value: payment } = await Swal.fire({
+        title: "Qual a forma de pagamento?",
+        text: "1-Dinheiro, 2-Débito, 3-Crédito, 4-Ticket",
+        icon: "question",
+        input: "number",
+        inputAttributes: {
+          min: 1,
+          max: 4,
+        },
+      });
+
+      if (payment) {
+        const payments = ["Dinheiro", "Débito", "Crédito", "Ticket"];
+        const { value: value } = await Swal.fire({
+          title: "Qual o valor?",
+          text: payments[parseInt(payment) - 1],
+          icon: "question",
+          input: "text",
+          inputPlaceholder: "Informe uma forma de pagamento",
+          didOpen:(el) =>{
+            let teste = el.querySelector('input');
+
+            console.log(teste)
+          },
+        });
+
+        if (value) {
+          this.totalReceiving += parseFloat(value);
+          console.log(this.totalReceiving);
+          if (this.totalReceiving >= this.total) {
+            Swal.fire({
+              title: "Ecerrar recebimento?",
+              icon: "question",
+              html: "<span>Dinheiro: <span>",
+            });
+          } else {
+            this.receivePayment();
+          }
+        }
+      }
+    },
+
     async showCashierDetail(c, type) {
-      this.cashierDetailObject = c
-      this.detailsType = type
+      this.cashierDetailObject = c;
+      this.detailsType = type;
       this.itemsCashierDetails = await cashier.items(c.id, type);
       this.cashierDetail = true;
     },
@@ -1775,7 +1848,7 @@ export default {
   background: #f5f5f5;
 }
 
-.links-card-title{
+.links-card-title {
   /* padding-left: 20px; */
   margin-left: 20px;
 }
