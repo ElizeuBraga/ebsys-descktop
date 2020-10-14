@@ -1311,31 +1311,44 @@ export default {
       });
 
       if (payment) {
+        console.log(this.total)
         const payments = ["Dinheiro", "Débito", "Crédito", "Ticket"];
         const { value: value } = await Swal.fire({
-          title: "Qual o valor?",
+          title: "Quanto está recebendo?",
           text: payments[parseInt(payment) - 1],
           icon: "question",
-          input: "text",
-          inputPlaceholder: "Informe uma forma de pagamento",
-          didOpen:(el) =>{
-            let teste = el.querySelector('input');
+          input: "number",
+          inputAttributes: {
+          min: 1,
+          max: this.total,
+        },
+          didOpen: (el) => {
+            let teste = el.querySelector("input");
 
-            console.log(teste)
+            console.log(teste);
           },
         });
 
         if (value) {
-          this.totalReceiving += parseFloat(value);
-          console.log(this.totalReceiving);
-          if (this.totalReceiving >= this.total) {
-            Swal.fire({
-              title: "Ecerrar recebimento?",
+          if (parseInt(payment) == 1) {
+            const { value: changeFor } = await Swal.fire({
+              title: "Troco para quanto?",
               icon: "question",
-              html: "<span>Dinheiro: <span>",
+              input: "text"
             });
+
+            if (changeFor) {
+              await Swal.fire({
+                title: "Devolva",
+                text: this.formatMoney(parseFloat(changeFor) - parseFloat(value)),
+                icon: "success",
+              });
+            }
           } else {
-            this.receivePayment();
+            Swal.fire({
+              title: payments[payment - 1],
+              text: value,
+            });
           }
         }
       }
