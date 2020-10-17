@@ -31,16 +31,6 @@
           prepend-icon="mdi-database-search"
           return-object
         ></v-autocomplete>
-
-        <!-- card fechamento -->
-        <v-card class="mt-12" v-if="receiving">
-          <v-card-title>
-            Fechamento
-          </v-card-title>
-          <v-card-text>
-            <p v-for="(p, i) in payments" :key="i">{{paymentsFormats[p.type -1]}} = {{formatMoney(p.amount)}}</p>
-          </v-card-text>
-        </v-card>
       </v-col>
       <v-col cols="2">
         <v-text-field
@@ -888,6 +878,7 @@ import { Customer } from "../models/Customer";
 import { Helper } from "../models/Helper";
 import { Order } from "../models/Order";
 import Swal from "sweetalert2";
+import { Payment } from "../models/Payment";
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -1097,7 +1088,11 @@ export default {
 
       if (e.key == "F9") {
         if (this.total > 0) {
-          this.receivePayment();
+          if (this.diffPaymentAndTotal == 0) {
+            this.closeOrderReport()
+          } else {
+            this.receivePayment();
+          }
         }
       }
 
@@ -1225,17 +1220,17 @@ export default {
       return this.product != Object.keys(this.product).length > 0;
     },
 
-    calcPayment(){
+    calcPayment() {
       let total = 0;
-      this.payments.forEach(element => {
-        total += element.amount
+      this.payments.forEach((element) => {
+        total += element.amount;
       });
 
-      return total
+      return total;
     },
 
-    diffPaymentAndTotal(){
-      return parseFloat((this.total - this.calcPayment).toFixed(2))
+    diffPaymentAndTotal() {
+      return parseFloat((this.total - this.calcPayment).toFixed(2));
     },
 
     fieldsLogin() {
@@ -1322,6 +1317,24 @@ export default {
   },
 
   methods: {
+    closeOrderReport() {
+      let html = "";
+      this.payments.forEach((element) => {
+        html +=
+          this.paymentsFormats[parseInt(element.type) - 1] +
+          " = " +
+          this.formatMoney(element.amount) +
+          "<br>";
+      });
+
+      if (this.diffPaymentAndTotal == 0) {
+        Swal.fire({
+          title: "Finalizar pagamento",
+          html: html,
+        });
+      }
+    },
+
     async receivePayment() {
       this.receiving = true;
 
@@ -1341,15 +1354,18 @@ export default {
       if (payment) {
         // const payments = ["Dinheiro", "Débito", "Crédito", "Ticket"];
         const { value: value } = await Swal.fire({
-          title: "Quanto está recebendo em "+ this.paymentsFormats[parseInt(payment) - 1] +"?",
+          title:
+            "Quanto está recebendo em " +
+            this.paymentsFormats[parseInt(payment) - 1] +
+            "?",
           text: "Faltam " + this.formatMoney(this.diffPaymentAndTotal),
           icon: "question",
           input: "number",
           inputAttributes: {
-          min: 0,
-          max: this.diffPaymentAndTotal,
-          step:"any"
-        },
+            min: 0,
+            max: this.diffPaymentAndTotal,
+            step: "any",
+          },
           didOpen: (el) => {
             let teste = el.querySelector("input");
 
@@ -1363,26 +1379,40 @@ export default {
             const { value: changeFor } = await Swal.fire({
               title: "Troco para quanto?",
               icon: "question",
-              input: "text"
+              input: "text",
             });
 
             if (changeFor) {
               await Swal.fire({
                 title: "Devolva",
-                text: this.formatMoney(parseFloat(changeFor) - parseFloat(value)),
+                text: this.formatMoney(
+                  parseFloat(changeFor) - parseFloat(value)
+                ),
                 icon: "success",
               });
             }
-            this.payments.push({type:parseInt(payment), amount:parseFloat(value)})
+            this.payments.push({
+              type: parseInt(payment),
+              amount: parseFloat(value),
+            });
 
-            if(this.diffPaymentAndTotal > 0){
-              this.receivePayment()
+            if (this.diffPaymentAndTotal > 0) {
+              this.receivePayment();
+            } else {
+              this.closeOrderReport();
             }
           } else {
             // else inser in payment array the values
-            this.payments.push({type:parseInt(payment), amount:parseFloat(value)})
+            this.payments.push({
+              type: parseInt(payment),
+              amount: parseFloat(value),
+            });
 
-            console.log(this.calcPayment)
+            if (this.diffPaymentAndTotal == 0) {
+              this.closeOrderReport();
+            } else {
+              this.receivePayment();
+            }
           }
         }
       }
