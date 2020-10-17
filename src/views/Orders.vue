@@ -31,6 +31,16 @@
           prepend-icon="mdi-database-search"
           return-object
         ></v-autocomplete>
+
+        <!-- card fechamento -->
+        <v-card class="mt-12" v-if="receiving">
+          <v-card-title>
+            Fechamento
+          </v-card-title>
+          <v-card-text>
+            <p v-for="(p, i) in payments" :key="i">{{paymentsFormats[p.type -1]}} = {{formatMoney(p.amount)}}</p>
+          </v-card-text>
+        </v-card>
       </v-col>
       <v-col cols="2">
         <v-text-field
@@ -906,6 +916,7 @@ export default {
       },
 
       //cashier variables
+      receiving: false,
       itemsCashierDetails: [],
       detailsType: "all",
       cashierDetailObject: {
@@ -1214,6 +1225,19 @@ export default {
       return this.product != Object.keys(this.product).length > 0;
     },
 
+    calcPayment(){
+      let total = 0;
+      this.payments.forEach(element => {
+        total += element.amount
+      });
+
+      return total
+    },
+
+    diffPaymentAndTotal(){
+      return parseFloat((this.total - this.calcPayment).toFixed(2))
+    },
+
     fieldsLogin() {
       return this.username == "" || this.password == "";
     },
@@ -1299,6 +1323,9 @@ export default {
 
   methods: {
     async receivePayment() {
+      this.receiving = true;
+
+      // asking the payment form
       const { value: payment } = await Swal.fire({
         title: "Qual a forma de pagamento?",
         text: "1-Dinheiro, 2-Débito, 3-Crédito, 4-Ticket",
@@ -1310,17 +1337,18 @@ export default {
         },
       });
 
+      // asking the amount for the payment form
       if (payment) {
-        console.log(this.total)
-        const payments = ["Dinheiro", "Débito", "Crédito", "Ticket"];
+        // const payments = ["Dinheiro", "Débito", "Crédito", "Ticket"];
         const { value: value } = await Swal.fire({
-          title: "Quanto está recebendo?",
-          text: payments[parseInt(payment) - 1],
+          title: "Quanto está recebendo em "+ this.paymentsFormats[parseInt(payment) - 1] +"?",
+          text: "Faltam " + this.formatMoney(this.diffPaymentAndTotal),
           icon: "question",
           input: "number",
           inputAttributes: {
-          min: 1,
-          max: this.total,
+          min: 0,
+          max: this.diffPaymentAndTotal,
+          step:"any"
         },
           didOpen: (el) => {
             let teste = el.querySelector("input");
@@ -1330,6 +1358,7 @@ export default {
         });
 
         if (value) {
+          // if payment is money, ask change
           if (parseInt(payment) == 1) {
             const { value: changeFor } = await Swal.fire({
               title: "Troco para quanto?",
@@ -1344,11 +1373,16 @@ export default {
                 icon: "success",
               });
             }
+            this.payments.push({type:parseInt(payment), amount:parseFloat(value)})
+
+            if(this.diffPaymentAndTotal > 0){
+              this.receivePayment()
+            }
           } else {
-            Swal.fire({
-              title: payments[payment - 1],
-              text: value,
-            });
+            // else inser in payment array the values
+            this.payments.push({type:parseInt(payment), amount:parseFloat(value)})
+
+            console.log(this.calcPayment)
           }
         }
       }
