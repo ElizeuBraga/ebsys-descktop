@@ -371,134 +371,7 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-
-      <!-- modal Receive-->
-      <v-dialog
-        v-model="dialogReceive"
-        max-width="800"
-        :persistent="true"
-        scrollable
-      >
-        <v-card height="80vh">
-          <v-card-title class="headline lighten-2" primary-title>
-            <v-toolbar flat>
-              <v-toolbar-title> Receber </v-toolbar-title>
-            </v-toolbar>
-          </v-card-title>
-
-          <v-card-text>
-            <v-row align="center" justify="center">
-              <v-col cols="12">
-                <v-icon
-                  style="vertical-align: middle"
-                  :disabled="true"
-                  size="200"
-                  >attach_money</v-icon
-                >
-              </v-col>
-              <v-col cols="2" class="mb-0 pb-0">
-                <v-text-field
-                  type="number"
-                  min="1"
-                  max="4"
-                  ref="paymentType"
-                  label="Pagamento"
-                  :color="mainColor"
-                  v-model="paymentType"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="8" class="mb-0 pb-0">
-                <v-text-field
-                  maxlength="10"
-                  v-money="money"
-                  ref="amountToReceive"
-                  label="A receber"
-                  :color="mainColor"
-                  v-model="totalReceive"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" class="mb-0 mt-0 pb-0 pt-0">
-                <p class="text-center" id="payments">
-                  <span ref="money">1-Dinheiro </span>
-                  <span ref="debit">2-Débito </span>
-                  <span>3-Crédito </span>
-                  <span>4-Ticket </span>
-                </p>
-              </v-col>
-              <v-col cols="12">
-                <p v-if="order.money > 0" class="mb-0">
-                  Dinheiro - {{ formatMoney(order.money) }}
-                </p>
-                <p v-if="order.debit > 0" class="mb-0">
-                  Debito - {{ formatMoney(order.debit) }}
-                </p>
-                <p v-if="order.credit > 0" class="mb-0">
-                  Credito - {{ formatMoney(order.credit) }}
-                </p>
-                <p v-if="order.ticket > 0" class="mb-0">
-                  Ticket - {{ formatMoney(order.ticket) }}
-                </p>
-                <br />
-                <hr />
-                <p :style="{ color: 'green' }" class="resume-end-order mb-0">
-                  Total - {{ formatMoney(order.total_received) }}
-                </p>
-                <p
-                  :style="{ color: 'red' }"
-                  class="resume-end-order mb-0"
-                  v-if="this.total - order.total_received > 0"
-                >
-                  Falta - {{ formatMoney(this.total - order.total_received) }}
-                </p>
-                <p
-                  :style="{ color: 'red' }"
-                  class="resume-end-order mb-0"
-                  v-else
-                >
-                  Falta - 0,00
-                </p>
-                <p
-                  :style="{ color: 'red' }"
-                  class="resume-end-order mb-0"
-                  v-if="order.total_received > total"
-                >
-                  Troco - {{ formatMoney(order.total_received - this.total) }}
-                </p>
-                <p
-                  :style="{ color: 'red' }"
-                  class="resume-end-order mb-0"
-                  v-else
-                >
-                  Troco - 0,00
-                </p>
-              </v-col>
-            </v-row>
-          </v-card-text>
-
-          <v-divider></v-divider>
-
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn
-              :style="{ width: '50%', background: 'green' }"
-              color="white"
-              ref="btnendorder"
-              text
-              @click="endOrder(order)"
-              >Receber</v-btn
-            >
-            <v-btn
-              :style="{ width: '50%', background: 'red' }"
-              color="white"
-              ref="cancelReceive"
-              text
-              @click="cancelReceive"
-              >Cancelar(Esc)</v-btn
-            >
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
+      
       <!-- modal close cahiser-->
       <v-dialog v-model="modalCloseCashier" width="500" :persistent="false">
         <v-card>
@@ -879,6 +752,7 @@ import { Helper } from "../models/Helper";
 import { Order } from "../models/Order";
 import Swal from "sweetalert2";
 import { Payment } from "../models/Payment";
+import { Console } from "console";
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -1087,9 +961,10 @@ export default {
       }
 
       if (e.key == "F9") {
+        this.dialogReceive = true
         if (this.total > 0) {
           if (this.diffPaymentAndTotal == 0) {
-            this.closeOrderReport()
+            this.closeOrderReport();
           } else {
             this.receivePayment();
           }
@@ -1291,6 +1166,7 @@ export default {
     },
 
     paymentType(e) {
+      console.log(e);
       if (parseInt(e) > 4) {
         setTimeout(() => {
           this.paymentType = 1;
@@ -1318,7 +1194,7 @@ export default {
 
   methods: {
     closeOrderReport() {
-      let html = "";
+      let html = "<div>";
       this.payments.forEach((element) => {
         html +=
           this.paymentsFormats[parseInt(element.type) - 1] +
@@ -1327,10 +1203,30 @@ export default {
           "<br>";
       });
 
+      html += "</div>";
+
       if (this.diffPaymentAndTotal == 0) {
         Swal.fire({
-          title: "Finalizar pagamento",
+          title: "Finalizar pagamento?",
+          icon: "question",
           html: html,
+          showCancelButton: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              title: "Feito!",
+              icon: "success",
+              timer: 1000,
+            });
+          } else {
+            Swal.fire({
+              title: "Cancelado!",
+              icon: "error",
+              timer: 1000,
+            });
+
+            this.payments = [];
+          }
         });
       }
     },
@@ -1341,15 +1237,19 @@ export default {
       // asking the payment form
       const { value: payment } = await Swal.fire({
         title: "Qual a forma de pagamento?",
-        text: "1-Dinheiro, 2-Débito, 3-Crédito, 4-Ticket",
+        html:
+          `<div id='payments'><span>1-Dinheiro</span>, <span>2-Débito</span>, <span>3-Crédito</span>, <span>4-Ticket</span></div><br>
+        <b style='color:red'>Faltam <span>` +
+          this.formatMoney(this.diffPaymentAndTotal) +
+          `</span></b>`,
         icon: "question",
         input: "number",
+        inputValue: this.paymentType,
         inputAttributes: {
           min: 1,
           max: 4,
         },
       });
-
       // asking the amount for the payment form
       if (payment) {
         // const payments = ["Dinheiro", "Débito", "Crédito", "Ticket"];
@@ -1368,18 +1268,23 @@ export default {
           },
           didOpen: (el) => {
             let teste = el.querySelector("input");
-
-            console.log(teste);
+            // console.log(teste);
           },
         });
 
         if (value) {
+          console.log(value);
           // if payment is money, ask change
           if (parseInt(payment) == 1) {
             const { value: changeFor } = await Swal.fire({
               title: "Troco para quanto?",
+              html: "<b style='color:green'>Recebendo " + this.formatMoney(parseFloat(value))+"</b>",
               icon: "question",
-              input: "text",
+              input: "number",
+              inputAttributes: {
+                min: 0,
+                step: "any",
+              },
             });
 
             if (changeFor) {
@@ -1546,6 +1451,7 @@ export default {
       this.quantity = 1;
       this.$refs.product.focus();
       this.locObj = {};
+      this.payment = [];
     },
 
     cancelReceive() {
