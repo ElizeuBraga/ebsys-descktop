@@ -1284,6 +1284,7 @@ export default {
               html: "<b style='color:green'>Recebendo " + this.formatMoney(parseFloat(value))+"</b>",
               icon: "question",
               input: "number",
+              inputValue: parseFloat(value).toFixed(2),
               inputAttributes: {
                 min: value,
                 step: "any",
@@ -1371,7 +1372,7 @@ export default {
 
     async loadUsersFromServer() {
       let maxid = await helper.max("users");
-      axios.get("users/getGreaterThen/" + 0).then((response) => {
+      axios.get("users/getGreaterThen/" + maxid).then((response) => {
         let user = new User();
         user.create(response.data);
 
