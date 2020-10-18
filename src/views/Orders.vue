@@ -371,7 +371,7 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-      
+
       <!-- modal close cahiser-->
       <v-dialog v-model="modalCloseCashier" width="500" :persistent="false">
         <v-card>
@@ -1218,6 +1218,8 @@ export default {
               icon: "success",
               timer: 1000,
             });
+
+            this.endOrder(this.order)
           } else {
             Swal.fire({
               title: "Cancelado!",
@@ -1258,11 +1260,12 @@ export default {
             "Quanto está recebendo em " +
             this.paymentsFormats[parseInt(payment) - 1] +
             "?",
-          text: "Faltam " + this.formatMoney(this.diffPaymentAndTotal),
+          html: "<span style='color:red; font-weight:bold'>Faltam " + this.formatMoney(this.diffPaymentAndTotal) + "</span>",
           icon: "question",
           input: "number",
+          inputValue: this.diffPaymentAndTotal.toFixed(2),
           inputAttributes: {
-            min: 0,
+            min: 0.1,
             max: this.diffPaymentAndTotal,
             step: "any",
           },
@@ -1282,7 +1285,7 @@ export default {
               icon: "question",
               input: "number",
               inputAttributes: {
-                min: 0,
+                min: value,
                 step: "any",
               },
             });
@@ -1368,7 +1371,7 @@ export default {
 
     async loadUsersFromServer() {
       let maxid = await helper.max("users");
-      axios.get("users/getGreaterThen/" + maxid).then((response) => {
+      axios.get("users/getGreaterThen/" + 0).then((response) => {
         let user = new User();
         user.create(response.data);
 
@@ -1626,16 +1629,25 @@ export default {
     },
 
     async endOrder(order) {
+      
+      this.payments.forEach(element => {
+        if(element.type == 1){
+          order.money += element.amount
+        }else if(element.type == 2){
+          order.debit += element.amount
+        }else if(element.type == 3){
+          order.credit += element.amount
+        }else{
+          order.ticket += element.amount
+        }
+      });
+
       order.cashier_id = this.cashier.id;
 
       let o = new Order();
       let response = await o.create(order);
-      return;
-      o.store(order, items, payments);
       this.dialogReceive = false;
-      this.order.items = [];
-      this.order.customer = {};
-      this.amountMoney = 0;
+      this.order = {}
       this.payments = [];
       this.typeOrderBalcao();
     },

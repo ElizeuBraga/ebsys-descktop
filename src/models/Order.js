@@ -21,7 +21,6 @@ export class Order {
     }
 
     async create(o) {
-        console.log(o)
         let customer_id = null
         let item = {}
         let items =[]
@@ -51,8 +50,6 @@ export class Order {
             await helper.insertMany('items', items)
         })
         // db.run('COMMIT');
-        
-        console.log(o)
         if(Object.keys(o.customer).length > 0){
             customer_id = o.customer.id
         }

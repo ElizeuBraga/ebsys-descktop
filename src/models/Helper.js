@@ -88,9 +88,11 @@ export class Helper{
             
             let sql = 'INSERT INTO '+ table +' values' + map;
     
+            let sql_log_errors = "INSERT INTO logs_errors values(?,?,?, datetime('now', 'localtime'))"
             await db.run(sql).then(()=>{
                 resolved = true
             }).catch((err)=>{
+                db.run(sql_log_errors, [err, table, 'create'])
                 console.log(err)
             })
             

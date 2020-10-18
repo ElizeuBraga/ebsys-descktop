@@ -8,6 +8,7 @@ drop table if exists products;
 DROP table if exists sections;
 DROP table if exists cashiers;
 DROP table if exists users;
+drop table if exists logs_errors;
 
 CREATE table sections(
 	id integer primary key not null,
@@ -119,6 +120,13 @@ create table items(
 	deleted_at timestamp,
 	foreign key (order_id) references orders (id),
 	foreign key (product_id) references products (id)
+);
+
+CREATE table logs_errors(
+	log text,
+	model text,
+	"method" text,
+	created_at timestamp
 );
 
 --commit;
