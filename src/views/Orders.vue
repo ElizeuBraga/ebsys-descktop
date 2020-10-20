@@ -961,7 +961,7 @@ export default {
       }
 
       if (e.key == "F9") {
-        this.dialogReceive = true
+        this.dialogReceive = true;
         if (this.total > 0) {
           if (this.diffPaymentAndTotal == 0) {
             this.closeOrderReport();
@@ -1219,7 +1219,7 @@ export default {
               timer: 1000,
             });
 
-            this.endOrder(this.order)
+            this.endOrder(this.order);
           } else {
             Swal.fire({
               title: "Cancelado!",
@@ -1251,6 +1251,10 @@ export default {
           min: 1,
           max: 4,
         },
+        didOpen: (el) => {
+          let input = el.querySelector("input");
+          input.select();
+        },
       });
       // asking the amount for the payment form
       if (payment) {
@@ -1260,7 +1264,10 @@ export default {
             "Quanto está recebendo em " +
             this.paymentsFormats[parseInt(payment) - 1] +
             "?",
-          html: "<span style='color:red; font-weight:bold'>Faltam " + this.formatMoney(this.diffPaymentAndTotal) + "</span>",
+          html:
+            "<span style='color:red; font-weight:bold'>Faltam " +
+            this.formatMoney(this.diffPaymentAndTotal) +
+            "</span>",
           icon: "question",
           input: "number",
           inputValue: this.diffPaymentAndTotal.toFixed(2),
@@ -1268,10 +1275,11 @@ export default {
             min: 0.1,
             max: this.diffPaymentAndTotal,
             step: "any",
+            ref: "swalAmount",
           },
           didOpen: (el) => {
-            let teste = el.querySelector("input");
-            // console.log(teste);
+            let input = el.querySelector("input");
+            input.select();
           },
         });
 
@@ -1281,13 +1289,36 @@ export default {
           if (parseInt(payment) == 1) {
             const { value: changeFor } = await Swal.fire({
               title: "Troco para quanto?",
-              html: "<b style='color:green'>Recebendo " + this.formatMoney(parseFloat(value))+"</b>",
+              html:
+                "<b style='color:green'>Recebendo " +
+                this.formatMoney(parseFloat(value)) +
+                "</b>",
               icon: "question",
               input: "number",
               inputValue: parseFloat(value).toFixed(2),
               inputAttributes: {
                 min: value,
                 step: "any",
+              },
+              didOpen: (el) => {
+                let input = el.querySelector("input");
+                input.select();
+
+                input.addEventListener("keydown", (e) => {
+                  if (e.key == "." || e.key == ",") {
+                    console.log("Os vilóes");
+                  }
+                });
+                input.addEventListener("keyup", (e) => {
+                  let withoutDot = input.value.replace(".", "");
+                  let firstPart = withoutDot.slice(0, withoutDot.length - 2);
+                  let endPart = withoutDot.slice(withoutDot.length - 2);
+                  var output = [firstPart, ".", endPart].join("");
+
+                  if (withoutDot.length > 0) {
+                    input.value = output;
+                  }
+                });
               },
             });
 
@@ -1630,16 +1661,15 @@ export default {
     },
 
     async endOrder(order) {
-      
-      this.payments.forEach(element => {
-        if(element.type == 1){
-          order.money += element.amount
-        }else if(element.type == 2){
-          order.debit += element.amount
-        }else if(element.type == 3){
-          order.credit += element.amount
-        }else{
-          order.ticket += element.amount
+      this.payments.forEach((element) => {
+        if (element.type == 1) {
+          order.money += element.amount;
+        } else if (element.type == 2) {
+          order.debit += element.amount;
+        } else if (element.type == 3) {
+          order.credit += element.amount;
+        } else {
+          order.ticket += element.amount;
         }
       });
 
@@ -1648,7 +1678,7 @@ export default {
       let o = new Order();
       let response = await o.create(order);
       this.dialogReceive = false;
-      this.order = {}
+      this.order = {};
       this.payments = [];
       this.typeOrderBalcao();
     },
