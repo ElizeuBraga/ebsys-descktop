@@ -50,6 +50,17 @@ export class Cashier {
         db.run(sql,[user.id]);
     }
 
+    async isOpened(){
+        let isOpened = false
+        await this.find().then((result)=>{
+            if(result.id){
+                isOpened = true
+            }
+        });
+
+        return isOpened;
+    }
+
     async find() {
         let sql = "select * from cashiers where updated_at ISNULL";
         let result = await db.get(sql);

@@ -621,7 +621,7 @@
             >
             <v-btn
               v-else
-              @click="modalCloseCashier = true"
+              @click="initCloseCashierProcess()"
               large
               :style="{ color: 'red' }"
               >Fechar caixa</v-btn
@@ -839,7 +839,7 @@ export default {
       this.loading = false;
     }
 
-    let statusCashier = await this.cashierStatus();
+    // let statusCashier = await this.cashierStatus();
     setTimeout(() => {
       this.$refs.username.focus();
       this.lastColor = this.deliveryColor;
@@ -1494,6 +1494,8 @@ export default {
       var cashier = new CashierController();
       let response = await cashier.show();
       this.cashier = response;
+
+      this.checkUserOpenedCashier()
       if (this.cashier.created_at) {
         this.statusCashier = true;
         return true;
@@ -1656,7 +1658,8 @@ export default {
         ])
         .then( async (result) => {
           if (result.value) {
-            cashier.update(result.value)
+            await cashier.update(result.value)
+            this.cashierStatus()
           }
         });
     },
