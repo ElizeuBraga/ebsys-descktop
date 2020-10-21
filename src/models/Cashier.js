@@ -36,13 +36,9 @@ export class Cashier {
     }
 
     async update(cashier) {
-        let money = helper.formatMonetaryForDB(cashier.money)
-        let credit = helper.formatMonetaryForDB(cashier.credit)
-        let debit = helper.formatMonetaryForDB(cashier.debit)
-        let ticket = helper.formatMonetaryForDB(cashier.ticket)
-
-        let sql = "update cashiers set updated_at = datetime('now', 'localtime'), money = ?, credit = ?, debit = ?, ticket = ? where id = ?";
-        db.run(sql, [money.replace(',', '.'), credit.replace(',', '.'), debit.replace(',', '.'), ticket.replace(',', '.'), cashier.id], err => {
+        let cashier_data = await this.find();
+        let sql = "update cashiers set updated_at = datetime('now', 'localtime'), money = ?, debit = ?, credit = ?, ticket = ? where id = ?";
+        db.run(sql, [cashier[0],cashier[1],cashier[2],cashier[3], cashier_data.id], err => {
             if (err) {
                 return console.log(err);
             }

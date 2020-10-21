@@ -2,7 +2,7 @@ import { count } from "console";
 import { resolve } from "path";
 import { stringify } from "querystring";
 import sqlite3 from "sqlite3";
-const util    = require('util');
+const util = require('util');
 
 const db = new sqlite3.Database(
     "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -12,60 +12,73 @@ db.run = util.promisify(db.run);
 db.all = util.promisify(db.all);
 db.get = util.promisify(db.get);
 
-export class Helper{
-    async max(table){
+export class Helper {
+    async max(table) {
         let sql = 'select case when max(id) is null then 0 else max(id) end as "max" from ' + table;
 
         let result = await db.get(sql);
         return result.max
     }
 
-    formatMonetaryForDB(value){
+    formatMonetaryForDB(value) {
         let result = null;
-        if(this.isString(value)){
-            result = value.replace('.', '').replace(',', '.')  
-        }else if (this.isFloat(value)) {
-            result = value.toFixed(2)  
-        }else{
+        if (this.isString(value)) {
+            result = value.replace('.', '').replace(',', '.')
+        } else if (this.isFloat(value)) {
+            result = value.toFixed(2)
+        } else {
             result = parseFloat(value).toFixed(2)
         }
         return result
     }
 
-    isString (value) {
+    isString(value) {
         return typeof value === 'string' || value instanceof String;
     }
 
-    isFloat(n){
+    isFloat(n) {
         return Number(n) === n && n % 1 !== 0;
     }
 
-    async insertMany(table, array){
+    inputMask(value) {
+        let withoutDot = value.replace(".", "");
+        let firstPart = withoutDot.slice(0, withoutDot.length - 2);
+        let endPart = withoutDot.slice(withoutDot.length - 2);
+        var output = [firstPart, ".", endPart].join("");
+
+        // if (withoutDot.length > 0) {
+        //     input.value = output;
+        // }
+
+        return output;
+    }
+
+    async insertMany(table, array) {
         let resolved = false;
-        if (array.length > 0) {   
+        if (array.length > 0) {
             let columns = []
-            
+
             // get columns of a table
-            let sqlinfotable = "PRAGMA table_info("+table+")";        
-            await db.all(sqlinfotable).then(async (cols)=>{
-                if(cols.length > 0){
-                    for(let c of cols){
+            let sqlinfotable = "PRAGMA table_info(" + table + ")";
+            await db.all(sqlinfotable).then(async (cols) => {
+                if (cols.length > 0) {
+                    for (let c of cols) {
                         const todo = await fetch(c);
                         columns.push(c.name)
                     }
-                }else{
+                } else {
                     console.log(table + ' não existe')
                 }
-            }).catch((e)=>{
+            }).catch((e) => {
                 console.log(e)
             });
-            
+
             // compare if table keys is equals array keys
-            if(stringify(Object.keys(array[0])) !== stringify(columns)){
+            if (stringify(Object.keys(array[0])) !== stringify(columns)) {
                 console.log('Dados não petencem a ' + table)
                 return
             }
-            
+
             let countcols = 0;
             let countelements = 0;
             let separator = ",";
@@ -77,26 +90,26 @@ export class Helper{
                 for (let c of columns) {
                     const todo = await fetch(c);
                     countcols += 1;
-                    (countcols == columns.length) ? separator = ")," : separator =  ",";
-                    
+                    (countcols == columns.length) ? separator = ")," : separator = ",";
+
                     if (countelements == array.length && countcols == columns.length) {
                         separator = ");"
                     }
-                    map += (typeof e[c] == 'string') ? "'" +e[c]+ "'" + separator : (countcols == 1) ? "(" + e[c] + separator: e[c] + separator;
+                    map += (typeof e[c] == 'string') ? "'" + e[c] + "'" + separator : (countcols == 1) ? "(" + e[c] + separator : e[c] + separator;
                 }
             }
-            
-            let sql = 'INSERT INTO '+ table +' values' + map;
-    
+
+            let sql = 'INSERT INTO ' + table + ' values' + map;
+
             let sql_log_errors = "INSERT INTO logs_errors values(?,?,?, datetime('now', 'localtime'))"
-            await db.run(sql).then(()=>{
+            await db.run(sql).then(() => {
                 resolved = true
-            }).catch((err)=>{
+            }).catch((err) => {
                 db.run(sql_log_errors, [err, table, 'create'])
                 console.log(err)
             })
-            
+
         }
-            return resolved
+        return resolved
     }
 }

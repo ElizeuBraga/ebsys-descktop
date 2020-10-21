@@ -372,66 +372,6 @@
         </v-card>
       </v-dialog>
 
-      <!-- modal close cahiser-->
-      <v-dialog v-model="modalCloseCashier" width="500" :persistent="false">
-        <v-card>
-          <v-card-title
-            class="headline grey lighten-2 text-center"
-            primary-title
-            >Fechar caixa</v-card-title
-          >
-
-          <v-card-text>
-            <v-row justify="center">
-              <v-col cols="6">
-                <v-text-field
-                  maxlength="10"
-                  :color="mainColor"
-                  v-money="money"
-                  label="Dinheiro"
-                  v-model="cashier.money"
-                ></v-text-field>
-                <v-text-field
-                  maxlength="10"
-                  :color="mainColor"
-                  v-money="money"
-                  label="Débito"
-                  v-model="cashier.credit"
-                ></v-text-field>
-                <v-text-field
-                  maxlength="10"
-                  :color="mainColor"
-                  v-money="money"
-                  label="Crédito"
-                  v-model="cashier.debit"
-                ></v-text-field>
-                <v-text-field
-                  maxlength="10"
-                  :color="mainColor"
-                  v-money="money"
-                  label="Ticket"
-                  v-model="cashier.ticket"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-card-text>
-
-          <v-divider></v-divider>
-
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn
-              :style="{ width: '100%', background: mainColor }"
-              color="white"
-              ref="closeCashier"
-              text
-              @click="closeCashier(cashier)"
-              >Ok</v-btn
-            >
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
       <!-- modal cashiers closeds -->
       <v-dialog
         scrollable
@@ -962,12 +902,17 @@ export default {
 
       if (e.key == "F9") {
         this.dialogReceive = true;
-        if (this.total > 0) {
+        if (this.total > 0 && this.statusCashier) {
           if (this.diffPaymentAndTotal == 0) {
             this.closeOrderReport();
           } else {
             this.receivePayment();
           }
+        }else if(!this.statusCashier){
+          Swal.fire({
+            title:"O caixa está fechado!",
+            icon:"error"
+          })
         }
       }
 
@@ -992,8 +937,7 @@ export default {
       }
 
       if (e.key == "F2" && !this.unlogged) {
-        this.modalCloseCashier = true;
-        return;
+        this.initCloseCashierProcess();
       }
 
       if (e.key == "F10" && !this.unlogged) {
@@ -1280,6 +1224,17 @@ export default {
           didOpen: (el) => {
             let input = el.querySelector("input");
             input.select();
+
+            input.addEventListener("keyup", (e) => {
+              let withoutDot = input.value.replace(".", "");
+              let firstPart = withoutDot.slice(0, withoutDot.length - 2);
+              let endPart = withoutDot.slice(withoutDot.length - 2);
+              var output = [firstPart, ".", endPart].join("");
+
+              if (withoutDot.length > 0) {
+                input.value = output;
+              }
+            });
           },
         });
 
@@ -1304,11 +1259,6 @@ export default {
                 let input = el.querySelector("input");
                 input.select();
 
-                input.addEventListener("keydown", (e) => {
-                  if (e.key == "." || e.key == ",") {
-                    console.log("Os vilóes");
-                  }
-                });
                 input.addEventListener("keyup", (e) => {
                   let withoutDot = input.value.replace(".", "");
                   let firstPart = withoutDot.slice(0, withoutDot.length - 2);
@@ -1613,6 +1563,104 @@ export default {
       });
     },
 
+    initCloseCashierProcess() {
+      Swal.mixin({
+        input: "number",
+        confirmButtonText: "Próximo",
+        showCancelButton: true,
+        cancelButtonText: "Cancelar",
+        progressSteps: ["1", "2", "3", "4"],
+      })
+        .queue([
+          {
+            title: "Dinheiro",
+            inputAttributes:{
+              step: 'any'
+            },
+            didOpen: (el) => {
+              let input = el.querySelector("input");
+              input.select();
+
+              input.addEventListener("keyup", (e) => {
+                let withoutDot = input.value.replace(".", "");
+                let firstPart = withoutDot.slice(0, withoutDot.length - 2);
+                let endPart = withoutDot.slice(withoutDot.length - 2);
+                var output = [firstPart, ".", endPart].join("");
+
+                if (withoutDot.length > 0) {
+                  input.value = output;
+                }
+              });
+            },
+          },{
+            title: "Débito",
+            inputAttributes:{
+              step: 'any'
+            },
+            didOpen: (el) => {
+              let input = el.querySelector("input");
+              input.select();
+
+              input.addEventListener("keyup", (e) => {
+                let withoutDot = input.value.replace(".", "");
+                let firstPart = withoutDot.slice(0, withoutDot.length - 2);
+                let endPart = withoutDot.slice(withoutDot.length - 2);
+                var output = [firstPart, ".", endPart].join("");
+
+                if (withoutDot.length > 0) {
+                  input.value = output;
+                }
+              });
+            },
+          },{
+            title: "Crédito",
+            inputAttributes:{
+              step: 'any'
+            },
+            didOpen: (el) => {
+              let input = el.querySelector("input");
+              input.select();
+
+              input.addEventListener("keyup", (e) => {
+                let withoutDot = input.value.replace(".", "");
+                let firstPart = withoutDot.slice(0, withoutDot.length - 2);
+                let endPart = withoutDot.slice(withoutDot.length - 2);
+                var output = [firstPart, ".", endPart].join("");
+
+                if (withoutDot.length > 0) {
+                  input.value = output;
+                }
+              });
+            },
+          },{
+            title: "Ticket",
+            inputAttributes:{
+              step: 'any'
+            },
+            didOpen: (el) => {
+              let input = el.querySelector("input");
+              input.select();
+
+              input.addEventListener("keyup", (e) => {
+                let withoutDot = input.value.replace(".", "");
+                let firstPart = withoutDot.slice(0, withoutDot.length - 2);
+                let endPart = withoutDot.slice(withoutDot.length - 2);
+                var output = [firstPart, ".", endPart].join("");
+
+                if (withoutDot.length > 0) {
+                  input.value = output;
+                }
+              });
+            },
+          }
+        ])
+        .then( async (result) => {
+          if (result.value) {
+            cashier.update(result.value)
+          }
+        });
+    },
+
     closeCashier(c) {
       if (this.cashierStatus()) {
         this.$fire({
@@ -1790,20 +1838,6 @@ export default {
     },
 
     insertInOrderItems(product) {
-      if (!this.statusCashier) {
-        this.$fire({
-          title: "Caixa fechado",
-          text: "Deseja abri-lo?",
-          type: "question",
-          // timer: 3000,
-          showCloseButton: true,
-          showCancelButton: true,
-        }).then((r) => {
-          if (r.value === true) {
-            this.openCashier(this.user);
-          }
-        });
-      }
       if (this.donQuestionAgain) {
         let p = new Product();
         p.dontAskAgain(product.id);
