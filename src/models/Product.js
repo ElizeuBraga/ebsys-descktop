@@ -32,8 +32,8 @@ export class Product {
     }
 
     async update(p) {
-        let sql = "update products set name = ? , price = ? , section_id = ?, updated_at = ? where remote_id = " + p.id;
-        let resp = db.run(sql, [p.name, p.price, p.section_id, p.updated_at]);
+        let sql = "update products set name = ? , price = ? where id = " + p.id;
+        let resp = db.run(sql, [p.name, p.price]);
     }
 
     async create(products) {

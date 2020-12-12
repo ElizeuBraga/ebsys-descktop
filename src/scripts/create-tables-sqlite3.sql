@@ -10,24 +10,10 @@ DROP table if exists cashiers;
 DROP table if exists users;
 drop table if exists logs_errors;
 
-CREATE table sections(
-	id integer primary key not null,
-	name varchar(50) not null,
-	created_at timestamp not null,
-	updated_at timestamp,
-	deleted_at timestamp
-);
-
 create table products (
 	id integer primary key not null,
 	name varchar(50) not null,
-	price real not null,
-	section_id integer not null,
-	ask_obs boolean default(true),
-	created_at timestamp not null,
-	updated_at timestamp,
-	deleted_at timestamp,
-	foreign key (section_id) references sections(id)
+	price real not null
 );
 
 CREATE table localities(

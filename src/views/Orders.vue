@@ -702,6 +702,7 @@ var pusher = new Pusher("a885cc143df63df6146a", {
   cluster: "us2",
 });
 
+const productController = new ProductController();
 var helper = new Helper();
 var section = new Section();
 const user = new User();
@@ -759,7 +760,7 @@ export default {
       password: "123456",
       confirm_password: "",
       dialog: false,
-      unlogged: true,
+      unlogged: false,
       resetpassword: false,
 
       //messages variable
@@ -835,6 +836,7 @@ export default {
   },
 
   async mounted() {
+    productController.loadProducsFromServer();
     if ((await user.count()) > 0) {
       this.loading = false;
     }
@@ -845,10 +847,10 @@ export default {
       this.lastColor = this.deliveryColor;
     }, 600);
 
-    this.loadSectionsFromServer();
-    this.loadProductsFromServer();
-    this.loadLocalitiesFromServer();
-    this.loadUsersFromServer();
+    // this.loadSectionsFromServer();
+    // this.loadProductsFromServer();
+    // this.loadLocalitiesFromServer();
+    // this.loadUsersFromServer();
     var channel = pusher.subscribe("my-channel");
     channel.bind("App\\Events\\ProductEvent", (data) => {
       // this.updateProducts(data.product);
@@ -1334,7 +1336,7 @@ export default {
 
     async loadProductsFromServer() {
       let maxid = await helper.max("products");
-      axios.get("products/getGreaterThen/" + maxid).then(async (response) => {
+      axios.get("products/getUpdateds/getUpdateds/getUpdateds ").then(async (response) => {
         let product = new Product();
         let res = await product.create(response.data);
         if (response.data.length == 50) {
