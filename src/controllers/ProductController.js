@@ -35,32 +35,4 @@ export class ProductController{
     destroy(){
 
     }
-
-    async loadProducsFromServer(){
-        let productsNotInDB = []
-        await axios.get("products/getUpdateds/getUpdateds/getUpdateds").then(async (response)=>{
-            if(response.data.length == 0){
-                console.log('Nada a atualizar')
-                return
-            }
-            for (let p of response.data) {
-                const todo = await fetch(p);
-                // columns.push(c.name)
-                // console.log(p.name)
-                await product.find(p.id).then(async (p2)=>{
-                    if(p2){
-                        await product.update(p)
-                        console.log('Atualizei')
-                    }else{
-                        productsNotInDB.push(p)
-                    }
-                });
-            }
-        }).finally(()=>{
-            if(productsNotInDB.length > 0){
-                console.log('Inseri ' + productsNotInDB.length)
-                helper.insertMany('products', productsNotInDB);
-            }
-        });
-    }
 }

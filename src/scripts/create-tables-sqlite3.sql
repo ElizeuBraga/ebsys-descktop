@@ -10,35 +10,31 @@ DROP table if exists cashiers;
 DROP table if exists users;
 drop table if exists logs_errors;
 
+--made in ws
 create table products (
 	id integer primary key not null,
 	name varchar(50) not null,
-	price real not null
+	price real not null,
+	ask_obs boolean
 );
 
+--made in server
 CREATE table localities(
 	id integer primary key not null,
 	"name" varchar(20) not null,
 	product_id integer not null,
-	created_at timestamp not null,
-	updated_at timestamp,
-	deleted_at timestamp,
 	foreign key (product_id) references products (id)
 	
 );
 
+--made in server
 CREATE table users(
 	id integer primary key not null,
 	name varchar(20) not null,
 	email varchar(50) unique not null,
 	phone varchar(11) unique not null,
 	"password" varchar(60) not null,
-	"role" varchar(10)not null,
-	"token" varchar(60),
-	change_password boolean default(true),
-	created_at timestamp not null,
-	updated_at timestamp,
-	deleted_at timestamp
+	change_password boolean default(true)
 );
 
 --made in local
@@ -48,6 +44,9 @@ CREATE table customers(
 	address varchar(50) not null,
 	phone varchar(11) unique not null,
 	locality_id integer not null,
+	created_at timestamp default(datetime()),
+	updated_at timestamp,
+	deleted_at timestamp,
 	foreign key (locality_id) references localities(id)
 );
 
@@ -59,7 +58,7 @@ create table cashiers(
 	debit real,
 	credit real,
 	ticket real,
-	created_at timestamp not null,
+	created_at timestamp default(datetime()),
 	updated_at timestamp,
 	deleted_at timestamp,
 	foreign key (user_id) references users (id)
@@ -75,7 +74,7 @@ CREATE table orders(
 	credit real not null default(0),
 	ticket real not null default(0),
 	order_type integer not null,
-	created_at timestamp not null,
+	created_at timestamp default(datetime()),
 	updated_at timestamp,
 	deleted_at timestamp,
 	foreign key (cashier_id) references cashiers (id),
@@ -88,7 +87,7 @@ create table payments(
 	price real not null,
 	order_id integer not null,
 	payment_type char,
-	created_at timestamp not null,
+	created_at timestamp default(datetime()),
 	updated_at timestamp,
 	deleted_at timestamp,
 	foreign key (order_id) references orders (id)
@@ -101,7 +100,7 @@ create table items(
 	product_id integer not null,
 	price real not null,
 	order_id integer not null,
-	created_at timestamp not null,
+	created_at timestamp default(datetime()),
 	updated_at timestamp,
 	deleted_at timestamp,
 	foreign key (order_id) references orders (id),
@@ -112,7 +111,7 @@ CREATE table logs_errors(
 	log text,
 	model text,
 	"method" text,
-	created_at timestamp
+	created_at timestamp default(datetime())
 );
 
 --commit;

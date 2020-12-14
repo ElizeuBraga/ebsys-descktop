@@ -1,7 +1,7 @@
 import { resolve } from "path";
 import sqlite3 from "sqlite3";
 import bcryptjs from 'bcryptjs'
-import {Helper} from './Helper'
+import { Helper } from './Helper'
 import { Athena } from "aws-sdk";
 const util = require('util');
 
@@ -22,7 +22,7 @@ export class User {
         let hashed = null
     }
 
-    async count(){
+    async count() {
         let sql = "select COUNT(*) as quantity from users";
 
         let result = await db.get(sql);
@@ -30,8 +30,8 @@ export class User {
         return result;
     }
 
-    async find(username){
-        let sql = "select * from users where phone = '" + username + "' OR email = '" + username+"';";
+    async find(username) {
+        let sql = "select * from users where phone = '" + username + "' OR email = '" + username + "';";
         let result = await db.get(sql);
 
         return result
@@ -43,11 +43,11 @@ export class User {
         return users
     }
 
-    async create(users){
+    async create(users) {
         let res = await helper.insertMany('users', users);
     }
 
-    async count(){
+    async count() {
         let sql = "select count(*) as quantidade from users";
 
         let result = await db.get(sql);
@@ -55,7 +55,7 @@ export class User {
         return result.quantidade;
     }
 
-    resetPassword(id) {
+    activeResetPassword(id) {
         let sql = "update users set change_password = true where id = " + id;
 
         db.run(sql);
@@ -64,7 +64,7 @@ export class User {
     async update(u, resetpwd = false) {
         var today = new Date();
         let resolved = false;
-        if(resetpwd){
+        if (resetpwd) {
             var salt = bcryptjs.genSaltSync(10);
             var hash = bcryptjs.hashSync(u.password, salt);
             u.password = hash
@@ -84,13 +84,23 @@ export class User {
     }
 
     async auth(user, password) {
-        let sql = "select * from users where phone = '"+ user +"' OR email = '"+ user +"';";
+        let sql = "select * from users where phone = '" + user + "' OR email = '" + user + "';";
         let result = await db.get(sql);
 
         let auth = await bcryptjs.compareSync(password, result.password);
 
         return auth;
 
+    }
+
+    resetPassword(password, user_id) {
+        var salt = bcryptjs.genSaltSync(10);
+        var hash = bcryptjs.hashSync(password, salt);
+        var new_password = hash
+
+        let sql = "UPDATE users SET password = '" + new_password + "', change_password = false WHERE id = " + user_id;
+
+        db.run(sql);
     }
 
 }

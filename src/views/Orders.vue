@@ -675,6 +675,7 @@ import axios from "axios";
 import { VMoney } from "v-money";
 import sqlite3 from "sqlite3";
 import { Product } from "../models/Product";
+import { Ws } from "../models/Ws";
 import { Locality } from "../models/Locality";
 import { ProductController } from "../controllers/ProductController";
 import { LocalityController } from "../controllers/LocalityController";
@@ -707,6 +708,7 @@ var helper = new Helper();
 var section = new Section();
 const user = new User();
 const cashier = new Cashier();
+const ws = new Ws();
 export default {
   mixins: [mixins],
   directives: { money: VMoney },
@@ -756,11 +758,11 @@ export default {
       amountMoney: 0.0,
       type: "",
       //user variables
-      username: "user0@gmail.com",
+      username: "user1@gmail.com",
       password: "123456",
       confirm_password: "",
       dialog: false,
-      unlogged: false,
+      unlogged: true,
       resetpassword: false,
 
       //messages variable
@@ -836,10 +838,15 @@ export default {
   },
 
   async mounted() {
-    productController.loadProducsFromServer();
+
+    //if table users have data load products and turn login possible
     if ((await user.count()) > 0) {
       this.loading = false;
+      var p = new ProductController();
+      this.products = await p.index();
     }
+
+    ws.loadAll();
 
     // let statusCashier = await this.cashierStatus();
     setTimeout(() => {
@@ -881,9 +888,6 @@ export default {
     //cashier status
     this.cashierStatus();
 
-    //load products
-    var p = new ProductController();
-    this.products = await p.index();
 
     // load localities
     var l = new LocalityController();
@@ -1512,15 +1516,17 @@ export default {
         this.showMessageErrorLogin("Senhas não conferem");
         return;
       }
+      
+      let user = new User();
+      user.resetPassword(password, this.user.id);
 
-      this.user.password = password;
-      let user = new UserController();
-      user.update(this.user, true);
-      this.resetpassword = false;
+      this.resetpassword = false
       this.$fire({
         title: "Feito!",
         text: "Senha alterada com sucesso!",
         type: "success",
+      }).then(()=>{
+        
       });
     },
 
@@ -1714,6 +1720,7 @@ export default {
     },
 
     async endOrder(order) {
+      console.log(order)
       this.payments.forEach((element) => {
         if (element.type == 1) {
           order.money += element.amount;

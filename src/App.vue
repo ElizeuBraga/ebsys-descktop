@@ -132,7 +132,7 @@ export default {
         }).then((r)=>{
           if(r.value === true){
             let user = new User()
-            user.resetPassword(this.loggedUser.id)
+            user.activeResetPassword(this.loggedUser.id)
             this.logout()
           }
         })
