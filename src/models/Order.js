@@ -1,12 +1,7 @@
 import sqlite3 from "sqlite3";
-import {ItemController} from '../controllers/ItemController'
-import {PaymentController} from '../controllers/PaymentController'
 import util from 'util'
-import { stringify } from "querystring";
 import { Helper } from "./Helper";
-const db = new sqlite3.Database(
-    "/home/basis/Downloads/app-descktop/src/database/database.db"
-    );
+const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
 db.run = util.promisify(db.run);
 db.get = util.promisify(db.get);
 

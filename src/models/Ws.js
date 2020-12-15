@@ -1,21 +1,7 @@
-import sqlite3 from "sqlite3";
-import bcryptjs from 'bcryptjs'
 import {Helper} from './Helper'
 import axios from 'axios';
-import {Product} from './Product';
-const util = require('util');
-
-const db = new sqlite3.Database(
-    "/home/basis/Downloads/app-descktop/src/database/database.db"
-);
-
-db.run = util.promisify(db.run);
-db.get = util.promisify(db.get);
-db.all = util.promisify(db.all);
-bcryptjs.compare = util.promisify(bcryptjs.compare)
 
 const helper = new Helper();
-const product = new Product();
 
 export class Ws {
     constructor() {

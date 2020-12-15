@@ -1,12 +1,8 @@
-import { DocDB } from "aws-sdk";
-import { resolve } from "path";
 import sqlite3 from "sqlite3";
 import { Helper } from "./Helper";
 const util    = require('util');
 
-const db = new sqlite3.Database(
-    "/home/basis/Downloads/app-descktop/src/database/database.db"
-);
+const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
 
 db.run = util.promisify(db.run);
 db.all = util.promisify(db.all);

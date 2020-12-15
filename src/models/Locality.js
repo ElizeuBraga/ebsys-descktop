@@ -1,9 +1,7 @@
 import sqlite3 from "sqlite3";
 import util from 'util'
 import { Helper } from "./Helper";
-const db = new sqlite3.Database(
-    "/home/basis/Downloads/app-descktop/src/database/database.db"
-);
+const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
 
 db.all = util.promisify(db.all);
 db.run = util.promisify(db.run);

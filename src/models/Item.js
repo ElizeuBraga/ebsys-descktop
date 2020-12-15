@@ -1,8 +1,6 @@
 import sqlite3 from "sqlite3";
 import {Order} from '../models/Order'
-const db = new sqlite3.Database(
-    "/home/basis/Downloads/app-descktop/src/database/database.db"
-);
+const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
 export class Item {
     constructor() {
 
