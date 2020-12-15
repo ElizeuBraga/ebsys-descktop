@@ -18,11 +18,11 @@
       </v-menu>
     </v-app-bar>
     <v-container fill-height fluid :style="{width:'1800px', background:backgroundColor}">
-      <v-progress-linear
+      <!-- <v-progress-linear
       v-if="loading"
       indeterminate
       :color="mainColor"
-    ></v-progress-linear>
+    ></v-progress-linear> -->
       <router-view></router-view>
     </v-container>
   </v-app>
