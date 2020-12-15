@@ -126,4 +126,14 @@ export class Cashier {
             return false
         }
     }
+
+    async checkCashierOwner(id){
+        let sql = "select u.id from cashiers c2 join users u on u.id = c2.user_id where c2.updated_at ISNULL";
+        let result = await db.get(sql);
+        if (result.id === id) {
+            return true
+        }else{
+            return false
+        }
+    }
 }

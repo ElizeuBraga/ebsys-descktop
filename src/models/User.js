@@ -80,12 +80,21 @@ export class User {
     }
 
     async auth(user, password) {
+        let auth = false;
         let sql = "select * from users where phone = '" + user + "' OR email = '" + user + "';";
         let result = await db.get(sql);
 
-        let auth = await bcryptjs.compareSync(password, result.password);
+        if(result){
+            auth = await bcryptjs.compareSync(password, result.password);
+            if(auth){
+                return result
+            }else{
+                return false;
+            }
+        }else{
+            return auth;
+        }
 
-        return auth;
 
     }
 

@@ -493,115 +493,6 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-
-      <!-- modal login -->
-      <v-dialog v-model="unlogged" width="500" :persistent="true">
-        <v-card>
-          <v-card-title
-            class="headline grey lighten-2 text-center"
-            primary-title
-            >Login</v-card-title
-          >
-
-          <v-card-text>
-            <v-row justify="center">
-              <v-col cols="12">
-                <v-text-field
-                  label="Telefone ou email"
-                  :color="mainColor"
-                  v-model="username"
-                  ref="username"
-                ></v-text-field>
-                <v-text-field
-                  ref="password"
-                  type="password"
-                  label="Senha"
-                  :color="mainColor"
-                  v-model="password"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-card-text>
-          <v-alert
-            :value="msgLogin"
-            class="ml-2 mr-2"
-            transition="scale-transition"
-            type="error"
-            >{{ msgloginerror }}</v-alert
-          >
-          <v-divider></v-divider>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn
-              :style="{ width: '100%', background: mainColor }"
-              color="white"
-              ref="btnLogin"
-              text
-              :disabled="fieldsLogin || loading"
-              @click="login(username, password)"
-            >
-              <v-progress-linear
-                v-if="loading"
-                indeterminate
-                color="white"
-              ></v-progress-linear>
-              <span v-else>Entrar</span>
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
-      <!-- modal reset password -->
-      <v-dialog v-model="resetpassword" width="500" :persistent="true">
-        <v-card>
-          <v-card-title
-            class="headline grey lighten-2 text-center"
-            primary-title
-            >Trocar senha</v-card-title
-          >
-
-          <v-card-text>
-            <v-row justify="center">
-              <v-col cols="12">
-                <v-text-field
-                  ref="password"
-                  label="Senha"
-                  :color="mainColor"
-                  v-model="password"
-                  type="password"
-                ></v-text-field>
-                <v-text-field
-                  ref="receive"
-                  type="password"
-                  label="Confirme a senha"
-                  :color="mainColor"
-                  v-model="confirm_password"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-card-text>
-          <v-alert
-            :value="msgLogin"
-            class="ml-2 mr-2"
-            transition="scale-transition"
-            type="error"
-            >{{ msgloginerror }}</v-alert
-          >
-          <v-divider></v-divider>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn
-              :style="{ width: '100%', background: mainColor }"
-              color="white"
-              ref="btnResetPassword"
-              text
-              :disabled="password == '' || confirm_password == ''"
-              @click="resetPassword(password, confirm_password)"
-              >Entrar</v-btn
-            >
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
     </v-row>
     <!-- rodapé -->
     <v-footer
@@ -694,6 +585,7 @@ import { Order } from "../models/Order";
 import Swal from "sweetalert2";
 import { Payment } from "../models/Payment";
 import { Console } from "console";
+import { access } from 'fs';
 
 const db = new sqlite3.Database(
   "/home/basis/Downloads/app-descktop/src/database/database.db"
@@ -762,7 +654,7 @@ export default {
       password: "123456",
       confirm_password: "",
       dialog: false,
-      unlogged: true,
+      unlogged: false,
       resetpassword: false,
 
       //messages variable
@@ -838,6 +730,7 @@ export default {
   },
 
   async mounted() {
+    this.initLoginProcess();
 
     //if table users have data load products and turn login possible
     if ((await user.count()) > 0) {
@@ -846,18 +739,12 @@ export default {
       this.products = await p.index();
     }
 
+    // load data from ws
     ws.loadAll();
 
-    // let statusCashier = await this.cashierStatus();
     setTimeout(() => {
-      this.$refs.username.focus();
       this.lastColor = this.deliveryColor;
     }, 600);
-
-    // this.loadSectionsFromServer();
-    // this.loadProductsFromServer();
-    // this.loadLocalitiesFromServer();
-    // this.loadUsersFromServer();
     var channel = pusher.subscribe("my-channel");
     channel.bind("App\\Events\\ProductEvent", (data) => {
       // this.updateProducts(data.product);
@@ -871,8 +758,7 @@ export default {
     this.typeOrderBalcao();
 
     this.$root.$on("logout", (e) => {
-      this.unlogged = e;
-      this.password = "";
+      this.initLoginProcess()
     });
 
     this.$root.$on("cashiers_closeds", async (e) => {
@@ -887,7 +773,6 @@ export default {
 
     //cashier status
     this.cashierStatus();
-
 
     // load localities
     var l = new LocalityController();
@@ -914,11 +799,11 @@ export default {
           } else {
             this.receivePayment();
           }
-        }else if(!this.statusCashier){
+        } else if (!this.statusCashier) {
           Swal.fire({
-            title:"O caixa está fechado!",
-            icon:"error"
-          })
+            title: "O caixa está fechado!",
+            icon: "error",
+          });
         }
       }
 
@@ -978,10 +863,6 @@ export default {
           return;
         }
 
-        if (this.unlogged) {
-          this.login(this.username, this.password);
-          return;
-        }
         if (this.modalFindCustomer) {
           this.findCustomer(this.order.customer.phone);
           return;
@@ -1340,13 +1221,15 @@ export default {
 
     async loadProductsFromServer() {
       let maxid = await helper.max("products");
-      axios.get("products/getUpdateds/getUpdateds/getUpdateds ").then(async (response) => {
-        let product = new Product();
-        let res = await product.create(response.data);
-        if (response.data.length == 50) {
-          // this.loadProductsFromServer()
-        }
-      });
+      axios
+        .get("products/getUpdateds/getUpdateds/getUpdateds ")
+        .then(async (response) => {
+          let product = new Product();
+          let res = await product.create(response.data);
+          if (response.data.length == 50) {
+            // this.loadProductsFromServer()
+          }
+        });
     },
 
     async loadLocalitiesFromServer() {
@@ -1501,7 +1384,7 @@ export default {
       let response = await cashier.show();
       this.cashier = response;
 
-      this.checkUserOpenedCashier()
+      this.checkUserOpenedCashier();
       if (this.cashier.created_at) {
         this.statusCashier = true;
         return true;
@@ -1516,18 +1399,16 @@ export default {
         this.showMessageErrorLogin("Senhas não conferem");
         return;
       }
-      
+
       let user = new User();
       user.resetPassword(password, this.user.id);
 
-      this.resetpassword = false
+      this.resetpassword = false;
       this.$fire({
         title: "Feito!",
         text: "Senha alterada com sucesso!",
         type: "success",
-      }).then(()=>{
-        
-      });
+      }).then(() => {});
     },
 
     async login(username, password) {
@@ -1584,8 +1465,8 @@ export default {
         .queue([
           {
             title: "Dinheiro",
-            inputAttributes:{
-              step: 'any'
+            inputAttributes: {
+              step: "any",
             },
             didOpen: (el) => {
               let input = el.querySelector("input");
@@ -1602,10 +1483,11 @@ export default {
                 }
               });
             },
-          },{
+          },
+          {
             title: "Débito",
-            inputAttributes:{
-              step: 'any'
+            inputAttributes: {
+              step: "any",
             },
             didOpen: (el) => {
               let input = el.querySelector("input");
@@ -1622,10 +1504,11 @@ export default {
                 }
               });
             },
-          },{
+          },
+          {
             title: "Crédito",
-            inputAttributes:{
-              step: 'any'
+            inputAttributes: {
+              step: "any",
             },
             didOpen: (el) => {
               let input = el.querySelector("input");
@@ -1642,10 +1525,11 @@ export default {
                 }
               });
             },
-          },{
+          },
+          {
             title: "Ticket",
-            inputAttributes:{
-              step: 'any'
+            inputAttributes: {
+              step: "any",
             },
             didOpen: (el) => {
               let input = el.querySelector("input");
@@ -1662,12 +1546,70 @@ export default {
                 }
               });
             },
-          }
+          },
         ])
-        .then( async (result) => {
+        .then(async (result) => {
           if (result.value) {
-            await cashier.update(result.value)
-            this.cashierStatus()
+            this.$fire({
+              title: "Caixa fechado",
+              type: "success",
+            });
+            await cashier.update(result.value);
+            this.cashierStatus();
+          }
+        });
+    },
+
+    initLoginProcess() {
+      Swal.mixin({
+        title:"Login",
+        input: "text",
+        confirmButtonText: "Proximo &rarr;",
+        // cancelButtonText:"Cancelar",
+        // showCancelButton: true,
+        progressSteps: ["1", "2"],
+        allowOutsideClick: false,
+        didOpen: (el) => {
+          let input = el.querySelector("input");
+          input.select();
+        }
+      })
+        .queue([
+          {
+            title: "Email/telefone",
+            text: "Insira seu email ou telefone",
+          },
+          {
+            title: "Senha",
+            text: "Digite sua senha",
+            input: "password"
+          },
+        ])
+        .then(async (result) => {
+          let accept = await user.auth(result.value[0], result.value[1]);
+          console.log(accept)
+          if (accept) {
+            let isOwner = await cashier.checkCashierOwner(accept.id); 
+            console.log(isOwner)
+            if(!isOwner){
+              Swal.fire({
+              title:"Ops!",
+              text:"Caixa já está aberto por outro usuario, contate o administrador.",
+              icon:"warning"
+            }).then(()=>{
+              this.initLoginProcess();
+            })  
+            }else{
+              this.user = accept
+              this.$root.$emit("logged_user", accept);
+            }
+          }else{
+            Swal.fire({
+              title:"Acesso negado!",
+              icon:"error"
+            }).then(()=>{
+              this.initLoginProcess();
+            })
           }
         });
     },
@@ -1720,7 +1662,6 @@ export default {
     },
 
     async endOrder(order) {
-      console.log(order)
       this.payments.forEach((element) => {
         if (element.type == 1) {
           order.money += element.amount;

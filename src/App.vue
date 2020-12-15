@@ -23,31 +23,6 @@
       indeterminate
       :color="mainColor"
     ></v-progress-linear>
-      <v-navigation-drawer v-model="drawer" absolute temporary>
-        <v-list nav dense>
-          <v-list-item-group :color="myColor">
-            <v-list-item to="/orders" @click="drawer = false">
-              <v-list-item-icon>
-                <v-icon>mdi-home</v-icon>
-              </v-list-item-icon>
-              <v-list-item-title>Entregas</v-list-item-title>
-            </v-list-item>
-
-            <v-list-item to="/countertop" @click="drawer = false">
-              <v-list-item-icon>
-                <v-icon>mdi-account</v-icon>
-              </v-list-item-icon>
-              <v-list-item-title>Balcão</v-list-item-title>
-            </v-list-item>
-            <v-list-item to @click="logout">
-              <v-list-item-icon>
-                <v-icon>mdi-account</v-icon>
-              </v-list-item-icon>
-              <v-list-item-title>Sair</v-list-item-title>
-            </v-list-item>
-          </v-list-item-group>
-        </v-list>
-      </v-navigation-drawer>
       <router-view></router-view>
     </v-container>
   </v-app>
@@ -105,13 +80,9 @@ export default {
   },
 
   methods: {
-    logout() {
-      this.$root.$emit("logout", true);
-    },
-
     clickedItem(item){
       if (item.title === 'Sair') {
-        this.logout()
+        this.$root.$emit("logout", true);
       }
 
       if (item.title === 'Atualizar') {
@@ -133,7 +104,7 @@ export default {
           if(r.value === true){
             let user = new User()
             user.activeResetPassword(this.loggedUser.id)
-            this.logout()
+            this.$root.$emit("logout", true);
           }
         })
       }
