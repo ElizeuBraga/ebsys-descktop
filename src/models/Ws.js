@@ -1,66 +1,49 @@
 import {Helper} from './Helper'
 import axios from 'axios';
-
+import { decodeBase64 } from 'bcryptjs';
+const util    = require('util');
+import sqlite3 from "sqlite3";
+const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
 const helper = new Helper();
+db.all = util.promisify(db.all);
 
 export class Ws {
     constructor() {
-        
+        this.serverTables = ['products', 'localities', 'users']
+        this.localTables = ['cashiers', 'customers', 'orders', 'items']
     }
 
     async loadAll(){
-        if(await this.checkIfHasUpdates()){
-            let tables = [];
-            tables.push(await this.loadProducs());
-            tables.push(await this.loadLocalities());
-            tables.push(await this.loadUsers());
-            
-            return this.changeUpdated(tables);
+        for (let t of this.serverTables) {
+            const todo = await fetch(t);
+            await this.downloadDataFromServer(t)
+        }
+
+        for (let t of this.localTables) {
+            const todo = await fetch(t);
+            await this.uplodDataFromServer(t)
         }
     }
 
-    async changeUpdated(tables){
-        await axios.put("changeUpdated", tables).then(async (response)=>{
-            console.log("Dados atualizados não retornarão mais do WS")
+    async uplodDataFromServer(table){
+        await axios.post('maxid', {table:table}).then(async (response)=>{
+            let sql = "select * from " + table + " where id > " + response.data;
+            await db.all(sql).then(async (rows)=>{
+                await axios.post(table, rows)
+            })
         })
-
-        return true;
     }
 
-    async loadProducs(){
-        await axios.get("products").then(async (response)=>{
-            await helper.insertMany('products', response.data);
+    async downloadDataFromServer(table){
+        await axios.post('hasUpdated', {table:table}).then(async (response)=>{
+            if(response.data){
+                await axios.get(table).then(async (response)=>{
+                    await helper.insertMany(table, response.data);
+                    await axios.put('changeUpdated', {table: table});
+                })
+            }else{
+                console.log('dados de ' + table + " já estão atualizados")
+            }
         })
-
-        return 'products';
-    }
-
-    async loadUsers(){
-        await axios.get("users").then(async (response)=>{
-            await helper.insertMany('users', response.data);
-        })
-
-        return 'users';
-    }
-
-    async loadLocalities(){
-        await axios.get("localities").then(async (response)=>{
-            await helper.insertMany('localities', response.data);
-        })
-
-        return 'localities';
-    }
-
-    async checkIfHasUpdates(){
-        let hasUpdates = false;
-        await axios.get("checkIfHasUpdates").then(async (response)=>{
-            hasUpdates = response.data;
-            console.log(hasUpdates)
-        })
-
-        if(!hasUpdates){
-            console.log('O sistema está atualizado')
-        }
-        return hasUpdates;
     }
 }

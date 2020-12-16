@@ -1438,6 +1438,7 @@ export default {
     },
 
     openCashier(user) {
+      console.log(user)
       this.$fire({
         title: "Abrir o caixa?",
         text: "Você será responsavel pelas movimentações até o fechamento.",
@@ -1587,7 +1588,6 @@ export default {
         ])
         .then(async (result) => {
           let accept = await user.auth(result.value[0], result.value[1]);
-          console.log(accept)
           if (accept) {
             let isOwner = await cashier.checkCashierOwner(accept.id); 
             console.log(isOwner)

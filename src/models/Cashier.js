@@ -42,7 +42,8 @@ export class Cashier {
     }
 
     async create(user) {
-        let sql = "INSERT INTO cashiers (created_at, user_id)values(datetime('now', 'localtime'), ?)";
+        console.log(user)
+        let sql = "INSERT INTO cashiers (user_id)values(?)";
         db.run(sql,[user.id]);
     }
 
@@ -130,10 +131,14 @@ export class Cashier {
     async checkCashierOwner(id){
         let sql = "select u.id from cashiers c2 join users u on u.id = c2.user_id where c2.updated_at ISNULL";
         let result = await db.get(sql);
-        if (result.id === id) {
-            return true
+        if(result){
+            if (result.id === id) {
+                return true
+            }else{
+                return false
+            }
         }else{
-            return false
+            return true
         }
     }
 }

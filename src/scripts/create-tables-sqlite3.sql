@@ -1,4 +1,5 @@
 --begin;
+PRAGMA foreign_keys = ON;
 drop table if exists items;
 DROP table if exists payments;
 drop table if exists orders;
