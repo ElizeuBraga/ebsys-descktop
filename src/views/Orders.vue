@@ -761,6 +761,11 @@ export default {
       this.initLoginProcess()
     });
 
+    this.$root.$on("actualized_data", async (e) => {
+      this.products = await productController.index();
+    });
+    
+
     this.$root.$on("cashiers_closeds", async (e) => {
       this.cashierDetail = false;
       this.modalClosedsCashiers = true;

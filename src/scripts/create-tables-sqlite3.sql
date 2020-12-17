@@ -83,18 +83,6 @@ CREATE table orders(
 );
 
 --made in local
-create table payments(
-	id integer primary key,
-	price real not null,
-	order_id integer not null,
-	payment_type char,
-	created_at timestamp default(datetime()),
-	updated_at timestamp,
-	deleted_at timestamp,
-	foreign key (order_id) references orders (id)
-);
-
---made in local
 create table items(
 	id integer primary key,
 	quantity integer not null,
