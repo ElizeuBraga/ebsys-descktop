@@ -44,6 +44,7 @@ export class Ws {
     }
 
     async downloadDataFromServer(table){
+        let success = false;
         await axios.post('hasUpdated', {table:table}).then(async (response)=>{
             if(response.data){
                 await axios.get(table).then(async (response)=>{
@@ -53,6 +54,12 @@ export class Ws {
             }else{
                 console.log('data in ' + table + " are actualized")
             }
+        }).then(()=>{
+            success = true;
+        }).catch(()=>{
+            success = false
         })
+
+        return success;
     }
 }

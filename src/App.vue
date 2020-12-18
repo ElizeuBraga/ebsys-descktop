@@ -124,8 +124,16 @@ export default {
               allowOutsideClick: false,
               didOpen: async () => {
                 Swal.showLoading();
-                await ws.downloadDataFromServer("products");
-                Swal.close();
+                await ws.downloadDataFromServer("products").then((response)=>{
+                  Swal.close();
+                  if(!response){
+                    Swal.fire({
+                      title:"Erro de servidor",
+                      icon:"error"
+                    })
+                  }
+
+                })
               },
             });
 
