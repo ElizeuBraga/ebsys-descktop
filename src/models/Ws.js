@@ -12,8 +12,14 @@ let vue = new Vue();
 
 export class Ws {
     constructor() {
-        this.serverTables = ['products', 'localities', 'users']
-        this.localTables = ['cashiers', 'customers', 'orders', 'items']
+        this.serverTables = [
+            'users'
+            //,'products', 'localities',
+        ]
+        this.localTables = [
+            'cashiers'
+            //, 'customers', 'orders', 'items'
+        ]
     }
 
     async loadAll(){
@@ -30,11 +36,12 @@ export class Ws {
     }
 
     async uplodDataFromServer(table){
-        await axios.post('maxid', {table:table}).then(async (response)=>{
-            let sql = "select * from " + table + " where id > " + response.data;
+        await axios.get(table + '/getLastId/').then(async (response)=>{
+            let sql = "select * from " + table + " where id > " + parseInt(response.data[0].lastId);
             await db.all(sql).then(async (rows)=>{
+                console.log(rows)
                 if(rows.length > 0){
-                    await axios.post(table, rows)
+                    await axios.post(table + '/post/', rows)
                     console.log('Uoloading data to ' + table)
                 }else{
                     console.log('No data to upload in ' + table)
@@ -45,11 +52,11 @@ export class Ws {
 
     async downloadDataFromServer(table){
         let success = false;
-        await axios.post('hasUpdated', {table:table}).then(async (response)=>{
+        await axios.get(table + '/getLastId/').then(async (response)=>{
             if(response.data){
-                await axios.get(table).then(async (response)=>{
+                await axios.get(table + '/get/').then(async (response)=>{
                     await helper.insertMany(table, response.data);
-                    await axios.put('changeUpdated', {table: table});
+                    // await axios.put('changeUpdated', {table: table});
                 })
             }else{
                 console.log('data in ' + table + " are actualized")
