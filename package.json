@@ -17,6 +17,7 @@
     "bcryptjs": "^2.4.3",
     "console": "^0.7.2",
     "material-design-icons-iconfont": "^5.0.1",
+    "mysql": "^2.18.1",
     "pg": "^8.2.1",
     "pusher": "^3.0.1",
     "pusher-js": "^6.0.0",

@@ -1,5 +1,5 @@
 import {User} from '../models/User'
-
+const user = new User();
 export class UserController{
     constructor(){
 
@@ -11,11 +11,8 @@ export class UserController{
         return users;
     }
 
-    store(u){
-        let user = new User();
-        let result = user.create(u);
-
-        return result;
+    store(users){
+        user.create(users);
     }
 
     update(u, resetpwd = false){

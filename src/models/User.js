@@ -1,16 +1,16 @@
 import sqlite3 from "sqlite3";
 import bcryptjs from 'bcryptjs'
 import { Helper } from './Helper'
+import { DB } from './DB'
 const util = require('util');
 
-const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
-
-db.run = util.promisify(db.run);
-db.get = util.promisify(db.get);
-db.all = util.promisify(db.all);
 bcryptjs.compare = util.promisify(bcryptjs.compare)
 
 const helper = new Helper();
+const db = new DB();
+// db.run = util.promisify(db.run);
+// db.get = util.promisify(db.get);
+// db.all = util.promisify(db.all);
 
 export class User {
     constructor() {
@@ -21,12 +21,14 @@ export class User {
     async count() {
         let sql = "select COUNT(*) as quantity from users";
 
+        return
         let result = await db.get(sql);
 
         return result;
     }
 
     async find(username) {
+        return
         let sql = "select * from users where phone = '" + username + "' OR email = '" + username + "';";
         let result = await db.get(sql);
 
@@ -40,12 +42,13 @@ export class User {
     }
 
     async create(users) {
-        let res = await helper.insertMany('users', users);
+        db.insert(users)
     }
 
     async count() {
         let sql = "select count(*) as quantidade from users";
 
+        return
         let result = await db.get(sql);
 
         return result.quantidade;

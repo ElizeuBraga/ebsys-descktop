@@ -2,11 +2,11 @@ import {Helper} from './Helper'
 import axios from 'axios';
 import { decodeBase64 } from 'bcryptjs';
 import Vue from 'vue';
+import { DB } from './DB';
 const util    = require('util');
-import sqlite3, { verbose } from "sqlite3";
-const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
 const helper = new Helper();
-db.all = util.promisify(db.all);
+const db = new DB();
+// db.all = util.promisify(db.all);
 
 let vue = new Vue();
 
@@ -36,42 +36,28 @@ export class Ws {
     }
 
     async uplodDataFromServer(table){
+        let lastId = await db.getLastId(table);
         await axios.get(table + '/getLastId/').then(async (response)=>{
-            let sql = "select * from " + table + " where id > " + parseInt(response.data[0].lastId);
-            await db.all(sql).then(async (rows)=>{
-                if(rows.length > 0){
-                    console.log(rows)
-                    await axios.post(table + '/post/', rows).then((response)=>{
-                        console.log(response.data)
-                    })
-                    console.log('Uploading data to ' + table)
-                }else{
-                    console.log('No data to upload in ' + table)
-                }
-            })
+            // console.log(response.data)
         })
     }
 
-    async downloadDataFromServer(table){
-        let success = false;
-        await axios.get(table + '/getLastId/').then(async (response)=>{
-            if(response.data){
-                await axios.get(table + '/get/').then(async (response)=>{
-                    let insert = await helper.insertMany(table, response.data);
-
-                    if(insert){
-                        await axios.post(table + '/updatedToFalse');
-                    }
-                })
-            }else{
-                console.log('data in ' + table + " are actualized")
-            }
-        }).then(()=>{
-            success = true;
-        }).catch(()=>{
-            success = false
+    async getDataFrom(table){
+        let data = []
+        await axios.get(table + '/get/').then(async (response)=>{
+            data = response.data
         })
 
-        return success;
+        return data
+    }
+
+    async downloadDataFromServer(table){
+        await axios.get(table + '/getLastId/').then(async (response)=>{
+            let lastIdLocal = await db.getLastId(table);
+            if(parseInt(response.data[0].lastId) > lastIdLocal){
+                let dataFromServer = await this.getDataFrom(table)
+                db.insert(table, dataFromServer)                
+            }
+        })
     }
 }

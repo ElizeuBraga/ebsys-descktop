@@ -53,6 +53,7 @@ export class Helper {
     }
 
     async insertMany(table, data) {
+        return
         console.log('Inserting or updating data in '+ table)
         // check if table exists
         // ------------------------------------------------------------------------------------------------------------

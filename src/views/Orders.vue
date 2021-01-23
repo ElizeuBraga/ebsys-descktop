@@ -587,10 +587,6 @@ import { Payment } from "../models/Payment";
 import { Console } from "console";
 import { access } from 'fs';
 
-const db = new sqlite3.Database(
-  "/home/basis/Downloads/app-descktop/src/database/database.db"
-);
-
 var pusher = new Pusher("a885cc143df63df6146a", {
   cluster: "us2",
 });
