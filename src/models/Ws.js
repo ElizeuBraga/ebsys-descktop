@@ -57,8 +57,11 @@ export class Ws {
         await axios.get(table + '/getLastId/').then(async (response)=>{
             if(response.data){
                 await axios.get(table + '/get/').then(async (response)=>{
-                    await helper.insertMany(table, response.data);
-                    // await axios.put('changeUpdated', {table: table});
+                    let insert = await helper.insertMany(table, response.data);
+
+                    if(insert){
+                        await axios.post(table + '/updatedToFalse');
+                    }
                 })
             }else{
                 console.log('data in ' + table + " are actualized")
