@@ -1,16 +1,15 @@
-import sqlite3 from "sqlite3";
-import util from 'util'
+import { DB } from "./DB";
 import { Helper } from "./Helper";
-const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
-
-db.run = util.promisify(db.run);
-db.get = util.promisify(db.get);
-db.all = util.promisify(db.all);
 
 const helper = new Helper();
+const db = new DB();
+const table = 'products'
 export class Product {
     constructor() {
+    }
 
+    async get(){
+        return await db.select(table);
     }
 
     async find(id){

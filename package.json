@@ -14,6 +14,7 @@
   "dependencies": {
     "aws-sdk": "^2.708.0",
     "axios": "^0.19.2",
+    "bcrypt": "^5.0.0",
     "bcryptjs": "^2.4.3",
     "console": "^0.7.2",
     "material-design-icons-iconfont": "^5.0.1",

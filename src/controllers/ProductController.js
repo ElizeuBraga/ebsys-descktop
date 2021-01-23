@@ -8,9 +8,8 @@ export class ProductController{
 
     }
 
-    async index(){
-        let product = new Product();
-        let products = await product.all();
+    async get(){
+        let products = await new Product().get();
         return products
     }
 

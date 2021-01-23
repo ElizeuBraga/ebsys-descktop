@@ -727,13 +727,8 @@ export default {
 
   async mounted() {
     this.initLoginProcess();
+    this.products = await new Product().get();
 
-    //if table users have data load products and turn login possible
-    if ((await user.count()) > 0) {
-      this.loading = false;
-      var p = new ProductController();
-      this.products = await p.index();
-    }
 
     // load data from ws
     ws.loadAll();
@@ -1580,18 +1575,18 @@ export default {
           {
             title: "Email/telefone",
             text: "Insira seu email ou telefone",
+            inputValue:"ez@gmail"
           },
           {
             title: "Senha",
             text: "Digite sua senha",
-            input: "password"
+            input: "password",
+            inputValue:"12345"
           },
         ])
         .then(async (result) => {
-          let accept = await user.auth(result.value[0], result.value[1]);
-          if (accept) {
-            let isOwner = await cashier.checkCashierOwner(accept.id); 
-            console.log(isOwner)
+          let authenticated = await user.auth(result.value[0], result.value[1]);
+          if (authenticated) {
             if(!isOwner){
               Swal.fire({
               title:"Ops!",
@@ -1601,8 +1596,8 @@ export default {
               this.initLoginProcess();
             })  
             }else{
-              this.user = accept
-              this.$root.$emit("logged_user", accept);
+              this.user = authenticated
+              this.$root.$emit("logged_user", authenticated);
             }
           }else{
             Swal.fire({
