@@ -3,7 +3,7 @@ import axios from 'axios';
 import { decodeBase64 } from 'bcryptjs';
 import Vue from 'vue';
 const util    = require('util');
-import sqlite3 from "sqlite3";
+import sqlite3, { verbose } from "sqlite3";
 const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
 const helper = new Helper();
 db.all = util.promisify(db.all);
@@ -14,11 +14,11 @@ export class Ws {
     constructor() {
         this.serverTables = [
             'users'
-            //,'products', 'localities',
+            ,'products', 'localities',
         ]
         this.localTables = [
             'cashiers'
-            //, 'customers', 'orders', 'items'
+            , 'customers', 'orders', 'items'
         ]
     }
 
@@ -39,10 +39,12 @@ export class Ws {
         await axios.get(table + '/getLastId/').then(async (response)=>{
             let sql = "select * from " + table + " where id > " + parseInt(response.data[0].lastId);
             await db.all(sql).then(async (rows)=>{
-                console.log(rows)
                 if(rows.length > 0){
-                    await axios.post(table + '/post/', rows)
-                    console.log('Uoloading data to ' + table)
+                    console.log(rows)
+                    await axios.post(table + '/post/', rows).then((response)=>{
+                        console.log(response.data)
+                    })
+                    console.log('Uploading data to ' + table)
                 }else{
                     console.log('No data to upload in ' + table)
                 }
