@@ -1,13 +1,9 @@
-import sqlite3 from "sqlite3";
+import { DB } from "./DB";
 import { Helper } from "./Helper";
 const util    = require('util');
 
-const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
-
-db.get = util.promisify(db.get);
-db.run = util.promisify(db.run);
-db.all = util.promisify(db.all);
-
+const db = new DB();
+const table = 'cashiers';
 const helper = new Helper();
 
 export class Cashier {
@@ -16,6 +12,7 @@ export class Cashier {
     }
 
     async all(user_id) {
+        return 
         let sql = "select * from cashiers c where user_id = " + user_id + " order by updated_at DESC";
         let cashiers = []
         await db.all(sql).then((rows)=>{
@@ -32,45 +29,24 @@ export class Cashier {
     }
 
     async update(cashier) {
-        let cashier_data = await this.find();
-        let sql = "update cashiers set updated_at = datetime('now', 'localtime'), money = ?, debit = ?, credit = ?, ticket = ? where id = ?";
-        db.run(sql, [cashier[0],cashier[1],cashier[2],cashier[3], cashier_data.id], err => {
-            if (err) {
-                return console.log(err);
-            }
-        });
+        
     }
 
-    async create(user) {
-        console.log(user)
-        let sql = "INSERT INTO cashiers (user_id)values(?)";
-        db.run(sql,[user.id]);
+    async create() {
+        let user = JSON.parse(localStorage.getItem('logged_user'))
+
+        let cashier = [
+            {user_id: user.id}
+        ]
+        db.insert(table, cashier);
     }
 
     async isOpened(){
-        let isOpened = false
-        await this.find().then((result)=>{
-            if(result.id){
-                isOpened = true
-            }
-        });
-
-        return isOpened;
+        return false;
     }
 
     async find() {
-        let sql = "select * from cashiers where updated_at ISNULL";
-        let result = await db.get(sql);
-        if (result) {
-            return result
-        }else{
-            return result =  {
-                debit: "0,00",
-                credit: "0,00",
-                ticket: "0,00",
-                moneyamount: "0,00"
-              }
-        }
+        
     }
 
     async items(cashier_id, type){
@@ -119,26 +95,13 @@ export class Cashier {
     }
 
     async checkUserOpenedCashier(){
-        let sql = "select u.id, u.name from cashiers c2 join users u on u.id = c2.user_id where c2.updated_at ISNULL";
-        let result = await db.get(sql);
-        if (result) {
-            return result
-        }else{
-            return false
-        }
+        let sql = "SELECT u.* FROM cashiers c2 JOIN users u ON u.id = c2.user_id WHERE c2.updated_at IS NULL";
+        let result = await db.select(table, sql);
+
+        return result[0]
     }
 
     async checkCashierOwner(id){
-        let sql = "select u.id from cashiers c2 join users u on u.id = c2.user_id where c2.updated_at ISNULL";
-        let result = await db.get(sql);
-        if(result){
-            if (result.id === id) {
-                return true
-            }else{
-                return false
-            }
-        }else{
-            return true
-        }
+        return false;
     }
 }

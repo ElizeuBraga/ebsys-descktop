@@ -1376,18 +1376,7 @@ export default {
     },
 
     async cashierStatus() {
-      var cashier = new CashierController();
-      let response = await cashier.show();
-      this.cashier = response;
-
-      this.checkUserOpenedCashier();
-      if (this.cashier.created_at) {
-        this.statusCashier = true;
-        return true;
-      } else {
-        this.statusCashier = false;
-        return false;
-      }
+      return false;
     },
 
     resetPassword(password, confirm_password) {

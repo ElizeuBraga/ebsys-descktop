@@ -53,7 +53,11 @@ export class DB{
                 if(err){
                     console.log(err)
                 }else{
-                    resolve(result);
+                    if(result.length > 0){
+                        resolve(result);
+                    }
+
+                    resolve(false);
                 }
             })
         });

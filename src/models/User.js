@@ -42,22 +42,23 @@ export class User {
 
     /**
      * 
-     * @param {*} user 
+     * @param {*} email_phone 
      * @param {*} password
      * check users autenticity 
      */
-    async auth(user, password) {
-        let sql = "select * from users where phone = '" + user + "' OR email = '" + user + "';";
-        let result = await db.select(table, sql);
+    async auth(email_phone, password) {
+        let sql = "select * from users where phone = '" + email_phone + "' OR email = '" + email_phone + "';";
+        let user = await db.select(table, sql);
 
-        if(result.length == 0){
+        if(user.length == 0){
             return false;
         }
         return new Promise(function(resolve, reject){
-            bcrypt.compare(password, result[0].password.replace('$2y$', '$2a$'), (err, result)=>{
+            bcrypt.compare(password, user[0].password.replace('$2y$', '$2a$'), (err, result)=>{
                 if(err){
                     reject(err)
                 }else{
+                    localStorage.setItem('logged_user', JSON.stringify(user[0]))
                     resolve(result);
                 }
             });
