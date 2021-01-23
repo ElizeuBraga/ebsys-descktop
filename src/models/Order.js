@@ -33,9 +33,6 @@ export class Order {
                 item.product_id = i.id
                 item.price = i.price
                 item.order_id = order_id.order_id
-                item.created_at =  new Date().toISOString();
-                item.updated_at = null
-                item.deleted_at = null
                 
                 let itemCopy = Object.assign({}, item)
                 items.push(itemCopy)

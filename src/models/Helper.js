@@ -130,12 +130,9 @@ export class Helper {
                 console.log(e)
             });
 
-            // compare if table keys is equals array keys
-            if (stringify(Object.keys(array[0])) !== stringify(columns)) {
-                console.log('Data not owned to ' + table)
-                return
-            }
+            
 
+            columns = Object.keys(array[0]);
 
             // create a sql for insert
             let countcols = 0;
@@ -158,7 +155,7 @@ export class Helper {
                 }
             }
 
-            let sql = 'INSERT INTO ' + table + ' values' + map;
+            let sql = 'INSERT INTO ' + table + '('+columns+')'+'values' + map;
 
             let sql_log_errors = "INSERT INTO logs_errors values(?,?,?, datetime('now', 'localtime'))"
             await db.run(sql).then(() => {
