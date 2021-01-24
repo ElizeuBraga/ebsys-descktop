@@ -201,6 +201,8 @@ const cashier = new Cashier();
       async initLoginProccess(){
         let html = '<input id="swal-input1" placeholder="Email/Telefone" class="swal2-input">';
             html += '<input id="swal-input2" type="password" placeholder="Senha" class="swal2-input">';
+            html += '<input id="swal-input3" name="swal-input3" value="Sim" type="checkbox" style="padding: 35px;">';
+            html += '<label for="swal-input3">Lembrar meu email/telefone</label>';
         Swal.fire({
           title:"Login",
           html:html,
@@ -208,23 +210,32 @@ const cashier = new Cashier();
           confirmButtonText: "Entrar",
           didOpen: () => {
             document.getElementById('swal-input1').value = localStorage.getItem('email_phone')
+            if(localStorage.getItem('email_phone')){
+              let value3 = document.getElementById('swal-input3').checked = true
+            }
           },
           preConfirm: () => {
             let value1 = document.getElementById('swal-input1').value
-            localStorage.setItem('email_phone', value1)
-            let value2 = document.getElementById('swal-input2').value 
+            let value2 = document.getElementById('swal-input2').value
+            let value3 = document.getElementById('swal-input3')
             if(value1 == ''){
-               Swal.showValidationMessage('Digite seu email/telefone')
+              Swal.showValidationMessage('Digite seu email/telefone')
             }else if(value2 == ''){
               Swal.showValidationMessage('Digite sua senha')
             }
-            return [value1,value2]
+            return [value1,value2,value3.checked]
           }
         }).then(async (result)=>{
             let auth = await user.auth(result.value[0], result.value[1])
             if(!auth){
               Swal.showValidationMessage('Email e/ou senha estão incorretos!')
               this.initLoginProccess()
+            }
+
+            if(result.value[2]){
+              localStorage.setItem('email_phone', result.value[0])
+            }else{
+              localStorage.removeItem('email_phone')
             }
         })
       },
