@@ -50,7 +50,7 @@ export class User {
         let sql = "select * from users where phone = '" + email_phone + "' OR email = '" + email_phone + "';";
         let user = await db.select(table, sql);
 
-        if(user.length == 0){
+        if(!user){
             return false;
         }
         return new Promise(function(resolve, reject){

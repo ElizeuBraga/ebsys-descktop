@@ -1,3 +1,4 @@
+import Swal from 'sweetalert2';
 
 const util = require('util');
 export class Helper {
@@ -41,124 +42,10 @@ export class Helper {
         return output;
     }
 
-    async insertMany(table, data) {
-        return
-        console.log('Inserting or updating data in '+ table)
-        // check if table exists
-        // ------------------------------------------------------------------------------------------------------------
-        let sqlTable = "PRAGMA table_info(" + table + ")";
-        let exists = false;
-        await db.all(sqlTable).then(async (cols) => {
-            if (cols.length > 0) {
-                exists = true
-            }
-        }).catch((e) => {
-            console.log(e)
-        });
-
-        if(!exists){
-            console.log('Table ' + table + ' not exists');
-            return;
-        }else if(data.length == 0){
-            console.log('Not data for insert or update on ' + table);
-            return;
-        }
-        // ------------------------------------------------------------------------------------------------------------
-
-        let array = []
-        for (let d of data) {
-            const todo = await fetch(d);
-            // if data is in database update else insert in array for insert
-            await db.get('SELECT * FROM ' + table +' WHERE id = ' + d.id).then(async (d2)=>{
-                if(d2){
-                    // await product.update(p)
-                    let sql = "";
-                    if(table == 'products'){
-                        sql = "UPDATE " + table + " SET name = '" + d.name + "', price = " + d.price + " WHERE id = " + d.id;
-                    }else if(table == 'users'){
-                        sql = "UPDATE " + table + 
-                        " SET name = '" + d.name +
-                        "', email = '" + d.email +
-                        "', phone = '" + d.phone +
-                        "', password = '" + d.password +
-                        "', change_password = '" + d.change_password +
-                        "' WHERE id = " + d.id;
-                    }else if(table == 'localities'){
-                        sql = "UPDATE " + table + " SET name = '" + d.name + "', product_id = " + d.product_id + " WHERE id = " + d.id;
-                    }
-
-                    if(sql != ""){
-                        await db.run(sql);
-                        console.log('Updated')
-                    }
-
-                    // console.log(table + ' of id ' + d.id + ' updated')
-
-                }else{
-                    array.push(d)
-                }
-            })
-        }
-
-        let resolved = false;
-        if (array.length > 0) {
-            let columns = []
-            // get columns of a table
-            let sqlinfotable = "PRAGMA table_info(" + table + ")";
-            await db.all(sqlinfotable).then(async (cols) => {
-                if (cols.length > 0) {
-                    for (let c of cols) {
-                        const todo = await fetch(c);
-                        columns.push(c.name)
-                    }
-                } else {
-                    console.log(table + ' not exists')
-                    return;
-                    console.log('Oi')
-                }
-            }).catch((e) => {
-                console.log(e)
-            });
-
-            
-
-            columns = Object.keys(array[0]);
-
-            // create a sql for insert
-            let countcols = 0;
-            let countelements = 0;
-            let separator = ",";
-            let map = "";
-            for (let e of array) {
-                const todo = await fetch(e);
-                countelements += 1
-                countcols = 0;
-                for (let c of columns) {
-                    const todo = await fetch(c);
-                    countcols += 1;
-                    (countcols == columns.length) ? separator = ")," : separator = ",";
-
-                    if (countelements == array.length && countcols == columns.length) {
-                        separator = ");"
-                    }
-                    map += (typeof e[c] == 'string') ? "'" + e[c] + "'" + separator : (countcols == 1) ? "(" + e[c] + separator : e[c] + separator;
-                }
-            }
-
-            let sql = 'INSERT INTO ' + table + '('+columns+')'+'values' + map;
-
-            let sql_log_errors = "INSERT INTO logs_errors values(?,?,?, datetime('now', 'localtime'))"
-            await db.run(sql).then(() => {
-                resolved = true
-                console.log(table + ' is now in database')
-            }).catch((err) => {
-                db.run(sql_log_errors, [err, table, 'create'])
-                console.log(err)
-            })
-
-        }
-
-        console.log('------------------------------------------------')
-        return resolved
+    initLoginProccess(){
+        Swal.fire({
+            title:"Text",
+            html:"",
+        })
     }
 }
