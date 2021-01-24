@@ -60,4 +60,10 @@ export class Product {
         let sql = 'UPDATE products set ask_obs = false where id = ?'
         db.run(sql, [id]);
     }
+
+    async selectProdutcToCart(name){
+        let sql = "SELECT * FROM " + table + " WHERE name = '" + name + "';"
+
+        return await db.select(table,sql);
+    }
 }

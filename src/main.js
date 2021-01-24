@@ -1,20 +1,16 @@
 import Vue from 'vue'
 import App from './App.vue'
-import Login from './views/Login'
-import vuetify from './plugins/vuetify';
 import router from './router'
-import mixins from './mixins/mixins';
-import Countertop from './views/Balcao';
-import VueSimpleAlert from "vue-simple-alert";
-import 'material-design-icons-iconfont/dist/material-design-icons.css'
-var server = require("./server");
+import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
+// import 'material-design-icons-iconfont/dist/material-design-icons.css'
 
-Vue.config.productionTip = false
-Vue.use(require('vue-shortkey'))
-Vue.use(VueSimpleAlert, { reverseButtons: false });
+// Make BootstrapVue available throughout your project
+Vue.use(BootstrapVue)
+// Vue.use(VueSimpleAlert, { reverseButtons: false });
 
 var app = new Vue({
-  vuetify,
+  // vuetify,
+  // BootstrapVue,
   router,
   render: function (h) { return h(App) }
 }).$mount('#app')

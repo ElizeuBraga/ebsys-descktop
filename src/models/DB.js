@@ -62,4 +62,14 @@ export class DB{
             })
         });
     }
+
+    async execute(sql){
+        con.query(sql, function(err, result) {
+            if(err){
+                console.log(err)
+            }else{
+                console.log('Success')
+            }
+        });
+    }
 }
