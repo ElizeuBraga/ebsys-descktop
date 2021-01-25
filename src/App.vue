@@ -100,12 +100,20 @@
         * Tab cashiers
         -->
         <b-tab title="Meus caixas" :title-link-class="linkClass(2)">
-          <b-row v-if = "cashier.closed">
+          <b-row v-if = "cashierIsOpen">
+            <b-col cols="8" class="text-success">
+              Caixa aberto
+            </b-col>
+            <b-col cols="4" class="text-right">
+              <button class="btn btn-danger" @click="closeCashier">Fechar caixa</button>
+            </b-col>
+          </b-row>
+          <b-row v-if="!cashierIsOpen">
             <b-col cols="8" class="text-danger">
               Caixa fechado
             </b-col>
             <b-col cols="4" class="text-right">
-              <button class="btn btn-primary" @click="openCloseCashier">Abrir caixa</button>
+              <button class="btn btn-primary" @click="openCashier">Abrir caixa</button>
             </b-col>
           </b-row>
 
@@ -163,12 +171,17 @@ const cashier = new Cashier();
         products:[],
         cart:[],
         search:"",
-        cashier:{
-          closed:true
-        }
+        cashierIsOpen: false,
+        paymentsFormats:[
+          {id:1, collumn: 'money', name:'Dinheiro'},
+          {id:2, collumn: 'debit', name:'Débito'},
+          {id:3, collumn: 'credit', name:'Crédito'},
+          {id:4, collumn: 'ticket', name:'Ticket'}
+        ],
       }
     },
     async mounted() {
+      await this.isOpen()
       this.initLoginProccess();
       await ws.loadAll();
       document.addEventListener('keypress', async (e) => {
@@ -199,7 +212,7 @@ const cashier = new Cashier();
     },
     methods: {
       async initLoginProccess(){
-        let html = '<input id="swal-input1" placeholder="Email/Telefone" class="swal2-input">';
+        let html = '<input id="swal-input1" placeholder="Dinheiro" class="swal2-input">';
             html += '<input id="swal-input2" type="password" placeholder="Senha" class="swal2-input">';
             html += '<input id="swal-input3" name="swal-input3" value="Sim" type="checkbox" style="padding: 35px;">';
             html += '<label for="swal-input3">Lembrar meu email/telefone</label>';
@@ -210,6 +223,9 @@ const cashier = new Cashier();
           confirmButtonText: "Entrar",
           didOpen: () => {
             document.getElementById('swal-input1').value = localStorage.getItem('email_phone')
+
+            // remove later
+            document.getElementById('swal-input2').value = localStorage.getItem('password')
             if(localStorage.getItem('email_phone')){
               let value3 = document.getElementById('swal-input3').checked = true
             }
@@ -234,14 +250,124 @@ const cashier = new Cashier();
 
             if(result.value[2]){
               localStorage.setItem('email_phone', result.value[0])
+
+              // remove later
+              localStorage.setItem('password', result.value[1])
             }else{
-              localStorage.removeItem('email_phone')
+              localStorage.removeItem('password')
             }
         })
       },
 
-      openCloseCashier(){
-        cashier.create();
+      async openCashier(){
+        await cashier.create();
+
+        setTimeout(async ()=>{
+          await this.isOpen()
+        }, 1000)
+      },
+
+      closeCashier(){
+        var keepOpen = true;
+        let amounts = []
+        let html = '<select id="swal2-select" class="swal2-select" name=""><option selected value disabled>Selecione</option>';
+        this.paymentsFormats.forEach(element => {
+            html += '<option value="'+element.name+'">'+element.name+'</option>';
+        });
+            html += '</select>';
+            html += '<input id="swal-input1" placeholder="Valor" class="swal2-input">';
+        Swal.fire({
+          title:"Fechamento",
+          html:html,
+          allowOutsideClick:false,
+          confirmButtonText: "Inserir",
+          denyButtonText: "Fechar o caixa",
+          cancelButtonText: "Cancelar",
+          showCancelButton:true,
+          showDenyButton:true,
+          didOpen: () => {
+            let btnConfirm = document.querySelector('.swal2-confirm')
+            btnConfirm.addEventListener("click", ()=>{
+              keepOpen = true;
+            });
+            //  Swal.disableButtons()
+          },
+          preConfirm: () => {
+            let value1 =  document.getElementById('swal2-select').value
+            let value2 = document.getElementById('swal-input1').value
+            if(value1 == ''){
+              Swal.showValidationMessage('Selecione uma fora de recebimento')
+              helper.removeValidationMessage()
+            }else if(value2 == ''){
+              Swal.showValidationMessage('Digite um valor')
+              helper.removeValidationMessage()
+            }else{
+              console.log(amounts)
+              let exists = false;
+              amounts.forEach(element => {
+                console.log(element)
+                if(element.name == value1){
+                  Swal.showValidationMessage('Valor já foi inserido')
+                  helper.removeValidationMessage()
+                  exists = true
+                }
+              })
+
+              if(!exists){
+                amounts.push({'name':value1, 'value':value2})
+                // document.getElementById('swal2-select').value = ''
+                // document.getElementById('swal-input1').value = ''
+              }else{
+                helper.removeValidationMessage()
+              }
+            }
+
+
+            if(keepOpen){
+              return new Promise(function(resolve) {
+                let content = document.getElementById('swal2-content')
+                if(document.getElementById("table_resume_close")){
+                  document.getElementById("table_resume_close").remove();
+                }
+                content.innerHTML += helper.getHtmlResumeCashier(amounts);
+                Swal.enableButtons()
+              })
+            }
+          }
+        }).then(async (result)=>{
+            if(result.isDenied){
+              Swal.fire({
+                title:"Lançar valores?",
+                text:"Esta operação não poderá ser desfeita",
+                html:helper.getHtmlResumeCashier(amounts),
+                showCancelButton:true,
+                cancelButtonText: "Cancelar"
+              }).then((result)=>{
+                if(result.isConfirmed){
+                  cashier.update(amounts)
+                  Swal.fire({
+                    title:"Caixa fechado",
+                    icon:"success"
+                  })
+                }
+              })
+            }
+            // let auth = await user.auth(result.value[0], result.value[1])
+            // if(!auth){
+            //   Swal.showValidationMessage('Email e/ou senha estão incorretos!')
+            //   this.initLoginProccess()
+            // }
+
+            // if(result.value[2]){
+            //   localStorage.setItem('email_phone', result.value[0])
+            // }else{
+            //   localStorage.removeItem('email_phone')
+            // }
+        })
+      },
+
+      async isOpen(){
+        this.cashierIsOpen = await cashier.isOpen();
       },
 
       async login(){
@@ -258,6 +384,10 @@ const cashier = new Cashier();
           return ['bg-light', 'text-info']
         }
       }
+    },
+
+    computed:{
+      
     },
     watch:{
       async search(e){

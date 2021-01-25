@@ -48,4 +48,37 @@ export class Helper {
             html:"",
         })
     }
+
+    getHtmlResumeCashier(amounts){
+        let total = 0;
+        let html = `<table style="width:100%" class="table table-striped" id="table_resume_close">
+                <tr>
+                    <th class="text-left">Tipo</th>
+                    <th class="text-right">Valor</th>
+                </tr>`;
+            html += '';
+            amounts.forEach(element => {
+            total += parseFloat(element.value);
+            html +=`
+            <tr>
+                <td class="text-left">${element.name}</td>
+                <td class="text-right">${parseFloat(element.value).toFixed(2).replace('.', ',')}</td>
+            </tr>
+            `
+            });
+            html +=`
+            <tr class="text-left" >
+                <td><b>Total</b></td>
+                <td class="text-right"><b>${parseFloat(total).toFixed(2).replace('.', ',')}</b></td>
+            </tr>
+            `
+            html += `</table>`;
+        return html;
+    }
+
+    removeValidationMessage(timer = 2000){
+        setTimeout(()=>{
+            Swal.resetValidationMessage()
+        }, timer)
+    }
 }

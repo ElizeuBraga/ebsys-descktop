@@ -28,8 +28,8 @@ export class Cashier {
         return (part1 + part2);
     }
 
-    async update(cashier) {
-        
+    async update(amounts) {
+        console.log(amounts)
     }
 
     async create() {
@@ -41,7 +41,14 @@ export class Cashier {
         db.insert(table, cashier);
     }
 
-    async isOpened(){
+    async isOpen(){
+        let sql = "select * from cashiers c2 where updated_at is null"
+
+        let result = await db.select(table, sql);
+
+        if(result){
+            return true
+        }
         return false;
     }
 
