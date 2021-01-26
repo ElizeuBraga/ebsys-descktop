@@ -287,7 +287,9 @@ const cashier = new Cashier();
           showDenyButton:true,
           didOpen: () => {
             let btnConfirm = document.querySelector('.swal2-confirm')
+            console.log(btnConfirm)
             btnConfirm.addEventListener("click", ()=>{
+              console.log('Aqui')
               keepOpen = true;
             });
             //  Swal.disableButtons()
@@ -296,27 +298,45 @@ const cashier = new Cashier();
             let value1 =  document.getElementById('swal2-select').value
             let value2 = document.getElementById('swal-input1').value
             if(value1 == ''){
-              Swal.showValidationMessage('Selecione uma fora de recebimento')
+              Swal.showValidationMessage('Selecione uma forma de recebimento')
               helper.removeValidationMessage()
             }else if(value2 == ''){
               Swal.showValidationMessage('Digite um valor')
               helper.removeValidationMessage()
             }else{
-              console.log(amounts)
               let exists = false;
+              let valueExists = "";
+              let key = null;
+              let content = document.getElementById('swal2-content')
               amounts.forEach(element => {
-                console.log(element)
+                key+=1
                 if(element.name == value1){
                   Swal.showValidationMessage('Valor já foi inserido')
                   helper.removeValidationMessage()
                   exists = true
+                  valueExists = element.name
+                  key = 0
                 }
               })
 
               if(!exists){
+                // insert element in array
                 amounts.push({'name':value1, 'value':value2})
                 // document.getElementById('swal2-select').value = ''
                 // document.getElementById('swal-input1').value = ''
+                if(document.getElementById("table_resume_close")){
+                  document.getElementById("table_resume_close").remove();
+                }
+                content.innerHTML += helper.getHtmlResumeCashier(amounts);
+                let btnRemove = document.querySelector("#"+value1)
+                btnRemove.addEventListener("click", (e)=>{
+                  console.log(e)
+                  let index = amounts.findIndex(x => x.name === e.target.id);
+                  amounts.splice(index, 1)
+
+                  document.querySelector('.'+e.target.id).remove()
+                  // content.innerHTML += helper.getHtmlResumeCashier(amounts);
+                });
               }else{
                 helper.removeValidationMessage()
               }
@@ -325,11 +345,11 @@ const cashier = new Cashier();
 
             if(keepOpen){
               return new Promise(function(resolve) {
-                let content = document.getElementById('swal2-content')
-                if(document.getElementById("table_resume_close")){
-                  document.getElementById("table_resume_close").remove();
-                }
-                content.innerHTML += helper.getHtmlResumeCashier(amounts);
+                // let content = document.getElementById('swal2-content')
+                // if(document.getElementById("table_resume_close")){
+                //   document.getElementById("table_resume_close").remove();
+                // }
+                // content.innerHTML += helper.getHtmlResumeCashier(amounts);
                 Swal.enableButtons()
               })
             }

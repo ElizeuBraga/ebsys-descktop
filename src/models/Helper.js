@@ -55,24 +55,28 @@ export class Helper {
                 <tr>
                     <th class="text-left">Tipo</th>
                     <th class="text-right">Valor</th>
-                </tr>`;
+                    <th class="text-right">Opções</th>
+                    </tr>`;
             html += '';
             amounts.forEach(element => {
-            total += parseFloat(element.value);
-            html +=`
-            <tr>
+                total += parseFloat(element.value);
+                html +=`
+                <tr class="${element.name}">
                 <td class="text-left">${element.name}</td>
                 <td class="text-right">${parseFloat(element.value).toFixed(2).replace('.', ',')}</td>
-            </tr>
-            `
+                <td class="text-right"><button class="btn btn-sm btn-danger" id="${element.name}">Remover</button></td>
+                </tr>
+                `
             });
             html +=`
             <tr class="text-left" >
-                <td><b>Total</b></td>
+            <td><b>Total</b></td>
                 <td class="text-right"><b>${parseFloat(total).toFixed(2).replace('.', ',')}</b></td>
+                <td class="text-centers"></td>
             </tr>
             `
             html += `</table>`;
+
         return html;
     }
 
