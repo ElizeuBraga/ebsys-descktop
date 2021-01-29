@@ -6,6 +6,22 @@ var con = mysql.createConnection({
     database: "ebsys_descktop"
   });
 export class DB{
+    async update(table, array, id = 21){
+        let sql = "UPDATE " + table;
+        let map = " SET ";
+        for (const [i, a] of array.entries()) {
+            map += Object.keys(a)[0] + " = " + Object.values(a)[0] + ((i == array.length - 1) ? " ":", ")
+        }
+
+        map += " ,updated_at = now() WHERE id = " + id;
+
+        sql += map
+
+        let resp = await this.execute(sql)
+
+        return resp;
+    }
+
     async insert(table, items){
         console.log(items)
         let values = "";
@@ -64,12 +80,13 @@ export class DB{
     }
 
     async execute(sql){
-        con.query(sql, function(err, result) {
-            if(err){
-                console.log(err)
-            }else{
-                console.log('Success')
-            }
-        });
+        return new Promise(function(resolve, reject){
+            con.query(sql, function(err, result) {
+                if(err){
+                    resolve(false)
+                }
+                resolve(true)
+            });
+        })
     }
-}
+    }

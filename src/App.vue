@@ -60,7 +60,7 @@
             <b-col cols="10">
               <b-form-input v-model="search" list="producs" id="input-product"></b-form-input>
               <datalist id="producs">
-                <option v-for="p in products" :value="p.name">{{ parseFloat(p.price).toFixed(2).replace('.', ',') }}</option>
+                <option v-for="(i,p) in products" :value="p.name" :key="i">{{ parseFloat(p.price).toFixed(2).replace('.', ',') }}</option>
               </datalist>
             </b-col>
             <b-col cols="2">
@@ -362,13 +362,25 @@ const cashier = new Cashier();
                 html:helper.getHtmlResumeCashier(amounts),
                 showCancelButton:true,
                 cancelButtonText: "Cancelar"
-              }).then((result)=>{
+              }).then(async (result)=>{
                 if(result.isConfirmed){
-                  cashier.update(amounts)
-                  Swal.fire({
-                    title:"Caixa fechado",
-                    icon:"success"
-                  })
+                  let resp = await cashier.update(amounts)
+
+                  console.log(resp)
+                  if(resp){
+                      setTimeout(async ()=>{
+                        await this.isOpen()
+                      }, 1000)
+                      Swal.fire({
+                        title:"Caixa fechado",
+                        icon:"success"
+                      })
+                  }else{
+                    Swal.fire({
+                        title:"Erro ao fechar o caixa",
+                        icon:"error"
+                      })
+                  }
                 }
               })
             }

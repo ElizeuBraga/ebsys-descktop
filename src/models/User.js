@@ -58,7 +58,7 @@ export class User {
                 if(err){
                     reject(err)
                 }else{
-                    localStorage.setItem('logged_user', JSON.stringify(user[0]))
+                    localStorage.setItem('user', JSON.stringify(user[0]))
                     resolve(result);
                 }
             });

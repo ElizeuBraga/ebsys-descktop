@@ -29,16 +29,49 @@ export class Cashier {
     }
 
     async update(amounts) {
-        console.log(amounts)
+        let newArray = []
+
+        for (const a of amounts) {
+            const todo = await fetch(a)
+            if(a.name === 'Dinheiro'){
+                newArray.push({money:a.value})
+            }else if(a.name === 'Débito'){
+                newArray.push({debit:a.value})
+            }else if(a.name === 'Crédito'){
+                newArray.push({credit:a.value})
+            }else{
+                newArray.push({ticket:a.value})
+            }
+        }
+        let cashier = await this.detail();
+        
+        let user = JSON.parse(localStorage.getItem('user'));
+        console.log(user)
+        if(cashier[0].user_id != user.id){
+            return false
+        }
+        let result = await db.update(table, newArray, cashier[0].id);
+
+        return result;
+
+
     }
 
     async create() {
-        let user = JSON.parse(localStorage.getItem('logged_user'))
+        let user = JSON.parse(localStorage.getItem('user'))
 
         let cashier = [
             {user_id: user.id}
         ]
         db.insert(table, cashier);
+    }
+
+    async detail(){
+        let sql = "select * from cashiers c2 where updated_at is null"
+
+        let result = await db.select(table, sql);
+
+        return result;
     }
 
     async isOpen(){
