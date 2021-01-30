@@ -11,14 +11,31 @@ export class Cashier {
 
     }
 
-    async all(user_id) {
-        return 
-        let sql = "select * from cashiers c where user_id = " + user_id + " order by updated_at DESC";
-        let cashiers = []
-        await db.all(sql).then((rows)=>{
-            cashiers = rows
-        })
-        return cashiers
+    async all(dates = false) {
+        let and = ""
+        if(dates){
+            and = ` AND c.created_at BETWEEN '${dates[0]}' AND '${dates[1]}'`
+        }
+        let user = JSON.parse(localStorage.getItem('user'));
+        let sql = ` SELECT
+                        c.id,
+                        u.name as user_name,
+                        sum(money + debit + credit + ticket) as value,
+                        DATE_FORMAT(c.created_at, '%d-%m-%Y às %H:%i') as created_at,
+                        DATE_FORMAT(c.updated_at, '%d-%m-%Y às %H:%i') as updated_at
+                    FROM cashiers c 
+                    JOIN users u on u.id = c.user_id 
+                    where user_id = ${user.id} AND c.updated_at is not null ${and}
+                    GROUP by c.id
+                    order by c.created_at DESC`;
+
+        let cashiers = await db.select(table, sql);
+        
+        if(cashiers){
+            return cashiers;
+        }else{
+            return []
+        }
     }
 
     remove_character(str, char_pos) 
@@ -55,6 +72,27 @@ export class Cashier {
         return result;
 
 
+    }
+
+    async getCashierInfo(cashier_id){
+        let sql = ` SELECT
+                    p.name,
+                    SUM(i.quantity) as quantity,
+                    SUM(i.price) as total
+                FROM products p
+                JOIN items i ON i.product_id = p.id
+                JOIN orders o ON o.id = i.order_id 
+                JOIN cashiers c ON c.id = o.cashier_id
+                WHERE c.id = ${cashier_id}
+                GROUP BY p.name, c.id;`;
+
+        let info = await db.select(table, sql)
+
+        if(info){
+            return info;
+        }else{
+            return []
+        }
     }
 
     async create() {

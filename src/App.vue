@@ -14,7 +14,7 @@
             <b-col cols="10">
               <b-form-input v-model="search" list="producs" id="input-product"></b-form-input>
               <datalist id="producs">
-                <option v-for="p in products" :value="p.name">{{ parseFloat(p.price).toFixed(2).replace('.', ',') }}</option>
+                <option v-for="(p,index) in products" :value="p.name" :key="index">{{ parseFloat(p.price).toFixed(2).replace('.', ',') }}</option>
               </datalist>
             </b-col>
             <b-col cols="2">
@@ -54,13 +54,13 @@
         *
         * Tab deliveries
         -->
-        <b-tab title="Entregas" :title-link-class="linkClass(1)">
+        <b-tab title="Entregas" :title-link-class="linkClass(1)" @click="changeTab(1)">
           <b-row>
           <b-row class="w-50 p-3 mh-100">
             <b-col cols="10">
               <b-form-input v-model="search" list="producs" id="input-product"></b-form-input>
               <datalist id="producs">
-                <option v-for="(i,p) in products" :value="p.name" :key="i">{{ parseFloat(p.price).toFixed(2).replace('.', ',') }}</option>
+                <option v-for="(p,i) in products" :value="p.name" :key="i">{{ parseFloat(p.price).toFixed(2).replace('.', ',') }}</option>
               </datalist>
             </b-col>
             <b-col cols="2">
@@ -105,6 +105,7 @@
               Caixa aberto
             </b-col>
             <b-col cols="4" class="text-right">
+              <button class="btn btn-primary m-2" @click="getCashiers(byDate = true)">Buscar</button>
               <button class="btn btn-danger" @click="closeCashier">Fechar caixa</button>
             </b-col>
           </b-row>
@@ -113,25 +114,32 @@
               Caixa fechado
             </b-col>
             <b-col cols="4" class="text-right">
-              <button class="btn btn-primary" @click="openCashier">Abrir caixa</button>
+              <button class="btn btn-primary m-2" @click="getCashiers(byDate = true)">Buscar</button>
+              <button class="btn btn-success" @click="openCashier">Abrir caixa</button>
             </b-col>
           </b-row>
 
-          <table class="table  table-striped">
+          <table class="table table-hover">
                 <thead>
                   <tr>
-                    <th scope="col">Data</th>
+                    <th class="text-center" scope="col">Data</th>
                     <th class="text-center" scope="col">Valor</th>
                     <th class="text-center" scope="col">Fechado por</th>
+                    <th class="text-center" scope="col">Data fechamento</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(i, index) in cart" :key="index">
-                    <th scope="row">{{i.id}}</th>
-                    <td>{{i.name}}</td>
-                    <td class="text-center">{{parseFloat(i.price).toFixed(2).replace('.', ',')}}</td>
-                    <td class="text-center">{{i.qtd}}</td>
-                    <td class="text-center">{{parseFloat(i.qtd * i.price).toFixed(2).replace('.', ',')}}</td>
+                  <tr class="text-center text-danger" v-if="cashiers.length == 0">
+                    <th></th>
+                    <th></th>
+                    <th>Nenhum registro encontrado</th>
+                    <th></th>
+                  </tr>
+                  <tr v-else style="cursor: pointer;" title="Clique para mais informações" v-for="(c, index) in cashiers" :key="index" @click="cashierInfo(c.id)">
+                    <th class="text-center" scope="row">{{c.created_at}}</th>
+                    <td class="text-center">{{parseFloat(c.value).toFixed(2).replace('.', ',')}}</td>
+                    <td class="text-center">{{c.user_name}}</td>
+                    <td class="text-center">{{c.updated_at}}</td>
                   </tr>
                 </tbody>
               </table>
@@ -178,12 +186,17 @@ const cashier = new Cashier();
           {id:3, collumn: 'credit', name:'Crédito'},
           {id:4, collumn: 'ticket', name:'Ticket'}
         ],
+        cashiers:[],
+        order:{
+          
+        }
       }
     },
     async mounted() {
+      this.getCashiers();
       await this.isOpen()
       this.initLoginProccess();
-      await ws.loadAll();
+      // await ws.loadAll();
       document.addEventListener('keypress', async (e) => {
         if (e.key === 'Enter') {
           var inputProduct = document.getElementById("input-product");
@@ -211,6 +224,74 @@ const cashier = new Cashier();
       });
     },
     methods: {
+      changeTab(tabIndex){
+        if(tabIndex == 1){
+          Swal.fire({
+            title:"Buscar cliente",
+          })
+        }
+      },
+
+      async cashierInfo(cashier_id){
+        let items = await cashier.getCashierInfo(cashier_id);
+        let html = "";
+        if(items.length == 0){
+          html += "<tr><span class='text-danger'>Nehnum item encontrado</span><tr>"
+        }else{
+          html = `
+            <table class="table  table-striped">
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th class="text-center" scope="col">Quantidade</th>
+                  <th class="text-center" scope="col">Total</th>
+                </tr>
+              </thead>
+              <tbody>`;
+
+              items.forEach(i => {
+                html += `<tr>
+                          <th>${i.name}</th>
+                          <td class="text-center">${i.quantity}</td>
+                          <td class="text-center">${parseFloat(i.total).toFixed(2).replace('.', ',')}</td>
+                        </tr>`;
+              });
+
+                
+              html += `</tbody>
+            </table>`;
+          }
+        Swal.fire({
+          title:"Informações",
+          html: html,
+          showCloseButton: true
+        })
+      },
+
+      async getCashiers(byDate = false){
+        if(byDate){
+          Swal.fire({
+            title:"Buscar por data",
+            html: '<input type="date" id="swal-input1" placeholder="Data inicial" class="swal2-input">'+
+                  '<input type="date" id="swal-input2" placeholder="Data final" class="swal2-input">',
+            preConfirm:()=>{
+              let start = document.getElementById('swal-input1').value;
+              let end = document.getElementById('swal-input2').value;
+
+              if(start == '' || end == ''){
+                Swal.showValidationMessage('Escolha data inicial e data final')
+              }else{
+                return [start, end]
+              }
+            }
+          }).then(async (result)=>{
+            this.cashiers = await cashier.all(result.value);
+          })
+        }else{
+          this.cashiers = await cashier.all();
+        }
+      },
+
       async initLoginProccess(){
         let html = '<input id="swal-input1" placeholder="Dinheiro" class="swal2-input">';
             html += '<input id="swal-input2" type="password" placeholder="Senha" class="swal2-input">';
@@ -371,6 +452,7 @@ const cashier = new Cashier();
                       setTimeout(async ()=>{
                         await this.isOpen()
                       }, 1000)
+                      this.getCashiers();
                       Swal.fire({
                         title:"Caixa fechado",
                         icon:"success"
