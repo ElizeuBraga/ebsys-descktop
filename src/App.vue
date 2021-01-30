@@ -69,6 +69,10 @@
           </b-row>
           <b-row class="w-50 p-3">
             <b-col>
+              <div v-if="custom.length >0" class="text-center">
+                <span>{{custom[0].name}} - {{custom[0].phone}}</span><br>
+                <span>{{custom[0].address}} - {{custom[0].locality}}</span>
+              </div>
               <table class="table  table-striped">
                 <thead>
                   <tr>
@@ -159,7 +163,9 @@ import { DB } from "./models/DB";
 import { Ws } from "./models/Ws";
 import { User } from "./models/User";
 import { Cashier } from "./models/Cashier";
+import { Locality } from "./models/Locality";
 import { Helper } from "./models/Helper";
+import { Customer } from "./models/Customer";
 import {mixins} from './mixins/mixins';
 import Swal from 'sweetalert2';
 Vue.use(BootstrapVue)
@@ -167,6 +173,8 @@ Vue.use(BootstrapVue)
 // const db = new DB().createDatabase();
 const product = new Product();
 const helper = new Helper();
+const locality = new Locality();
+const customer = new Customer();
 const ws = new Ws();
 const db = new DB();
 const user = new User();
@@ -177,6 +185,7 @@ const cashier = new Cashier();
       return {
         tabIndex: 0,
         products:[],
+        localities: [],
         cart:[],
         search:"",
         cashierIsOpen: false,
@@ -188,13 +197,15 @@ const cashier = new Cashier();
         ],
         cashiers:[],
         order:{
-          
-        }
+
+        },
+        custom:[]
       }
     },
     async mounted() {
       this.getCashiers();
       await this.isOpen()
+      this.localities = await locality.all()
       this.initLoginProccess();
       // await ws.loadAll();
       document.addEventListener('keypress', async (e) => {
@@ -226,10 +237,80 @@ const cashier = new Cashier();
     methods: {
       changeTab(tabIndex){
         if(tabIndex == 1){
+          this.initDeliveryOrder();
+        }
+      },
+
+      initDeliveryOrder(){
+        let name = ""
+          let phone = ""
+          let address = ""
+          let locality = ""
+          let customerResult = {}
           Swal.fire({
             title:"Buscar cliente",
+            inputLabel:"Telefone",
+            input:"text"
+          }).then(async(result)=>{
+            customerResult = await customer.find(result.value);
+
+            phone = result.value
+            let html = '<select id="swal2-select" class="swal2-select" name=""><option selected value disabled>Cidade</option>';
+            this.localities.forEach(element => {
+                html += '<option value="'+element.id+'">'+element.name+'</option>';
+            });
+            html += '</select>';
+              Swal.fire({
+                title:"Novo cliente",
+                html: '<input id="swal-input1" placeholder="Nome" class="swal2-input">'+
+                      '<input id="swal-input2" placeholder="Telefone" class="swal2-input">'+
+                      '<input id="swal-input3" placeholder="Endereço" class="swal2-input">' +
+                      html,
+                showCancelButton: true,
+                cancelButtonText:"Cancelar",
+                didOpen:()=>{
+                  if(customerResult){
+                    name = document.getElementById('swal-input1').value = customerResult[0].name;
+                    phone = document.getElementById('swal-input2').value = customerResult[0].phone;
+                    address = document.getElementById('swal-input3').value = customerResult[0].address;
+                    locality = document.getElementById('swal2-select').value = customerResult[0].locality_id;  
+                  }else{
+                    document.getElementById('swal-input1').focus()
+                    phone = document.getElementById('swal-input2').value = phone;
+                  }
+                },
+                preConfirm: async () => {
+                  // if(!customerResult){
+                    name = document.getElementById('swal-input1').value;
+                    phone = document.getElementById('swal-input2').value;
+                    address = document.getElementById('swal-input3').value;
+                    locality = document.getElementById('swal2-select').value;
+                  // }
+
+                  let arraData = [name, phone, address, locality];
+                  
+                  return arraData 
+                }
+              }).then(async(result)=>{
+                if(result.isConfirmed){
+                  let response = false;
+                  if(!customerResult){
+                    response = await customer.create(result.value)
+                  }else{
+                    response = await customer.update(result.value)
+                  }
+  
+                  // setTimeout(async ()=>{
+                    this.custom = await customer.find(phone)
+                  // }, 2000)
+                  let prod = await product.findByLocalityPhone(phone)
+                  prod[0].qtd = 1
+                  this.cart.push(JSON.parse(JSON.stringify(prod[0])))
+                }else if(result.isDismissed){
+                  this.initDeliveryOrder()
+                }
+              })
           })
-        }
       },
 
       async cashierInfo(cashier_id){

@@ -1,13 +1,8 @@
-import sqlite3 from "sqlite3";
-import util from 'util'
 import { Helper } from "./Helper";
-const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
-
-db.all = util.promisify(db.all);
-db.run = util.promisify(db.run);
-db.get = util.promisify(db.get);
-
+import { DB } from "./DB";
 const helper = new Helper();
+const db = new DB();
+const table = 'localities';
 
 export class Locality {
     constructor(){
@@ -16,8 +11,7 @@ export class Locality {
     
     async all() {
         let sql = "select * from localities";
-        let localities = await db.all(sql);
-
+        let localities = await db.select(table, sql);
         return localities;
     }
 

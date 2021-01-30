@@ -1,41 +1,39 @@
-import sqlite3 from "sqlite3";
-const util    = require('util');
-
-const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
-
-db.run = util.promisify(db.run);
-db.get = util.promisify(db.get);
+import { DB } from "./DB";
+const db = new DB();
+const table = 'customers';
 export class Customer{
 
-    async create(c){
-        let resolved = false;
-        let sql = "insert into customers (name,address,phone,locality_id)values(?,?,?,?)";
-        let response = db.run(sql, [c.name, c.address, c.phone, c.locality_id]);
+    async create(customer){
+        let array = [
+            {
+                name: customer[0],
+                phone: customer[1],
+                address: customer[2],
+                locality_id: customer[3],
+            }
+        ]
 
-        await response.then(()=>{
-            resolved = true;
-        }).catch((error)=>{
-            resolved = error.errno
-        })
+        let response = await db.insert(table, array)
 
-        return resolved
+        return response
     }
 
     async find(phone){
-        let sql = "select * from customers where phone = ?";
-        let response = await db.get(sql, [phone]);
+        let sql = ` select c.*, l.name as locality from customers c 
+                    join localities l on l.id = c.locality_id
+                    where phone = '${phone}'`;
+        let response = await db.select(table, sql);
 
         return response;
     }
 
     async update(customer){
-        let resolved = false;
-        let sql = "UPDATE customers SET name = ? ,address = ?, phone = ?, locality_id = ? where phone = ?";
+        let sql = ` UPDATE ${table} SET name = '${customer[0]}', phone = '${customer[1]}', 
+                    address = '${customer[2]}', locality_id = ${customer[3]},
+                    updated_at = now() WHERE phone = '${customer[1]}'`
 
-        await db.run(sql, [customer.name, customer.address, customer.phone, customer.locality_id, customer.phone]).then(()=>{
-            resolved = true
-        })
+        let response = await db.execute(sql)
 
-        return resolved;
+        return response;
     }
 }

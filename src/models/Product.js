@@ -12,6 +12,15 @@ export class Product {
         return await db.select(table);
     }
 
+    async findByLocalityPhone(phone){
+        let sql = ` SELECT p.* FROM customers c 
+        JOIN localities l ON l.id = c.locality_id
+        JOIN products p ON p.id = l.product_id WHERE phone = '${phone}'`
+        let product = await db.select(table, sql);
+
+        return product;
+    }
+
     async find(id){
         let resolved = false;
         let sql = "SELECT * FROM products where id = " + id;

@@ -83,6 +83,7 @@ export class DB{
         return new Promise(function(resolve, reject){
             con.query(sql, function(err, result) {
                 if(err){
+                    console.log(err)
                     resolve(false)
                 }
                 resolve(true)
