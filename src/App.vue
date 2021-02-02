@@ -31,6 +31,7 @@
                     <th class="text-center" scope="col">Valor</th>
                     <th class="text-center" scope="col">Quantidade</th>
                     <th class="text-center" scope="col">Valor parcial</th>
+                    <th class="text-center" scope="col">Opções</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -40,6 +41,9 @@
                     <td class="text-center">{{parseFloat(i.price).toFixed(2).replace('.', ',')}}</td>
                     <td class="text-center">{{i.qtd}}</td>
                     <td class="text-center">{{parseFloat(i.qtd * i.price).toFixed(2).replace('.', ',')}}</td>
+                    <td class="text-center">
+                        <b-icon style="cursor: pointer;" @click="removeItem(index)" variant="danger" icon="trash-fill" aria-hidden="true"></b-icon>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -81,6 +85,7 @@
                     <th class="text-center" scope="col">Valor</th>
                     <th class="text-center" scope="col">Quantidade</th>
                     <th class="text-center" scope="col">Valor parcial</th>
+                    <th class="text-center" scope="col">Opções</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -90,6 +95,9 @@
                     <td class="text-center">{{parseFloat(i.price).toFixed(2).replace('.', ',')}}</td>
                     <td class="text-center">{{i.qtd}}</td>
                     <td class="text-center">{{parseFloat(i.qtd * i.price).toFixed(2).replace('.', ',')}}</td>
+                    <td class="text-center">
+                      <button @click="removeItem(index)">Remover</button>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -169,6 +177,7 @@ import { Customer } from "./models/Customer";
 import {mixins} from './mixins/mixins';
 import Swal from 'sweetalert2';
 Vue.use(BootstrapVue)
+Vue.use(IconsPlugin)
 
 // const db = new DB().createDatabase();
 const product = new Product();
@@ -235,6 +244,20 @@ const cashier = new Cashier();
       });
     },
     methods: {
+
+      removeItem(index){
+        Swal.fire({
+          title:"Remover item?",
+          icon:"warning",
+          showCancelButton:true,
+          cancelButtonText:"Cancelar"
+        }).then((result)=>{
+          if(result.isConfirmed){
+            this.cart.splice(index, 1)
+          }
+        })
+      },
+
       changeTab(tabIndex){
         if(tabIndex == 1){
           this.initDeliveryOrder();
@@ -307,7 +330,8 @@ const cashier = new Cashier();
                   prod[0].qtd = 1
                   this.cart.push(JSON.parse(JSON.stringify(prod[0])))
                 }else if(result.isDismissed){
-                  this.initDeliveryOrder()
+                  // this.initDeliveryOrder()
+                  this.custom = {}
                 }
               })
           })
