@@ -94,9 +94,9 @@
             <b-row class="w-50 p-3 mh-100">
               <b-col cols="10">
                 <b-form-input
+                  id="input-product-delivery"
                   v-model="search"
                   list="producs"
-                  id="input-product"
                 ></b-form-input>
                 <datalist id="producs">
                   <option v-for="(p, i) in products" :value="p.name" :key="i">
@@ -109,7 +109,7 @@
                   type="number"
                   min="1"
                   value="1"
-                  id="input-qtd"
+                  id="input-qtd-delivery"
                 ></b-form-input>
               </b-col>
             </b-row>
@@ -271,6 +271,7 @@ export default {
   data() {
     return {
       tabIndex: 0,
+      tab:0,
       products: [],
       localities: [],
       cart: [],
@@ -295,19 +296,23 @@ export default {
     // await ws.loadAll();
     document.addEventListener("keypress", async (e) => {
       if (e.key === "Enter") {
-        var inputProduct = document.getElementById("input-product");
-        var inputQtd = document.getElementById("input-qtd");
-        if (inputProduct === document.activeElement) {
-          if (inputProduct.value == "") {
+        console.log(this.tab)
+        if(this.tab === 0){
+          var inputProduct = document.getElementById("input-product");
+          var inputQtd = document.getElementById("input-qtd");
+          if (inputProduct === document.activeElement) {
+            if (inputProduct.value == "") {
+              return;
+            }
+            inputQtd.focus();
             return;
           }
-          inputQtd.focus();
-          return;
-        }
-        if (inputQtd === document.activeElement) {
-          if (inputQtd.value == "") {
-            return;
-          }
+            
+          if (inputQtd === document.activeElement) {
+            if (inputQtd.value == "") {
+              return;
+            }
+          } 
           let prod = await product.selectProdutcToCart(inputProduct.value);
           prod[0].qtd = inputQtd.value;
           this.cart.push(JSON.parse(JSON.stringify(prod[0])));
@@ -315,7 +320,32 @@ export default {
           inputProduct.value = "";
           inputQtd.value = "1";
           this.search = "";
+        }else if(this.tab === 1 && (this.custom[0] !== undefined && this.custom[0].name !== undefined)){
+          var inputProductDelivery = document.getElementById("input-product-delivery");
+          var inputQtdDelivery = document.getElementById("input-qtd-delivery");
+          if (inputProductDelivery === document.activeElement) {
+            if (inputProductDelivery.value === "") {
+              return;
+            }
+            inputQtdDelivery.focus();
+            return;
+          }
+            
+          if (inputQtdDelivery === document.activeElement) {
+            if (inputQtdDelivery.value === "") {
+              return;
+            }
+          }
+
+          let prod = await product.selectProdutcToCart(inputProductDelivery.value);
+          prod[0].qtd = inputQtdDelivery.value;
+          this.cart.push(JSON.parse(JSON.stringify(prod[0])));
+          inputProductDelivery.focus();
+          inputProductDelivery.value = "";
+          inputQtdDelivery.value = "1";
+          this.search = "";
         }
+
       }
     });
   },
@@ -334,6 +364,7 @@ export default {
     },
 
     changeTab(tabIndex) {
+      this.tab = tabIndex
       this.cart = []
       if (tabIndex == 1) {
         this.custom = {}
@@ -429,19 +460,19 @@ export default {
                 response = await customer.update(result.value);
               }
 
-              // setTimeout(async ()=>{
-              this.custom = await customer.find(phone);
-              // }, 2000)
+              setTimeout(async ()=>{
+                this.custom = await customer.find(phone);
+              }, 2000)
               let prod = await product.findByLocalityPhone(phone);
               prod[0].qtd = 1;
               this.cart.unshift(JSON.parse(JSON.stringify(prod[0])));
+              let inputProductDelivery = document.getElementById("input-product-delivery");
+              inputProductDelivery.focus()
             } else if (result.isDismissed) {
               // this.initDeliveryOrder()
               this.custom = {};
             }
             
-            let inputProd = document.getElementById("input-product");
-            inputProd.focus()
           });
         }
       });
