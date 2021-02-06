@@ -9,6 +9,10 @@ export class Helper {
         return result.max
     }
 
+    formatMoney(value){
+        return parseFloat(value).toFixed(2).replace('.', ',')
+    }
+
     formatMonetaryForDB(value) {
         let result = null;
         if (this.isString(value)) {
