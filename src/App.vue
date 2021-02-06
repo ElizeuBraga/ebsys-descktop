@@ -1,275 +1,299 @@
 <template>
-  <div style="min-height:100vh">
-      <b-tabs v-model="tabIndex" card>
-        <!--
+  <div style="min-height: 100vh">
+    <b-tabs v-model="tabIndex" card>
+      <!--
         *
         *
         * Tab countertop
       -->
-        <b-tab title="Balcão" :title-link-class="linkClass(0)" @click="changeTab(0)">
-          <b-row>
-            <b-row class="w-50 p-3 mh-100">
-              <b-col cols="10">
-                <b-form-input
-                  v-model="search"
-                  list="producs"
-                  id="input-product"
-                ></b-form-input>
-                <datalist id="producs">
-                  <option
-                    v-for="(p, index) in products"
-                    :value="p.name"
-                    :key="index"
-                  >
-                    {{ parseFloat(p.price).toFixed(2).replace(".", ",") }}
-                  </option>
-                </datalist>
-              </b-col>
-              <b-col cols="2">
-                <b-form-input
-                  type="number"
-                  min="1"
-                  value="1"
-                  id="input-qtd"
-                ></b-form-input>
-              </b-col>
-            </b-row>
-            <b-row class="w-50 p-3">
-              <b-col>
-                <table class="table table-striped table-responsive">
-                  <thead>
-                    <tr>
-                      <th scope="col">#</th>
-                      <th scope="col">Produto</th>
-                      <th class="text-center" scope="col">Valor</th>
-                      <th class="text-center" scope="col">Quantidade</th>
-                      <th class="text-center" scope="col">Valor parcial</th>
-                      <th class="text-center" scope="col">Opções</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(i, index) in cart" :key="index">
-                      <th scope="row">{{ index + 1 }}</th>
-                      <td>{{ i.name }}</td>
-                      <td class="text-center">
-                        {{ parseFloat(i.price).toFixed(2).replace(".", ",") }}
-                      </td>
-                      <td class="text-center">{{ i.qtd }}</td>
-                      <td class="text-center">
-                        {{
-                          parseFloat(i.qtd * i.price)
-                            .toFixed(2)
-                            .replace(".", ",")
-                        }}
-                      </td>
-                      <td class="text-center">
-                        <b-icon
-                          style="cursor: pointer"
-                          @click="removeItem(index)"
-                          variant="danger"
-                          icon="trash-fill"
-                          aria-hidden="true"
-                        ></b-icon>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div class="row" style="background:red">
-                  <div class="col-4"></div>
-                  <div class="col-4"></div>
-                  <div class="col-4">R$ {{formatMoney(computedOrderAmount)}}</div>
-                </div>
-              </b-col>
-            </b-row>
+      <b-tab
+        title="Balcão"
+        :title-link-class="linkClass(0)"
+        @click="changeTab(0)"
+      >
+        <b-row>
+          <b-row class="w-50 p-3 mh-100">
+            <b-col cols="10">
+              <b-form-input
+                v-model="search"
+                list="producs"
+                id="input-product"
+              ></b-form-input>
+              <datalist id="producs">
+                <option
+                  v-for="(p, index) in products"
+                  :value="p.name"
+                  :key="index"
+                >
+                  {{ parseFloat(p.price).toFixed(2).replace(".", ",") }}
+                </option>
+              </datalist>
+            </b-col>
+            <b-col cols="2">
+              <b-form-input
+                type="number"
+                min="1"
+                value="1"
+                id="input-qtd"
+              ></b-form-input>
+            </b-col>
           </b-row>
-        </b-tab>
+          <b-row class="w-50 p-3">
+            <b-col>
+              <table class="table table-striped table-responsive">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Produto</th>
+                    <th class="text-center" scope="col">Valor</th>
+                    <th class="text-center" scope="col">Quantidade</th>
+                    <th class="text-center" scope="col">Valor parcial</th>
+                    <th class="text-center" scope="col">Opções</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(i, index) in cart" :key="index">
+                    <th scope="row">{{ index + 1 }}</th>
+                    <td>{{ i.name }}</td>
+                    <td class="text-center">
+                      {{ parseFloat(i.price).toFixed(2).replace(".", ",") }}
+                    </td>
+                    <td class="text-center">{{ i.qtd }}</td>
+                    <td class="text-center">
+                      {{
+                        parseFloat(i.qtd * i.price)
+                          .toFixed(2)
+                          .replace(".", ",")
+                      }}
+                    </td>
+                    <td class="text-center">
+                      <b-icon
+                        style="cursor: pointer"
+                        @click="removeItem(index)"
+                        variant="danger"
+                        icon="trash-fill"
+                        aria-hidden="true"
+                      ></b-icon>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="row" style="background: red">
+                <div class="col-4"></div>
+                <div class="col-4"></div>
+                <div class="col-4">
+                  R$ {{ formatMoney(computedOrderAmount) }}
+                </div>
+              </div>
+            </b-col>
+          </b-row>
+        </b-row>
+      </b-tab>
 
-        <!--
+      <!--
         *
         *
         * Tab deliveries
         -->
-        <b-tab
-          title="Entregas"
-          :title-link-class="linkClass(1)"
-          @click="changeTab(1)"
-        >
-          <b-row>
-            <b-row class="w-50 p-3 mh-100">
-              <b-col cols="10">
-                <b-form-input
-                  id="input-product-delivery"
-                  v-model="search"
-                  list="producs"
-                ></b-form-input>
-                <datalist id="producs">
-                  <option v-for="(p, i) in products" :value="p.name" :key="i">
-                    {{ parseFloat(p.price).toFixed(2).replace(".", ",") }}
-                  </option>
-                </datalist>
-              </b-col>
-              <b-col cols="2">
-                <b-form-input
-                  type="number"
-                  min="1"
-                  value="1"
-                  id="input-qtd-delivery"
-                ></b-form-input>
-              </b-col>
-            </b-row>
-            <b-row class="w-50 p-3">
-              <b-col>
-                <div v-if="custom.length > 0" class="text-center">
-                  <span>{{ custom[0].name }} - {{ custom[0].phone }}</span
-                  ><br />
-                  <span
-                    >{{ custom[0].address }} - {{ custom[0].locality }}</span
-                  >
-                </div>
-                <table class="table table-striped">
-                  <thead>
-                    <tr>
-                      <th scope="col">#</th>
-                      <th scope="col">Produto</th>
-                      <th class="text-center" scope="col">Valor</th>
-                      <th class="text-center" scope="col">Quantidade</th>
-                      <th class="text-center" scope="col">Valor parcial</th>
-                      <th class="text-center" scope="col">Opções</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(i, index) in cart" :key="index">
-                      <th scope="row">{{ index + 1 }}</th>
-                      <td>{{ i.name }}</td>
-                      <td class="text-center">
-                        {{ parseFloat(i.price).toFixed(2).replace(".", ",") }}
-                      </td>
-                      <td class="text-center">{{ i.qtd }}</td>
-                      <td class="text-center">
-                        {{
-                          parseFloat(i.qtd * i.price)
-                            .toFixed(2)
-                            .replace(".", ",")
-                        }}
-                      </td>
-                      <td class="text-center">
-                        <b-icon
-                          style="cursor: pointer"
-                          @click="removeItem(index)"
-                          variant="danger"
-                          icon="trash-fill"
-                          aria-hidden="true"
-                        ></b-icon>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </b-col>
-            </b-row>
+      <b-tab
+        title="Entregas"
+        :title-link-class="linkClass(1)"
+        @click="changeTab(1)"
+      >
+        <b-row>
+          <b-row class="w-50 p-3 mh-100">
+            <b-col cols="10">
+              <b-form-input
+                id="input-product-delivery"
+                v-model="search"
+                list="producs"
+              ></b-form-input>
+              <datalist id="producs">
+                <option v-for="(p, i) in products" :value="p.name" :key="i">
+                  {{ parseFloat(p.price).toFixed(2).replace(".", ",") }}
+                </option>
+              </datalist>
+            </b-col>
+            <b-col cols="2">
+              <b-form-input
+                type="number"
+                min="1"
+                value="1"
+                id="input-qtd-delivery"
+              ></b-form-input>
+            </b-col>
           </b-row>
-        </b-tab>
+          <b-row class="w-50 p-3">
+            <b-col>
+              <div v-if="custom.length > 0" class="text-center">
+                <span>{{ custom[0].name }} - {{ custom[0].phone }}</span
+                ><br />
+                <span>{{ custom[0].address }} - {{ custom[0].locality }}</span>
+              </div>
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Produto</th>
+                    <th class="text-center" scope="col">Valor</th>
+                    <th class="text-center" scope="col">Quantidade</th>
+                    <th class="text-center" scope="col">Valor parcial</th>
+                    <th class="text-center" scope="col">Opções</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(i, index) in cart" :key="index">
+                    <th scope="row">{{ index + 1 }}</th>
+                    <td>{{ i.name }}</td>
+                    <td class="text-center">
+                      {{ parseFloat(i.price).toFixed(2).replace(".", ",") }}
+                    </td>
+                    <td class="text-center">{{ i.qtd }}</td>
+                    <td class="text-center">
+                      {{
+                        parseFloat(i.qtd * i.price)
+                          .toFixed(2)
+                          .replace(".", ",")
+                      }}
+                    </td>
+                    <td class="text-center">
+                      <b-icon
+                        style="cursor: pointer"
+                        @click="removeItem(index)"
+                        variant="danger"
+                        icon="trash-fill"
+                        aria-hidden="true"
+                      ></b-icon>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </b-col>
+          </b-row>
+        </b-row>
+      </b-tab>
 
-        <!--
+      <!--
         *
         *
         * Tab cashiers
         -->
-        <b-tab title="Meus caixas" :title-link-class="linkClass(2)" @click="changeTab(2)">
-          <b-row v-if="cashierIsOpen">
-            <b-col cols="8" class="text-success"> Caixa aberto </b-col>
-            <b-col cols="4" class="text-right">
-              <button
-                class="btn btn-primary m-2"
-                @click="getCashiers((byDate = true))"
-              >
-                Buscar
-              </button>
-              <button class="btn btn-danger" @click="closeCashier">
-                Fechar caixa
-              </button>
-            </b-col>
-          </b-row>
-          <b-row v-if="!cashierIsOpen">
-            <b-col cols="8" class="text-danger"> Caixa fechado </b-col>
-            <b-col cols="4" class="text-right">
-              <button
-                class="btn btn-primary m-2"
-                @click="getCashiers((byDate = true))"
-              >
-                Buscar
-              </button>
-              <button class="btn btn-success" @click="openCashier">
-                Abrir caixa
-              </button>
-            </b-col>
-          </b-row>
+      <b-tab
+        title="Meus caixas"
+        :title-link-class="linkClass(2)"
+        @click="changeTab(2)"
+      >
+        <b-row v-if="cashierIsOpen">
+          <b-col cols="8" class="text-success"> Caixa aberto </b-col>
+          <b-col cols="4" class="text-right">
+            <button
+              class="btn btn-primary m-2"
+              @click="getCashiers((byDate = true))"
+            >
+              Buscar
+            </button>
+            <button class="btn btn-danger" @click="closeCashier">
+              Fechar caixa
+            </button>
+          </b-col>
+        </b-row>
+        <b-row v-if="!cashierIsOpen">
+          <b-col cols="8" class="text-danger"> Caixa fechado </b-col>
+          <b-col cols="4" class="text-right">
+            <button
+              class="btn btn-primary m-2"
+              @click="getCashiers((byDate = true))"
+            >
+              Buscar
+            </button>
+            <button class="btn btn-success" @click="openCashier">
+              Abrir caixa
+            </button>
+          </b-col>
+        </b-row>
 
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th class="text-center" scope="col">Data</th>
-                <th class="text-center" scope="col">Valor</th>
-                <th class="text-center" scope="col">Fechado por</th>
-                <th class="text-center" scope="col">Data fechamento</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="text-center text-danger" v-if="cashiers.length == 0">
-                <th></th>
-                <th></th>
-                <th>Nenhum registro encontrado</th>
-                <th></th>
-              </tr>
-              <tr
-                v-else
-                style="cursor: pointer"
-                title="Clique para mais informações"
-                v-for="(c, index) in cashiers"
-                :key="index"
-                @click="cashierInfo(c.id)"
-              >
-                <th class="text-center" scope="row">{{ c.created_at }}</th>
-                <td class="text-center">
-                  {{ parseFloat(c.value).toFixed(2).replace(".", ",") }}
-                </td>
-                <td class="text-center">{{ c.user_name }}</td>
-                <td class="text-center">{{ c.updated_at }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </b-tab>
-      </b-tabs>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th class="text-center" scope="col">Data</th>
+              <th class="text-center" scope="col">Valor</th>
+              <th class="text-center" scope="col">Fechado por</th>
+              <th class="text-center" scope="col">Data fechamento</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="text-center text-danger" v-if="cashiers.length == 0">
+              <th></th>
+              <th></th>
+              <th>Nenhum registro encontrado</th>
+              <th></th>
+            </tr>
+            <tr
+              v-else
+              style="cursor: pointer"
+              title="Clique para mais informações"
+              v-for="(c, index) in cashiers"
+              :key="index"
+              @click="cashierInfo(c.id)"
+            >
+              <th class="text-center" scope="row">{{ c.created_at }}</th>
+              <td class="text-center">
+                {{ parseFloat(c.value).toFixed(2).replace(".", ",") }}
+              </td>
+              <td class="text-center">{{ c.user_name }}</td>
+              <td class="text-center">{{ c.updated_at }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </b-tab>
+    </b-tabs>
 
-      <footer class="footer">
-        <div class="row">
-          <div class="col-4">
-            <!-- <button class="btn btn-primary">Abrir caixa</button> -->
-          </div>
-          <div class="col-4">
-            <!-- <button class="btn btn-primary">Receber pedido</button> -->
-          </div>
-          <div class="col-4">
-            <button v-if="tab == 0" class="btn btn-primary" :title="infoForBtnReceive" @click="closeOrder" :disabled="receiveDisabled">Encerrar pedido (F9)</button>
-            <button v-if="tab == 1" class="btn btn-primary" :title="infoForBtnReceive" @click="closeOrder" :disabled="receiveDisabled">Encerrar delivery</button>
-          </div>
+    <footer class="footer">
+      <div class="row">
+        <div class="col-4">
+          <!-- <button class="btn btn-primary">Abrir caixa</button> -->
         </div>
-      </footer>
-    </div>
+        <div class="col-4">
+          <!-- <button class="btn btn-primary">Receber pedido</button> -->
+        </div>
+        <div class="col-4">
+          <button
+            v-if="tab == 0"
+            class="btn btn-primary"
+            :title="infoForBtnReceive"
+            @click="closeOrder"
+            :disabled="receiveDisabled"
+          >
+            Encerrar pedido (F9)
+          </button>
+          <button
+            v-if="tab == 1"
+            class="btn btn-primary"
+            :title="infoForBtnReceive"
+            @click="closeOrder"
+            :disabled="receiveDisabled"
+          >
+            Encerrar delivery
+          </button>
+        </div>
+      </div>
+    </footer>
+  </div>
 </template>
 <style>
 .table-responsive {
-    max-height:800px;
-    min-height:800px;
+  max-height: 800px;
+  min-height: 800px;
 }
 .footer {
-   position: fixed;
-   left: 0;
-   bottom: 0;
-   margin-bottom: 5px;
-   padding-top: 5px;
-   width: 100%;
-   background: rgba(0, 0, 0, 0.03);
-   text-align: center;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  margin-bottom: 5px;
+  padding-top: 5px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.03);
+  text-align: center;
 }
 </style>
 <script>
@@ -303,10 +327,10 @@ export default {
   // mixins:[mixins],
   data() {
     return {
-      paymentInfo:[],
+      paymentInfo: [],
       receiving: false,
       tabIndex: 0,
-      tab:0,
+      tab: 0,
       products: [],
       localities: [],
       cart: [],
@@ -329,163 +353,152 @@ export default {
     this.localities = await locality.all();
     this.initLoginProccess();
     // await ws.loadAll();
-    
-    document.addEventListener("keypress", async (e) => {
-      if(e.key === 'Enter'){
-        if(this.tab === 0 || this.tab === 1){
-          let inputProd = document.getElementById('input-product');
-        let inputQtd = document.getElementById('input-qtd');
 
-        if(this.tab === 1){
-          inputProd = document.getElementById('input-product-delivery');
-          inputQtd = document.getElementById('input-qtd-delivery');
-        }
-        
-        if(inputProd.value !== ""){
-          if(inputQtd === document.activeElement){
-            inputProd.focus();
-            let inputProdValue = inputProd.value; 
-            let inputQtdValue = inputQtd.value;
-            inputQtd.value = 1
-            inputProd.value = ""
-            this.insertProdInCart(inputProdValue,inputQtdValue)
-            return
+    document.addEventListener("keypress", async (e) => {
+      if (e.key === "Enter") {
+        if (this.tab === 0 || this.tab === 1) {
+          let inputProd = document.getElementById("input-product");
+          let inputQtd = document.getElementById("input-qtd");
+
+          if (this.tab === 1) {
+            inputProd = document.getElementById("input-product-delivery");
+            inputQtd = document.getElementById("input-qtd-delivery");
           }
-          inputQtd.focus();
+
+          if (inputProd.value !== "") {
+            if (inputQtd === document.activeElement) {
+              inputProd.focus();
+              let inputProdValue = inputProd.value;
+              let inputQtdValue = inputQtd.value;
+              inputQtd.value = 1;
+              inputProd.value = "";
+              this.insertProdInCart(inputProdValue, inputQtdValue);
+              return;
+            }
+            inputQtd.focus();
+          }
         }
       }
-    }
-      // if (e.key === "Enter") {
-        //   console.log(this.receiving)
-      //   if(this.receiving){
-        //     if(this.computedOrderAmount){
-          //       this.closeOrder()
-      //     }
-      //     return
-      //   }
-      //   if(this.tab === 0){
-        //     var inputProduct = document.getElementById("input-product");
-      //     var inputQtd = document.getElementById("input-qtd");
-      //     if (inputProduct === document.activeElement) {
-        //       if (inputProduct.value == "") {
-          //         return;
-      //       }
-      //       inputQtd.focus();
-      //       return;
-      //     }
-            
-      //     if (inputQtd === document.activeElement) {
-        //       if (inputQtd.value == "") {
-          //         return;
-      //       }
-      //     } 
-      //     let prod = await product.selectProdutcToCart(inputProduct.value);
-      //     prod[0].qtd = inputQtd.value;
-      //     this.cart.push(JSON.parse(JSON.stringify(prod[0])));
-      //     inputProduct.focus();
-      //     inputProduct.value = "";
-      //     inputQtd.value = "1";
-      //     this.search = "";
-      //   }else if(this.tab === 1 && (this.custom[0] !== undefined && this.custom[0].name !== undefined)){
-      //     var inputProductDelivery = document.getElementById("input-product-delivery");
-      //     var inputQtdDelivery = document.getElementById("input-qtd-delivery");
-      //     if (inputProductDelivery === document.activeElement) {
-      //       if (inputProductDelivery.value === "") {
-      //         return;
-      //       }
-      //       inputQtdDelivery.focus();
-      //       return;
-      //     }
-            
-      //     if (inputQtdDelivery === document.activeElement) {
-      //       if (inputQtdDelivery.value === "") {
-      //         return;
-      //       }
-      //     }
-
-      //     let prod = await product.selectProdutcToCart(inputProductDelivery.value);
-      //     prod[0].qtd = inputQtdDelivery.value;
-      //     this.cart.push(JSON.parse(JSON.stringify(prod[0])));
-      //     inputProductDelivery.focus();
-      //     inputProductDelivery.value = "";
-      //     inputQtdDelivery.value = "1";
-      //     this.search = "";
-      //   }
-
-      // }
     });
   },
   methods: {
-    formatMoney(value){
-      return helper.formatMoney(value)
+    formatMoney(value) {
+      return helper.formatMoney(value);
     },
 
-    async insertProdInCart(inputProdValue, inputQtdValue){
+    async insertProdInCart(inputProdValue, inputQtdValue) {
       let prod = await product.selectProdutcToCart(inputProdValue);
       prod[0].qtd = inputQtdValue;
       this.cart.push(JSON.parse(JSON.stringify(prod[0])));
       // inputProduct.value = "";
       // inputQtd.value = "1";
       // this.search = "";
-      
+
       // inputProd.value = "";
-      console.log('Inserido no carrinho')
+      console.log("Inserido no carrinho");
     },
 
-    closeOrder(){
+    closeOrder() {
       this.receiving = true;
-      let html ='<select id="swal2-select" class="swal2-select" name=""><option selected value disabled>Selecione</option>';
+      let html =
+        '<select id="swal2-select" class="swal2-select" name=""><option selected value disabled>Selecione</option>';
       this.paymentsFormats.forEach((element) => {
         html +=
           '<option value="' + element.name + '">' + element.name + "</option>";
       });
       html += '<input id="swal-input1" placeholder="Nome" class="swal2-input">';
 
-      this.paymentInfo.forEach(element => {
-        html += `<span>${Object.keys(element)} - ${helper.formatMoney(Object.values(element))}</span><br>`
-      });
+      html += "<div class='row'>";
+      html += "<div class='col-6 text-left'>";
+      html += "Total a receber: "
+      html += "</div>";
+      html += "<div class='col-6 text-right'>";
+      html += helper.formatMoney(this.computedOrderAmount);
+      html += "</div>";
+      html += "</div>";
 
-      html += 'Total: ' + helper.formatMoney(this.computedPaymentAmount) + "<br>"
-      html += 'Falta: ' + helper.formatMoney(this.computedOrderAmount - this.computedPaymentAmount)
+      html += '<hr>';
+      html += "<div class='row'>";
+      if(this.computedPaymentAmount > 0){
+        this.paymentInfo.forEach((element) => {
+          html += "<div class='col-6 text-left'>";
+          html += Object.keys(element)
+          html += "</div>";
+          html += "<div class='col-6 text-right'>";
+          html += helper.formatMoney(Object.values(element))
+          html += "</div>";
+        });
+      }else{
+        html += "<div class='col-12 text-center text-danger'>";
+        html += "Nehum valor lançado";
+        html += "</div>";
+      }
+      html += "</div>";
+
+      html += '<hr>';
+      html += "<div class='row'>";
+      html += "<div class='col-6 text-left'>";
+      html += "Total recebido: ";
+      html += "</div>";
+      html += "<div class='col-6 text-right'>";
+      html += helper.formatMoney(this.computedPaymentAmount)
+      html += "</div>";
+      html += "</div>";
+      
+      if(this.computedMissedAmount > 0){
+        html += "<div class='row'>";
+        html += "<div class='col-6 text-left'>";
+        html += "Falta: ";
+        html += "</div>";
+        html += "<div class='col-6 text-right'>";
+        html += this.formatMoney(this.computedMissedAmount)
+        html += "</div>";
+        html += "</div>";
+      }
+
+      if(this.computedChangeAmount > 0){
+        html += "<div class='row'>";
+        html += "<div class='col-6 text-left'>";
+        html += "Troco: ";
+        html += "</div>";
+        html += "<div class='col-6 text-right'>";
+        html += this.formatMoney(this.computedChangeAmount)
+        html += "</div>";
+        html += "</div>";
+      }
       Swal.fire({
-        title:"Informações de pagamento",
-        html:html,
-        didOpen:()=>{
-            document.getElementById('swal2-select').focus();
+        title: "Informações de pagamento",
+        showCancelButton:true,
+        cancelButtonText:"Cancelar",
+        html: html,
+        didOpen: () => {
+          document.getElementById("swal2-select").focus();
         },
-        preConfirm:()=>{
-          let format = document.getElementById('swal2-select').value;
-          let value = document.getElementById('swal-input1').value;
+        preConfirm: () => {
+          let format = document.getElementById("swal2-select").value;
+          let value = document.getElementById("swal-input1").value;
 
-          if(format === ""){
-            Swal.showValidationMessage('Informe uma forma de recebimento')
-          }else if(value === ""){
-            Swal.showValidationMessage('Informe um valor')
+          if (format === "") {
+            Swal.showValidationMessage("Informe uma forma de recebimento");
+          } else if (value === "") {
+            Swal.showValidationMessage("Informe um valor");
           }
-          return {[format]:parseFloat(value)};
+          return { [format]: parseFloat(value) };
         },
-        allowEnterKey:true
-      }).then((result)=>{
+        allowEnterKey: true,
+      }).then((result) => {
+        if(result.isConfirmed){
+          this.paymentInfo.push(result.value);
+          this.receiving = false;
+          document.getElementById("input-product").focus();
 
-        this.paymentInfo.push(result.value)
-        this.receiving = false
-        document.getElementById('input-product').focus();
-        console.log('Modal fecho')
-
-        let title = "";
-        if(this.computedPaymentAmount < this.computedOrderAmount){
-          this.closeOrder();
-        }else if(this.computedPaymentAmount > this.computedOrderAmount){
-          let moneyBack = helper.formatMoney(this.computedPaymentAmount - this.computedOrderAmount)
-          Swal.fire({
-            title: "Troco",
-            html: `<span>${moneyBack}<span>`
-          })
-        }else{
-          title = "Pode fechar"
+          if (this.computedPaymentAmount < this.computedOrderAmount) {
+            this.closeOrder();
+          }
+        }else if(result.isDismissed){
+          this.paymentInfo = []
         }
-
-      })
+      });
     },
 
     removeItem(index) {
@@ -502,15 +515,15 @@ export default {
     },
 
     changeTab(tabIndex) {
-      this.tab = tabIndex
-      this.cart = []
+      this.tab = tabIndex;
+      this.cart = [];
       if (tabIndex == 1) {
-        this.custom = {}
+        this.custom = {};
         this.initDeliveryOrder();
-      }else if(tabIndex == 0){
-        setTimeout(()=>{
-          document.getElementById('input-product').focus();
-        }, 200)
+      } else if (tabIndex == 0) {
+        setTimeout(() => {
+          document.getElementById("input-product").focus();
+        }, 200);
       }
     },
 
@@ -526,8 +539,8 @@ export default {
         inputPlaceholder: "Telefone do cliente",
         showCancelButton: true,
         cancelButtonText: "Cancelar",
-        inputAttributes:{
-          maxlength: 11
+        inputAttributes: {
+          maxlength: 11,
         },
         preConfirm: (value) => {
           if (!value) {
@@ -584,10 +597,10 @@ export default {
               locality = document.getElementById("swal2-select").value;
               // }
 
-              if(name == '' || phone == '' || address == ''){
-                Swal.showValidationMessage('Preencha todos os campos')
-              }else if(locality == ''){
-                Swal.showValidationMessage('Escolha uma localidade')
+              if (name == "" || phone == "" || address == "") {
+                Swal.showValidationMessage("Preencha todos os campos");
+              } else if (locality == "") {
+                Swal.showValidationMessage("Escolha uma localidade");
               }
               let arraData = [name, phone, address, locality];
 
@@ -602,19 +615,20 @@ export default {
                 response = await customer.update(result.value);
               }
 
-              setTimeout(async ()=>{
+              setTimeout(async () => {
                 this.custom = await customer.find(phone);
-              }, 2000)
+              }, 2000);
               let prod = await product.findByLocalityPhone(phone);
               prod[0].qtd = 1;
               this.cart.unshift(JSON.parse(JSON.stringify(prod[0])));
-              let inputProductDelivery = document.getElementById("input-product-delivery");
-              inputProductDelivery.focus()
+              let inputProductDelivery = document.getElementById(
+                "input-product-delivery"
+              );
+              inputProductDelivery.focus();
             } else if (result.isDismissed) {
               // this.initDeliveryOrder()
               this.custom = {};
             }
-            
           });
         }
       });
@@ -698,22 +712,18 @@ export default {
         confirmButtonText: "Entrar",
         didOpen: () => {
           let inputEmail = document.getElementById("swal-input1");
-          inputEmail.value = localStorage.getItem(
-            "email_phone"
-          );
+          inputEmail.value = localStorage.getItem("email_phone");
 
           // remove later
-          let inputPass = document.getElementById("swal-input2")
+          let inputPass = document.getElementById("swal-input2");
 
-          inputPass.value = localStorage.getItem(
-            "password"
-          );
+          inputPass.value = localStorage.getItem("password");
 
-          setTimeout(()=>{
-            if(inputPass.value !== '' && inputEmail.value !== ''){
-              document.querySelector('.swal2-confirm').focus();
+          setTimeout(() => {
+            if (inputPass.value !== "" && inputEmail.value !== "") {
+              document.querySelector(".swal2-confirm").focus();
             }
-          }, 200)
+          }, 200);
           if (localStorage.getItem("email_phone")) {
             let value3 = (document.getElementById(
               "swal-input3"
@@ -744,7 +754,7 @@ export default {
           // remove later
           localStorage.setItem("password", result.value[1]);
 
-          document.getElementById('input-product').focus();
+          document.getElementById("input-product").focus();
         } else {
           localStorage.removeItem("password");
         }
@@ -782,7 +792,7 @@ export default {
         showDenyButton: true,
         didOpen: () => {
           let btnConfirm = document.querySelector(".swal2-confirm");
-          
+
           btnConfirm.addEventListener("click", () => {
             keepOpen = true;
           });
@@ -909,41 +919,46 @@ export default {
   },
 
   computed: {
-    computedPaymentAmount(){
+    computedMissedAmount(){
+      let total = this.computedOrderAmount - this.computedPaymentAmount
+      
+      return total; 
+    },
+    computedPaymentAmount() {
       let total = 0;
-      let values = []
+      let values = [];
 
-      this.paymentInfo.forEach(element => {
-        values.push(Object.values(element)[0])
-      });
-
-      values.forEach(element => {
-        total += parseFloat(element)
+      this.paymentInfo.forEach((element) => {
+        total += parseFloat(Object.values(element)[0]);
       });
 
       return total;
     },
-    
-    computedOrderAmount(){
+
+    computedOrderAmount() {
       let total = 0;
-      this.cart.forEach(element => {
-        total += parseFloat(element.price) * element.qtd
+      this.cart.forEach((element) => {
+        total += parseFloat(element.price) * element.qtd;
       });
       return total;
     },
 
-    infoForBtnReceive(){
-      if(!this.cashierIsOpen){
-        return "Caixa fechado"
+    computedChangeAmount(){
+      return this.computedPaymentAmount - this.computedOrderAmount;
+    },
+
+    infoForBtnReceive() {
+      if (!this.cashierIsOpen) {
+        return "Caixa fechado";
       }
-      if(this.cart == 0){
+      if (this.cart == 0) {
         return "Pedido vazio";
       }
     },
 
-    receiveDisabled(){
+    receiveDisabled() {
       return this.cart.length == 0;
-    }
+    },
   },
   watch: {
     async search(e) {
