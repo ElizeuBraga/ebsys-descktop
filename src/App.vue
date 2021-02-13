@@ -470,9 +470,15 @@ export default {
         title: "Informações de pagamento",
         showCancelButton:true,
         cancelButtonText:"Cancelar",
+        showDenyButton: true,
+        denyButtonText:"Finalizar pagamento",
         html: html,
         didOpen: () => {
           document.getElementById("swal2-select").focus();
+
+          if(this.computedMissedAmount > 0){
+            Swal.getDenyButton().disabled = true
+          }
         },
         preConfirm: () => {
           let format = document.getElementById("swal2-select").value;
@@ -480,8 +486,10 @@ export default {
 
           if (format === "") {
             Swal.showValidationMessage("Informe uma forma de recebimento");
+            Swal.getDenyButton().disabled = true
           } else if (value === "") {
             Swal.showValidationMessage("Informe um valor");
+            Swal.getDenyButton().disabled = true
           }
           return { [format]: parseFloat(value) };
         },
@@ -491,12 +499,21 @@ export default {
           this.paymentInfo.push(result.value);
           this.receiving = false;
           document.getElementById("input-product").focus();
-
-          if (this.computedPaymentAmount < this.computedOrderAmount) {
-            this.closeOrder();
-          }
+          this.closeOrder();
         }else if(result.isDismissed){
           this.paymentInfo = []
+        }else{
+          // this.paymentInfo = []
+          Swal.fire({
+            icon:"question",
+            title:"Finalizar recebimento?",
+            showCancelButton: true,
+            cancelButtonText:"Cancelar"
+          }).then((result)=>{
+            if(result.isDismissed){
+              this.closeOrder()
+            }
+          })
         }
       });
     },
