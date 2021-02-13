@@ -309,6 +309,8 @@ import { Cashier } from "./models/Cashier";
 import { Locality } from "./models/Locality";
 import { Helper } from "./models/Helper";
 import { Customer } from "./models/Customer";
+import { Payment } from "./models/Payment";
+import { Order } from "./models/Order";
 import { mixins } from "./mixins/mixins";
 import Swal from "sweetalert2";
 Vue.use(BootstrapVue);
@@ -323,6 +325,8 @@ const ws = new Ws();
 const db = new DB();
 const user = new User();
 const cashier = new Cashier();
+const payment = new Payment();
+const order = new Order();
 export default {
   // mixins:[mixins],
   data() {
@@ -336,21 +340,18 @@ export default {
       cart: [],
       search: "",
       cashierIsOpen: false,
-      paymentsFormats: [
-        { id: 1, collumn: "money", name: "Dinheiro" },
-        { id: 2, collumn: "debit", name: "Débito" },
-        { id: 3, collumn: "credit", name: "Crédito" },
-        { id: 4, collumn: "ticket", name: "Ticket" },
-      ],
+      paymentsFormats: [],
       cashiers: [],
       order: {},
       custom: [],
     };
   },
   async mounted() {
-    this.getCashiers();
-    await this.isOpen();
-    this.localities = await locality.all();
+    this.paymentsFormats = await payment.all();
+
+    // this.getCashiers();
+    // await this.isOpen();
+    // this.localities = await locality.all();
     this.initLoginProccess();
     // await ws.loadAll();
 
@@ -398,13 +399,13 @@ export default {
       console.log("Inserido no carrinho");
     },
 
-    closeOrder() {
+    async closeOrder() {
       this.receiving = true;
       let html =
         '<select id="swal2-select" class="swal2-select" name=""><option selected value disabled>Selecione</option>';
       this.paymentsFormats.forEach((element) => {
         html +=
-          '<option value="' + element.name + '">' + element.name + "</option>";
+          '<option value="' + element.id + '">' + element.name + "</option>";
       });
       html += '<input id="swal-input1" placeholder="Nome" class="swal2-input">';
 
@@ -420,14 +421,16 @@ export default {
       html += '<hr>';
       html += "<div class='row'>";
       if(this.computedPaymentAmount > 0){
-        this.paymentInfo.forEach((element) => {
+        for (const iterator of this.paymentInfo) {
+          const todo = await fetch(iterator);
+          let paymentName = await payment.get(Object.keys(iterator)); 
           html += "<div class='col-6 text-left'>";
-          html += Object.keys(element)
+          html += paymentName;
           html += "</div>";
           html += "<div class='col-6 text-right'>";
-          html += helper.formatMoney(Object.values(element))
+          html += helper.formatMoney(Object.values(iterator))
           html += "</div>";
-        });
+        }
       }else{
         html += "<div class='col-12 text-center text-danger'>";
         html += "Nehum valor lançado";
@@ -512,6 +515,8 @@ export default {
           }).then((result)=>{
             if(result.isDismissed){
               this.closeOrder()
+            }else if(result.isConfirmed){
+              order.create(this.cart, this.paymentInfo);
             }
           })
         }
@@ -979,13 +984,7 @@ export default {
   },
   watch: {
     async search(e) {
-      let sql =
-        "SELECT * from products where name like '%" +
-        e +
-        "%' OR price like '%" +
-        e +
-        "%' limit 20";
-      this.products = await db.select("products", sql);
+      this.products = await product.selectProdutcToCart(e);
     },
   },
 };

@@ -1,11 +1,6 @@
-import sqlite3 from "sqlite3";
-import util from 'util'
 import { Helper } from "./Helper";
-const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
-db.run = util.promisify(db.run);
-db.get = util.promisify(db.get);
-
 const helper = new Helper();
+const table = 'orders';
 export class Order {
     constructor() {
 
@@ -15,36 +10,8 @@ export class Order {
 
     }
 
-    async create(o) {
-        let customer_id = null
-        let item = {}
-        let items =[]
-        let sql = "insert into orders (cashier_id, customer_id, money, debit, credit, ticket, order_type, created_at) values(?, ?, ?, ?, ?, ?, ?,  datetime('now', 'localtime'));";
-        
-        
-        // db.run('BEGIN TRANSACTION');
-        await db.run(sql, [o.cashier_id, customer_id, o.money, o.debit, o.credit, o.ticket, o.order_type]).then(async ()=>{
-            let sqlLastRowId = "SELECT LAST_INSERT_ROWID() as order_id";
-            let order_id = await db.get(sqlLastRowId)
-            for (const i of o.items) {
-                let todo = await fetch(i)
-                item.id = null
-                item.quantity = i.quantity
-                item.product_id = i.id
-                item.price = i.price
-                item.order_id = order_id.order_id
-                
-                let itemCopy = Object.assign({}, item)
-                items.push(itemCopy)
-            }
-            
-        
-            await helper.insertMany('items', items)
-        })
-        // db.run('COMMIT');
-        if(Object.keys(o.customer).length > 0){
-            customer_id = o.customer.id
-        }
+    async create(cart, payments) {
+        console.log([cart, payments])
     }
 
     find(id) {
@@ -52,12 +19,6 @@ export class Order {
     }
 
     destroy(id){
-        let sql = "DELETE FROM orders where id = ?";
-
-        db.run(sql, [id], function(err) {
-            if (err) {
-                return console.log(err.message);
-            }
-        });
+        
     }
 }

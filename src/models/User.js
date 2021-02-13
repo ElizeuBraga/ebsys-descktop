@@ -48,7 +48,7 @@ export class User {
      */
     async auth(email_phone, password) {
         let sql = "select * from users where phone = '" + email_phone + "' OR email = '" + email_phone + "';";
-        let user = await db.select(table, sql);
+        let user = await db.select(sql);
 
         if(!user){
             return false;

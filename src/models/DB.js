@@ -56,14 +56,7 @@ export class DB{
         });
     }
 
-    async select(table, query = false){
-        let sql = ""
-        if(query){
-            sql = query;
-        }else{
-            sql = "SELECT * FROM " + table
-        }
-
+    async select(sql){
         return new Promise(function(resolve, reject){
             con.query(sql, async (err, result) => {
                 if(err){

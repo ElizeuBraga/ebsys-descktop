@@ -16,7 +16,7 @@ export class Product {
         let sql = ` SELECT p.* FROM customers c 
         JOIN localities l ON l.id = c.locality_id
         JOIN products p ON p.id = l.product_id WHERE phone = '${phone}'`
-        let product = await db.select(table, sql);
+        let product = await db.select(sql);
 
         return product;
     }
@@ -71,8 +71,8 @@ export class Product {
     }
 
     async selectProdutcToCart(name){
-        let sql = "SELECT * FROM " + table + " WHERE name = '" + name + "';"
+        let sql = `SELECT * FROM ${table} WHERE name like '%${name}%' LIMIT 20`;
 
-        return await db.select(table,sql);
+        return await db.select(sql);
     }
 }
