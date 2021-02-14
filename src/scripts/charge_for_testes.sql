@@ -19,18 +19,22 @@ insert into users(name,email,phone,password,token,updated,change_password,profil
 insert into cities (name,product_id)values('Sobradinho I', (select id from products where name = 'Taxa de entrega 1' limit 1));
 insert into cities (name,product_id)values('Sobradinho II', (select id from products where name = 'Taxa de entrega 2' limit 1));
 
+-- customers
+insert into customers (name,phone)values('Luana', '61998636232');
 
 -- adresses
-insert into adresses (address,complemnt,city_id)values('Q15 Conj c cs 12', null, (select id from cities where name = 'Sobradinho I' limit 1));
+insert into adresses (address,complement,city_id, customer_id)values('Q15 Conj c cs 12', null, 
+	(select id from cities where name = 'Sobradinho I' limit 1),
+		(select id from customers where name = 'Luana' limit 1)
+);
 
--- customers
-insert into customers (name,phone,address_id)values('Luana', '61998636232', (select id from adresses where address = 'Q15 Conj c cs 12' LIMIT 1));
 
 -- cashiers
 insert into cashiers (user_id)values((select id from users where name = 'Elizeu' LIMIT 1));
 
 -- payments
 INSERT into payments(name)values('Money');
+INSERT into payments(name)values('Crédit');
 -- payments cashiers
 
 INSERT into payments_cashiers(payment_id,cashier_id)values(

@@ -2,17 +2,17 @@ import { Helper } from "./Helper";
 import { DB } from "./DB";
 const helper = new Helper();
 const db = new DB();
-const table = 'localities';
+const table = 'cities';
 
-export class Locality {
+export class City {
     constructor(){
 
     }
     
     async all() {
-        let sql = "select * from localities";
-        let localities = await db.select(table, sql);
-        return localities;
+        let sql = `select * from ${table}`;
+        let cities = await db.selectMany(sql);
+        return cities;
     }
 
     async find(id) {

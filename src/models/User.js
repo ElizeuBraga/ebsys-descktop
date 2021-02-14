@@ -48,17 +48,17 @@ export class User {
      */
     async auth(email_phone, password) {
         let sql = "select * from users where phone = '" + email_phone + "' OR email = '" + email_phone + "';";
-        let user = await db.select(sql);
-
+        let user = await db.selectOne(sql);
+        
         if(!user){
             return false;
         }
         return new Promise(function(resolve, reject){
-            bcrypt.compare(password, user[0].password.replace('$2y$', '$2a$'), (err, result)=>{
+            bcrypt.compare(password, user.password.replace('$2y$', '$2a$'), (err, result)=>{
                 if(err){
                     reject(err)
                 }else{
-                    localStorage.setItem('user', JSON.stringify(user[0]))
+                    localStorage.setItem('user', JSON.stringify(user))
                     resolve(result);
                 }
             });

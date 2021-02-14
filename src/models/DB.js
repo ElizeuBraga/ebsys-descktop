@@ -23,7 +23,6 @@ export class DB{
     }
 
     async insert(table, items){
-        console.log(items)
         let values = "";
         for (let [i, a] of items.entries()) {
             const todo = await fetch(a);
@@ -34,12 +33,17 @@ export class DB{
 
         let sql = "INSERT INTO "+table+"("+Object.keys(items[0])+") values "+values;
 
-        con.query(sql, function(err, result) {
-            if(err){
-                console.log(err)
-            }else{
-                console.log('Insert successfull')
-            }
+        return new Promise(function(resolve, reject){
+            con.query(sql, (err, result) => {
+                if(err){
+                    console.log(err)
+                }else{
+                    // let sql = `INSERT INTO updateds(table_name, made_in)VALUES(${table}, 'local')`;
+                    // this.execute(sql);
+                    console.log('Insert successfull')
+                    resolve(result.insertId)
+                }
+            });
         });
     }
 
@@ -57,6 +61,41 @@ export class DB{
     }
 
     async select(sql){
+        return new Promise(function(resolve, reject){
+            con.query(sql, async (err, result) => {
+                if(err){
+                    console.log(err)
+                }else{
+                    if(result.length > 0){
+                        resolve(result);
+                    }
+
+                    resolve(false);
+                }
+            })
+        });
+    }
+
+    async selectOne(sql){
+        return new Promise(function(resolve, reject){
+            con.query(sql, async (err, result) => {
+                if(err){
+                    console.log(err)
+                }else{
+                    if(result.length > 0){
+                        if(result.length){
+                            resolve(result[0])
+                        }
+                        resolve(result);
+                    }
+
+                    resolve(false);
+                }
+            })
+        });
+    }
+
+    async selectMany(sql){
         return new Promise(function(resolve, reject){
             con.query(sql, async (err, result) => {
                 if(err){

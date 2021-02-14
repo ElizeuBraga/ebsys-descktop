@@ -13,10 +13,15 @@ export class Product {
     }
 
     async findByLocalityPhone(phone){
-        let sql = ` SELECT p.* FROM customers c 
-        JOIN localities l ON l.id = c.locality_id
-        JOIN products p ON p.id = l.product_id WHERE phone = '${phone}'`
-        let product = await db.select(sql);
+        let sql = `SELECT 
+                    p.*
+                FROM products p
+            JOIN cities c ON c.product_id = p.id
+            JOIN adresses a ON a.city_id = c.id
+            JOIN customers c2 ON c2.id = a.customer_id
+            WHERE phone = '${phone}';`
+
+        let product = await db.selectOne(sql);
 
         return product;
     }

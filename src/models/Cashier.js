@@ -20,7 +20,7 @@ export class Cashier {
         let sql = ` SELECT
                         c.id,
                         u.name as user_name,
-                        sum(money + debit + credit + ticket) as value,
+                        -- sum(money + debit + credit + ticket) as value,
                         DATE_FORMAT(c.created_at, '%d-%m-%Y às %H:%i') as created_at,
                         DATE_FORMAT(c.updated_at, '%d-%m-%Y às %H:%i') as updated_at
                     FROM cashiers c 
@@ -29,7 +29,7 @@ export class Cashier {
                     GROUP by c.id
                     order by c.created_at DESC`;
 
-        let cashiers = await db.select(table, sql);
+        let cashiers = await db.selectMany(sql);
         
         if(cashiers){
             return cashiers;
@@ -105,9 +105,17 @@ export class Cashier {
     }
 
     async detail(){
-        let sql = "select * from cashiers c2 where updated_at is null"
+        let sql = `select * from ${table} c2 where updated_at is null`;
 
-        let result = await db.select(table, sql);
+        let result = await db.selectOne(sql);
+
+        return result;
+    }
+
+    async getOpened(){
+        let sql = `select * from ${table} c2 where updated_at is null`;
+
+        let result = await db.selectOne(sql);
 
         return result;
     }
@@ -115,7 +123,7 @@ export class Cashier {
     async isOpen(){
         let sql = "select * from cashiers c2 where updated_at is null"
 
-        let result = await db.select(table, sql);
+        let result = await db.selectOne(sql);
 
         if(result){
             return true

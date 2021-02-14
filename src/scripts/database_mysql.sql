@@ -1,7 +1,9 @@
 begin;
+-- 	SET FOREIGN_KEY_CHECKS=ON;
 	drop database if exists ebsys_descktop;
 	create database if not exists ebsys_descktop;
 	use ebsys_descktop;
+
 	-- made in ws
 	CREATE table if not exists pages(
 		id integer auto_increment primary key,
@@ -73,30 +75,31 @@ begin;
 		foreign key (product_id) references products (id)
 	);
 	
-	-- made in ws
-	CREATE table if not exists adresses(
-		id integer auto_increment primary key,
-		address varchar(30) not null,
-		complemnt varchar(20),
-		updated boolean not null default 1,
-		city_id integer not null,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null,
-		foreign key (city_id) references cities (id)
-		
-	);
 	-- made in local
 	CREATE table if not exists customers(
 		id integer auto_increment primary key,
 		name varchar(50) not null,
 		phone varchar(11) unique not null,
 		updated boolean not null default 1,
-		address_id integer not null,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at timestamp null,
+		deleted_at timestamp null
+	);
+
+	-- made in ws
+	CREATE table if not exists adresses(
+		id integer auto_increment primary key,
+		address varchar(30) not null,
+		complement varchar(30),
+		updated boolean not null default 1,
+		city_id integer not null,
+		customer_id integer not null,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at timestamp null,
 		deleted_at timestamp null,
-		foreign key (address_id) references adresses(id)
+		foreign key (customer_id) references customers (id),
+		foreign key (city_id) references cities (id)
+		
 	);
 	
 	-- made in local
@@ -107,6 +110,14 @@ begin;
 		updated_at timestamp null,
 		deleted_at timestamp null,
 		foreign key (user_id) references users (id)
+	);
+
+	create table if not exists payments(
+		id integer auto_increment primary key,
+		name varchar(7),
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at timestamp null,
+		deleted_at timestamp null
 	);
 	
 	-- made in local
@@ -159,13 +170,6 @@ begin;
 		foreign key (product_id) references products (id)
 	);
 
-	create table if not exists payments(
-		id integer auto_increment primary key,
-		name varchar(7),
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null
-	);
 
 	create table if not exists payments_orders(
 		id integer auto_increment primary key,
@@ -175,7 +179,16 @@ begin;
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at timestamp null,
 		deleted_at timestamp null,
-		foreign key (payment_id) references products (id),
-		foreign key (order_id) references products (id)
+		foreign key (payment_id) references payments (id),
+		foreign key (order_id) references orders (id)
+	);
+
+	create table if not exists updateds(
+		id integer auto_increment primary key,
+		table_name varchar(30) not null,
+		made_in varchar(5) not null,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at timestamp null,
+		deleted_at timestamp null
 	);
 commit;

@@ -125,10 +125,10 @@
           </b-row>
           <b-row class="w-50 p-3">
             <b-col>
-              <div v-if="custom.length > 0" class="text-center">
-                <span>{{ custom[0].name }} - {{ custom[0].phone }}</span
+              <div v-if="custom.name !== undefined" class="text-center">
+                <span>{{ custom.name }} - {{ custom.phone }}</span
                 ><br />
-                <span>{{ custom[0].address }} - {{ custom[0].locality }}</span>
+                <span>{{ custom.address }} - {{ custom.city_name }}</span>
               </div>
               <table class="table table-striped">
                 <thead>
@@ -306,7 +306,7 @@ import { DB } from "./models/DB";
 import { Ws } from "./models/Ws";
 import { User } from "./models/User";
 import { Cashier } from "./models/Cashier";
-import { Locality } from "./models/Locality";
+import { City } from "./models/City";
 import { Helper } from "./models/Helper";
 import { Customer } from "./models/Customer";
 import { Payment } from "./models/Payment";
@@ -319,7 +319,7 @@ Vue.use(IconsPlugin);
 // const db = new DB().createDatabase();
 const product = new Product();
 const helper = new Helper();
-const locality = new Locality();
+const city = new City();
 const customer = new Customer();
 const ws = new Ws();
 const db = new DB();
@@ -336,7 +336,7 @@ export default {
       tabIndex: 0,
       tab: 0,
       products: [],
-      localities: [],
+      cities: [],
       cart: [],
       search: "",
       cashierIsOpen: false,
@@ -349,7 +349,7 @@ export default {
   async mounted() {
     this.paymentsFormats = await payment.all();
 
-    // this.getCashiers();
+    this.getCashiers();
     // await this.isOpen();
     // this.localities = await locality.all();
     this.initLoginProccess();
@@ -423,12 +423,12 @@ export default {
       if(this.computedPaymentAmount > 0){
         for (const iterator of this.paymentInfo) {
           const todo = await fetch(iterator);
-          let paymentName = await payment.get(Object.keys(iterator)); 
+          let paymentName = await payment.get(iterator.payment_id); 
           html += "<div class='col-6 text-left'>";
           html += paymentName;
           html += "</div>";
           html += "<div class='col-6 text-right'>";
-          html += helper.formatMoney(Object.values(iterator))
+          html += helper.formatMoney(iterator.price)
           html += "</div>";
         }
       }else{
@@ -484,17 +484,17 @@ export default {
           }
         },
         preConfirm: () => {
-          let format = document.getElementById("swal2-select").value;
-          let value = document.getElementById("swal-input1").value;
+          let payment_id = document.getElementById("swal2-select").value;
+          let price = document.getElementById("swal-input1").value;
 
-          if (format === "") {
+          if (payment_id === "") {
             Swal.showValidationMessage("Informe uma forma de recebimento");
             Swal.getDenyButton().disabled = true
-          } else if (value === "") {
+          } else if (price === "") {
             Swal.showValidationMessage("Informe um valor");
             Swal.getDenyButton().disabled = true
           }
-          return { [format]: parseFloat(value) };
+          return { payment_id:payment_id, price: parseFloat(price) };
         },
         allowEnterKey: true,
       }).then((result) => {
@@ -516,7 +516,7 @@ export default {
             if(result.isDismissed){
               this.closeOrder()
             }else if(result.isConfirmed){
-              order.create(this.cart, this.paymentInfo);
+              order.create(this.cart, this.paymentInfo, this.computedChangeAmount);
             }
           })
         }
@@ -553,7 +553,8 @@ export default {
       let name = "";
       let phone = "";
       let address = "";
-      let locality = "";
+      let complement = "";
+      let city_id = "";
       let customerResult = {};
       Swal.fire({
         title: "Buscar cliente",
@@ -575,37 +576,43 @@ export default {
         if (result.isConfirmed) {
           customerResult = await customer.find(result.value);
 
+          let cities = await city.all();
           phone = result.value;
-          let html =
-            '<select id="swal2-select" class="swal2-select" name=""><option selected value disabled>Cidade</option>';
-          this.localities.forEach((element) => {
-            html +=
-              '<option value="' +
-              element.id +
-              '">' +
-              element.name +
-              "</option>";
+
+
+          let html = '<select id="swal2-select" class="swal2-select" name="">';
+
+          if(!customerResult){
+            html += '<option selected value disabled>Cidade</option>';
+          }
+
+
+          cities.forEach((element) => {
+            html += `<option ${(customerResult && element.id == customerResult.city_id) ? 'selected' : ''} value="${element.id}">${element.name}</option>`;
           });
           html += "</select>";
           Swal.fire({
             title: "Novo cliente",
             html:
-              '<input id="swal-input1" placeholder="Nome" class="swal2-input">' +
+              '<input id="swal-input1" placeholder="Nome" maxlength="50" class="swal2-input">' +
               '<input id="swal-input2" maxlength="11" placeholder="Telefone" class="swal2-input">' +
-              '<input id="swal-input3" placeholder="Endereço" class="swal2-input">' +
+              '<input id="swal-input3" placeholder="Endereço" maxlength="30" class="swal2-input">' +
+              '<input id="swal-input4" placeholder="Complemento" maxlength="30" class="swal2-input">' +
               html,
             showCancelButton: true,
             cancelButtonText: "Cancelar",
             didOpen: () => {
               if (customerResult) {
                 name = document.getElementById("swal-input1").value =
-                  customerResult[0].name;
+                  customerResult.name;
                 phone = document.getElementById("swal-input2").value =
-                  customerResult[0].phone;
+                  customerResult.phone;
                 address = document.getElementById("swal-input3").value =
-                  customerResult[0].address;
-                locality = document.getElementById("swal2-select").value =
-                  customerResult[0].locality_id;
+                  customerResult.address;
+                complement = document.getElementById("swal-input4").value =
+                customerResult.complement;
+                city_id = document.getElementById("swal2-select").value =
+                  customerResult.city_id;
               } else {
                 document.getElementById("swal-input1").focus();
                 phone = document.getElementById("swal-input2").value = phone;
@@ -616,17 +623,17 @@ export default {
               name = document.getElementById("swal-input1").value;
               phone = document.getElementById("swal-input2").value;
               address = document.getElementById("swal-input3").value;
-              locality = document.getElementById("swal2-select").value;
+              complement = document.getElementById("swal-input4").value;
+              city_id = document.getElementById("swal2-select").value;
               // }
 
               if (name == "" || phone == "" || address == "") {
                 Swal.showValidationMessage("Preencha todos os campos");
-              } else if (locality == "") {
+              } else if (city_id == "") {
                 Swal.showValidationMessage("Escolha uma localidade");
               }
-              let arraData = [name, phone, address, locality];
-
-              return arraData;
+              
+              return {name: name, phone:phone, address:address, complement:complement, city_id: city_id, address_id: customerResult.address_id, customer_id:customerResult.id};
             },
           }).then(async (result) => {
             if (result.isConfirmed) {
@@ -639,10 +646,10 @@ export default {
 
               setTimeout(async () => {
                 this.custom = await customer.find(phone);
-              }, 2000);
-              let prod = await product.findByLocalityPhone(phone);
-              prod[0].qtd = 1;
-              this.cart.unshift(JSON.parse(JSON.stringify(prod[0])));
+              }, 500);
+              let prod = await customer.getRate(phone);
+              prod.qtd = 1;
+              this.cart.unshift(JSON.parse(JSON.stringify(prod)));
               let inputProductDelivery = document.getElementById(
                 "input-product-delivery"
               );
@@ -951,7 +958,7 @@ export default {
       let values = [];
 
       this.paymentInfo.forEach((element) => {
-        total += parseFloat(Object.values(element)[0]);
+        total += parseFloat(element.price);
       });
 
       return total;

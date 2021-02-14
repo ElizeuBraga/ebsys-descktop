@@ -19,21 +19,43 @@ export class Customer{
     }
 
     async find(phone){
-        let sql = ` select c.*, l.name as locality from customers c 
-                    join localities l on l.id = c.locality_id
-                    where phone = '${phone}'`;
-        let response = await db.select(table, sql);
+        let sql = `select 
+                        c.id, c.name, c.phone, a.id as address_id, a.address, a.complement, a.city_id, c2.name as city_name 
+                    from ${table} c
+                    join adresses a on a.customer_id = c.id
+                    join cities c2 on c2.id = a.city_id WHERE c.phone = '${phone}';`;
+        let response = await db.selectOne(sql);
 
         return response;
     }
 
+    async getRate(phone){
+        let sql = `select 
+                    p.* 
+                from products p
+                join cities c on c.product_id = p.id
+                join adresses a on a.city_id = c.id
+                join customers c2 on c2.id = a.customer_id
+                where c2.phone = '${phone}';`;
+
+        return db.selectOne(sql);
+    }
+
     async update(customer){
-        let sql = ` UPDATE ${table} SET name = '${customer[0]}', phone = '${customer[1]}', 
-                    address = '${customer[2]}', locality_id = ${customer[3]},
-                    updated_at = now() WHERE phone = '${customer[1]}'`
+        db.execute('BEGIN;');
+        let sql = ` UPDATE ${table} SET name = '${customer.name}', phone = '${customer.phone}', updated_at = now() WHERE id = '${customer.customer_id}'`;
+        let result = await db.execute(sql)
 
-        let response = await db.execute(sql)
+        if(result){
+            sql = ` UPDATE adresses SET address = '${customer.address}', city_id = ${customer.city_id}, complement = '${customer.complement}', updated_at = now() WHERE id = '${customer.address_id}'`;
+            result = await db.execute(sql)
 
-        return response;
+            if(result){
+                db.execute("COMMIT;")
+                return;
+            }
+        }
+        
+        db.execute('ROLLBACK;');
     }
 }
