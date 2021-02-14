@@ -61,7 +61,7 @@ export class Order {
                     paymentsArray.push(
                         {
                             payment_id: pF.id,
-                            price: total,
+                            price: (pF.id == 1) ? total - change : total,
                             order_id: order_id
                         }
                     )

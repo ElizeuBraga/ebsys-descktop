@@ -409,9 +409,9 @@ export default {
       });
       html += '<input id="swal-input1" placeholder="Nome" class="swal2-input">';
 
-      html += "<div class='row'>";
+      html += "<div class='row font-big text-success'>";
       html += "<div class='col-6 text-left'>";
-      html += "Total a receber: "
+      html += "Receber: "
       html += "</div>";
       html += "<div class='col-6 text-right'>";
       html += helper.formatMoney(this.computedOrderAmount);
@@ -419,7 +419,7 @@ export default {
       html += "</div>";
 
       html += '<hr>';
-      html += "<div class='row'>";
+      html += "<div class='row font-big'>";
       if(this.computedPaymentAmount > 0){
         for (const iterator of this.paymentInfo) {
           const todo = await fetch(iterator);
@@ -439,9 +439,9 @@ export default {
       html += "</div>";
 
       html += '<hr>';
-      html += "<div class='row'>";
+      html += "<div class='row font-big text-primary'>";
       html += "<div class='col-6 text-left'>";
-      html += "Total recebido: ";
+      html += "Recebido: ";
       html += "</div>";
       html += "<div class='col-6 text-right'>";
       html += helper.formatMoney(this.computedPaymentAmount)
@@ -449,9 +449,9 @@ export default {
       html += "</div>";
       
       if(this.computedMissedAmount > 0){
-        html += "<div class='row'>";
+        html += "<div class='row font-big text-danger'>";
         html += "<div class='col-6 text-left'>";
-        html += "Falta: ";
+        html += "Faltam: ";
         html += "</div>";
         html += "<div class='col-6 text-right'>";
         html += this.formatMoney(this.computedMissedAmount)
@@ -460,7 +460,7 @@ export default {
       }
 
       if(this.computedChangeAmount > 0){
-        html += "<div class='row'>";
+        html += "<div class='row font-big text-success'>";
         html += "<div class='col-6 text-left'>";
         html += "Troco: ";
         html += "</div>";
@@ -478,6 +478,7 @@ export default {
         html: html,
         didOpen: () => {
           document.getElementById("swal2-select").focus();
+          document.getElementById("swal-input1").value = this.computedOrderAmount;
 
           if(this.computedMissedAmount > 0){
             Swal.getDenyButton().disabled = true
@@ -517,6 +518,10 @@ export default {
               this.closeOrder()
             }else if(result.isConfirmed){
               order.create(this.cart, this.paymentInfo, this.computedChangeAmount);
+
+              this.cart = []
+              this.custom = {}
+              this.paymentInfo = []
             }
           })
         }
@@ -997,4 +1002,7 @@ export default {
 };
 </script>
 <style lang="scss">
+  .font-big{
+    font-size: 30px;
+  }
 </style>
