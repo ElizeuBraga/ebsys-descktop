@@ -68,7 +68,6 @@ export class Order {
                     total = 0
                 }
 
-                console.log(paymentsArray)
                 result = await db.insert('payments_orders', paymentsArray);
                 if(result){
                     db.execute('COMMIT;');

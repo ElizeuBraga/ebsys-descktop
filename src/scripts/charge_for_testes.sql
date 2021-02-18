@@ -1,4 +1,5 @@
 -- Sections
+use ebsys_descktop;
 INSERT INTO sections(name)VALUES('Hamburguers');
 INSERT INTO sections(name)VALUES('Taxas');
 -- products

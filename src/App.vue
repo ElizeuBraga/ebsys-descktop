@@ -407,7 +407,7 @@ export default {
         html +=
           '<option value="' + element.id + '">' + element.name + "</option>";
       });
-      html += '<input id="swal-input1" placeholder="Nome" class="swal2-input">';
+      html += '<input id="swal-input1" placeholder="Valor a receber" class="swal2-input">';
 
       html += "<div class='row font-big text-success'>";
       html += "<div class='col-6 text-left'>";
@@ -478,7 +478,7 @@ export default {
         html: html,
         didOpen: () => {
           document.getElementById("swal2-select").focus();
-          document.getElementById("swal-input1").value = this.computedOrderAmount;
+          document.getElementById("swal-input1").value = (this.computedMissedAmount > 0)? this.computedMissedAmount : 0;
 
           if(this.computedMissedAmount > 0){
             Swal.getDenyButton().disabled = true
