@@ -12,8 +12,8 @@ INSERT INTO products(name, price, section_id, ask_obs)VALUES('Taxa de entrega 2'
 insert into profiles(name)values('Adimin');
 
 -- users
-insert into users(name,email,phone,password,token,updated,change_password,profile_id)values('Elizeu', 'elizeu@gmail.com', '61998636231', '$2y$10$sXZ2Yw.SdaUwJIoLpx9OKuvT.Y1c0uGisD4tcHBitL/n6SospzRXy',
-	'12345', true, true, (select id from profiles where name = 'Adimin' limit 1)
+insert into users(name,email,phone,password,token,change_password,profile_id)values('Elizeu', 'elizeu@gmail.com', '61998636231', '$2y$10$sXZ2Yw.SdaUwJIoLpx9OKuvT.Y1c0uGisD4tcHBitL/n6SospzRXy',
+	'12345', true, (select id from profiles where name = 'Adimin' limit 1)
 );
 
 -- cities
