@@ -25,7 +25,8 @@ export class User {
     }
 
     async create(users) {
-        db.insert(users)
+        let response = db.insert(table, users)
+        return response;
     }
 
     async count() {

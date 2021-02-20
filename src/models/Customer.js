@@ -3,18 +3,8 @@ const db = new DB();
 const table = 'customers';
 export class Customer{
 
-    async create(customer){
-        let array = [
-            {
-                name: customer[0],
-                phone: customer[1],
-                address: customer[2],
-                locality_id: customer[3],
-            }
-        ]
-
-        let response = await db.insert(table, array)
-
+    async create(customers){
+        let response = await db.insert(table, customers)
         return response
     }
 

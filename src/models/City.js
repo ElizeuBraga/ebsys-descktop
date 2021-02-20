@@ -23,8 +23,9 @@ export class City {
         return result
     }
 
-    async create(localities){
-        let res = await helper.insertMany('localities', localities);
+    async create(cities){
+        let response = await db.insert(table, cities);
+        return response;
     }
 
     async count(){

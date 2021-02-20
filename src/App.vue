@@ -350,7 +350,7 @@ export default {
     this.paymentsFormats = await payment.all();
 
     this.getCashiers();
-    // await this.isOpen();
+    await this.isOpen();
     // this.localities = await locality.all();
     this.initLoginProccess();
     // await ws.loadAll();
@@ -499,7 +499,7 @@ export default {
         },
         allowEnterKey: true,
       }).then((result) => {
-        if(result.isConfirmed){
+          if(result.isConfirmed){
           this.paymentInfo.push(result.value);
           this.receiving = false;
           document.getElementById("input-product").focus();
@@ -810,7 +810,7 @@ export default {
         '<select id="swal2-select" class="swal2-select" name=""><option selected value disabled>Selecione</option>';
       this.paymentsFormats.forEach((element) => {
         html +=
-          '<option value="' + element.name + '">' + element.name + "</option>";
+          '<option value="' + element.id + '">' + element.name + "</option>";
       });
       html += "</select>";
       html +=
@@ -833,103 +833,34 @@ export default {
           //  Swal.disableButtons()
         },
         preConfirm: () => {
-          let value1 = document.getElementById("swal2-select").value;
-          let value2 = document.getElementById("swal-input1").value;
-          if (value1 == "") {
-            Swal.showValidationMessage("Selecione uma forma de recebimento");
-            helper.removeValidationMessage();
-          } else if (value2 == "") {
-            Swal.showValidationMessage("Digite um valor");
-            helper.removeValidationMessage();
-          } else {
-            let exists = false;
-            let valueExists = "";
-            let key = null;
-            let content = document.getElementById("swal2-content");
-            amounts.forEach((element) => {
-              key += 1;
-              if (element.name == value1) {
-                Swal.showValidationMessage("Valor já foi inserido");
-                helper.removeValidationMessage();
-                exists = true;
-                valueExists = element.name;
-                key = 0;
-              }
-            });
-
-            if (!exists) {
-              // insert element in array
-              amounts.push({ name: value1, value: value2 });
-              // document.getElementById('swal2-select').value = ''
-              // document.getElementById('swal-input1').value = ''
-              if (document.getElementById("table_resume_close")) {
-                document.getElementById("table_resume_close").remove();
-              }
-              content.innerHTML += helper.getHtmlResumeCashier(amounts);
-              let btnRemove = document.querySelector("#" + value1);
-              btnRemove.addEventListener("click", (e) => {
-                let index = amounts.findIndex((x) => x.name === e.target.id);
-                amounts.splice(index, 1);
-                document.querySelector("." + e.target.id).remove();
-              });
-            } else {
-              helper.removeValidationMessage();
-            }
-          }
-
-          if (keepOpen) {
-            return new Promise(function (resolve) {
-              // let content = document.getElementById('swal2-content')
-              // if(document.getElementById("table_resume_close")){
-              //   document.getElementById("table_resume_close").remove();
-              // }
-              // content.innerHTML += helper.getHtmlResumeCashier(amounts);
-              Swal.enableButtons();
-            });
-          }
+          let payment_id = document.getElementById("swal2-select").value;
+          let price = document.getElementById("swal-input1").value;
+          
+          return { payment_id:payment_id, price: parseFloat(price) };
         },
       }).then(async (result) => {
-        if (result.isDenied) {
+        if(result.isConfirmed){
+          this.paymentInfo.push(result.value);
+          this.closeCashier();
+        }else if(result.isDismissed){
+          this.paymentInfo = []
+        }else{
+          // this.paymentInfo = []
           Swal.fire({
-            title: "Lançar valores?",
-            text: "Esta operação não poderá ser desfeita",
-            html: helper.getHtmlResumeCashier(amounts),
+            icon:"question",
+            title:"Finalizar recebimento?",
             showCancelButton: true,
-            cancelButtonText: "Cancelar",
-          }).then(async (result) => {
-            if (result.isConfirmed) {
-              let resp = await cashier.update(amounts);
+            cancelButtonText:"Cancelar"
+          }).then((result)=>{
+            if(result.isDismissed){
+              this.closeCashier()
+            }else if(result.isConfirmed){
+              cashier.update(this.paymentInfo);
 
-              console.log(resp);
-              if (resp) {
-                setTimeout(async () => {
-                  await this.isOpen();
-                }, 1000);
-                this.getCashiers();
-                Swal.fire({
-                  title: "Caixa fechado",
-                  icon: "success",
-                });
-              } else {
-                Swal.fire({
-                  title: "Erro ao fechar o caixa",
-                  icon: "error",
-                });
-              }
+              this.paymentInfo = []
             }
-          });
+          })
         }
-        // let auth = await user.auth(result.value[0], result.value[1])
-        // if(!auth){
-        //   Swal.showValidationMessage('Email e/ou senha estão incorretos!')
-        //   this.initLoginProccess()
-        // }
-
-        // if(result.value[2]){
-        //   localStorage.setItem('email_phone', result.value[0])
-        // }else{
-        //   localStorage.removeItem('email_phone')
-        // }
       });
     },
 

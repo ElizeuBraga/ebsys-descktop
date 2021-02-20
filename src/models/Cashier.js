@@ -1,10 +1,12 @@
 import { DB } from "./DB";
 import { Helper } from "./Helper";
+import { Payment } from "./Payment";
 const util    = require('util');
 
 const db = new DB();
 const table = 'cashiers';
 const helper = new Helper();
+const payment = new Payment();
 
 export class Cashier {
     constructor() {
@@ -46,32 +48,9 @@ export class Cashier {
     }
 
     async update(amounts) {
-        let newArray = []
+        let payments = await payment.tratePayment(amounts)
 
-        for (const a of amounts) {
-            const todo = await fetch(a)
-            if(a.name === 'Dinheiro'){
-                newArray.push({money:a.value})
-            }else if(a.name === 'Débito'){
-                newArray.push({debit:a.value})
-            }else if(a.name === 'Crédito'){
-                newArray.push({credit:a.value})
-            }else{
-                newArray.push({ticket:a.value})
-            }
-        }
-        let cashier = await this.detail();
-        
-        let user = JSON.parse(localStorage.getItem('user'));
-        console.log(user)
-        if(cashier[0].user_id != user.id){
-            return false
-        }
-        let result = await db.update(table, newArray, cashier[0].id);
-
-        return result;
-
-
+        console.log(payments)
     }
 
     async getCashierInfo(cashier_id){
@@ -95,13 +74,9 @@ export class Cashier {
         }
     }
 
-    async create() {
-        let user = JSON.parse(localStorage.getItem('user'))
-
-        let cashier = [
-            {user_id: user.id}
-        ]
-        db.insert(table, cashier);
+    async create(cashiers) {
+        let response = await db.insert(table, cashiers);
+        return response;
     }
 
     async detail(){

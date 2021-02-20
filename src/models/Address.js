@@ -2,8 +2,8 @@ import { DB } from "./DB";
 import { Helper } from "./Helper";
 
 const db = new DB();
-const table = "sections";
-export class Section{
+const table = "adresses";
+export class Address{
     async all(){
         let sql = 'select * from sections order by id';
         let result = db.all(sql);
@@ -11,8 +11,8 @@ export class Section{
         return result
     }
 
-    async create(sections){
-        let response = await db.insert(table, sections)
+    async create(adresses){
+        let response = await db.insert(table, adresses)
         return response;
     }
 }

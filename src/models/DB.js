@@ -24,8 +24,8 @@ export class DB{
 
     async insert(table, items){
         let values = "";
-        for (let [i, a] of items.entries()) {
-            const todo = await fetch(a);
+        for await (let [i, a] of items.entries()) {
+            // const todo = await fetch(a);
             let keys = JSON.stringify(Object.values(a)).replace('[', '(');
             keys = keys.replace(/"/gi, "'");
             values += keys.replace(']', ')') + ((i == items.length - 1) ? "":",")
@@ -40,8 +40,9 @@ export class DB{
                 }else{
                     // let sql = `INSERT INTO updateds(table_name, made_in)VALUES(${table}, 'local')`;
                     // this.execute(sql);
-                    console.log('Insert successfull')
+                    // console.log('Insert successfull')
                     resolve(result.insertId)
+                    // resolve(true)
                 }
             });
         });

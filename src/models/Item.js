@@ -1,6 +1,7 @@
-import sqlite3 from "sqlite3";
 import {Order} from '../models/Order'
-const db = new sqlite3.Database(window.process.env.APP_DATABASE_URL);
+import { DB } from './DB'
+const table = "items"
+const db = new DB();
 export class Item {
     constructor() {
 
@@ -10,18 +11,9 @@ export class Item {
 
     }
 
-    async create(items, order_id) {
-        let sql3 = "INSERT INTO items(quantity, price, product_id, order_id, created_at)values(?, ?, ?, ?, datetime('now', 'localtime'));";
-    
-        items.forEach(i => {
-            db.run(sql3, [i.quantity, i.price, i.id, order_id], err => {
-                if (err) {
-                    let order = new Order();
-                    order.destroy(order_id)
-                    return console.log(err);
-                }
-            });
-        });
+    async create(items) {
+        let response = await db.insert(table, items);
+        return response;
     }
 
     find(id) {

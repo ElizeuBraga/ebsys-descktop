@@ -20,7 +20,32 @@ export class Payment{
         return payments;
     }
 
-    create(payments, order_id){
-        return;
+    async tratePayment(payments, change = 0, order_id = false){
+        let paymentsArray = []
+        let paymentFormats = await this.all();
+        let total = 0;
+        for (const pF of paymentFormats) {
+            for (const iterator of payments) {
+                const todo = await fetch(iterator);
+                if(iterator.payment_id == pF.id){
+                    total += parseFloat(iterator.price) 
+                }    
+            }
+            paymentsArray.push(
+                {
+                    payment_id: pF.id,
+                    price: (pF.id == 1) ? total - change : total,
+                    order_id: order_id
+                }
+            )
+            total = 0
+        }
+
+        return paymentsArray;
+    }
+
+    async create(payments){
+        let response = await db.insert(table, payments);
+        return response;
     }
 }
