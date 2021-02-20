@@ -38,12 +38,13 @@ INSERT into payments(name)values('Money');
 INSERT into payments(name)values('Crédit');
 -- payments cashiers
 
-INSERT into payments_cashiers(payment_id,cashier_id)values(
+INSERT into payments_cashiers(payment_id,cashier_id, price)values(
 	(select id from payments WHERE name = 'Money'),
 	(
 		SELECT c.id from cashiers c
 		join users u on u.id = c.user_id where u.name = 'Elizeu' limit 1
-	)
+	),
+	23.50
 );
 
 -- order_types
