@@ -311,6 +311,8 @@ import { Helper } from "./models/Helper";
 import { Customer } from "./models/Customer";
 import { Payment } from "./models/Payment";
 import { Order } from "./models/Order";
+import { Item } from "./models/Item";
+import { PaymentOrder } from "./models/PaymentOrder";
 import { mixins } from "./mixins/mixins";
 import Swal from "sweetalert2";
 Vue.use(BootstrapVue);
@@ -327,6 +329,8 @@ const user = new User();
 const cashier = new Cashier();
 const payment = new Payment();
 const order = new Order();
+const item = new Item();
+const paymentOrder = new PaymentOrder();
 export default {
   // mixins:[mixins],
   data() {
@@ -421,8 +425,8 @@ export default {
       html += '<hr>';
       html += "<div class='row font-big'>";
       if(this.computedPaymentAmount > 0){
-        for (const iterator of this.paymentInfo) {
-          const todo = await fetch(iterator);
+        for await(const iterator of this.paymentInfo) {
+          // const todo = await fetch(iterator);
           let paymentName = await payment.get(iterator.payment_id); 
           html += "<div class='col-6 text-left'>";
           html += paymentName;
@@ -513,11 +517,57 @@ export default {
             title:"Finalizar recebimento?",
             showCancelButton: true,
             cancelButtonText:"Cancelar"
-          }).then((result)=>{
+          }).then(async (result)=>{
             if(result.isDismissed){
               this.closeOrder()
             }else if(result.isConfirmed){
-              order.create(this.cart, this.paymentInfo, this.computedChangeAmount);
+              let customer_id = null;
+              let order_types_id = 2;
+              if(this.custom.id !== undefined){
+                order_types_id = 1;
+                customer_id = this.custom.id
+              }
+
+              let response_cashier = await cashier.detail();
+
+              db.execute('BEGIN;')
+              //insert the order
+              let order_id = await order.create([{
+                cashier_id: response_cashier.id,
+                customer_id: customer_id,
+                order_types_id: order_types_id
+              }]);
+              
+              // insert items
+              let items = []
+              for await (const iterator of this.cart) {
+                items.push(
+                  {
+                    quantity: iterator.qtd,
+                    product_id: iterator.id,
+                    price: iterator.price,
+                    order_id: order_id
+                  }
+                )
+              }
+
+              let item_id = await item.create(items);
+
+              // insert payments order
+              let paymentsOrder = []
+              for await (const iterator of this.paymentInfo) {
+                paymentsOrder.push(
+                  {
+                    order_id: order_id,
+                    payment_id: iterator.payment_id,
+                    price: iterator.price
+                  }
+                )
+              }
+
+              let payment_id = await paymentOrder.create(paymentsOrder);
+
+              db.execute('COMMIT;');
 
               this.cart = []
               this.custom = {}
