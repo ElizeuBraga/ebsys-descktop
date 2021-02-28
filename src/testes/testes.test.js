@@ -16,14 +16,19 @@ test('', async() => {
   let result = await
 
 
-  new Payment().create([
+  new Customer().update([
     {
-      name: "Testa"
+      id: 1,
+      name: "Testa S2"
+    },
+    {
+      id: 6,
+      name: "Chana"
     }
   ])
 
 
 
   // await expect(result).resolves.toBe(11);
-  console.log(result)
+  // console.log(result)
 });

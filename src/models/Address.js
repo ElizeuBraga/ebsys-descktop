@@ -15,4 +15,9 @@ export class Address{
         let response = await db.insert(table, adresses)
         return response;
     }
+
+    async update(adresses){
+        let response = await db.update(table, adresses)
+        return response;
+    }
 }

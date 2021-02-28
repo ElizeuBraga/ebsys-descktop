@@ -6,20 +6,27 @@ var con = mysql.createConnection({
     database: "ebsys_descktop"
   });
 export class DB{
-    async update(table, array, id = 21){
-        let sql = "UPDATE " + table;
-        let map = " SET ";
-        for (const [i, a] of array.entries()) {
-            map += Object.keys(a)[0] + " = " + Object.values(a)[0] + ((i == array.length - 1) ? " ":", ")
+    async update(table, array){
+        this.execute('BEGIN;');
+        for await (const [i, a] of array.entries()) {
+            let keys = Object.keys(a);
+            let values = Object.values(a);
+            let sql = "UPDATE " + table + " SET ";
+            let map = ""
+            for await (const [j, k] of keys.entries()) {
+                if(keys[j] != 'id'){
+                    map += keys[j] + " = '" + values[j] + "', " 
+                }
+            }
+
+            sql += map + "updated_at = now() WHERE id = " + a.id
+
+            await this.execute(sql);
         }
 
-        map += " ,updated_at = now() WHERE id = " + id;
+        this.execute('COMMIT;');
 
-        sql += map
-
-        let resp = await this.execute(sql)
-
-        return resp;
+        return true;
     }
 
     async insert(table, items){

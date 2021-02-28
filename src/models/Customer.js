@@ -12,8 +12,8 @@ export class Customer{
         let sql = `select 
                         c.id, c.name, c.phone, a.id as address_id, a.address, a.complement, a.city_id, c2.name as city_name 
                     from ${table} c
-                    join adresses a on a.customer_id = c.id
-                    join cities c2 on c2.id = a.city_id WHERE c.phone = '${phone}';`;
+                    left join adresses a on a.customer_id = c.id
+                    left join cities c2 on c2.id = a.city_id WHERE c.phone = '${phone}';`;
         let response = await db.selectOne(sql);
 
         return response;
@@ -31,21 +31,9 @@ export class Customer{
         return db.selectOne(sql);
     }
 
-    async update(customer){
-        db.execute('BEGIN;');
-        let sql = ` UPDATE ${table} SET name = '${customer.name}', phone = '${customer.phone}', updated_at = now() WHERE id = '${customer.customer_id}'`;
-        let result = await db.execute(sql)
+    async update(customers){
+        let response = await db.update(table, customers);
 
-        if(result){
-            sql = ` UPDATE adresses SET address = '${customer.address}', city_id = ${customer.city_id}, complement = '${customer.complement}', updated_at = now() WHERE id = '${customer.address_id}'`;
-            result = await db.execute(sql)
-
-            if(result){
-                db.execute("COMMIT;")
-                return;
-            }
-        }
-        
-        db.execute('ROLLBACK;');
+        return response;
     }
 }

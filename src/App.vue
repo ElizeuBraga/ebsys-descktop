@@ -1,5 +1,5 @@
 <template>
-  <div style="min-height: 100vh">
+  <div style="min-height: 100vh; background-color:#dee2e6">
     <b-tabs v-model="tabIndex" card>
       <!--
         *
@@ -11,83 +11,7 @@
         :title-link-class="linkClass(0)"
         @click="changeTab(0)"
       >
-        <b-row>
-          <b-row class="w-50 p-3 mh-100">
-            <b-col cols="10">
-              <b-form-input
-                v-model="search"
-                list="producs"
-                id="input-product"
-              ></b-form-input>
-              <datalist id="producs">
-                <option
-                  v-for="(p, index) in products"
-                  :value="p.name"
-                  :key="index"
-                >
-                  {{ parseFloat(p.price).toFixed(2).replace(".", ",") }}
-                </option>
-              </datalist>
-            </b-col>
-            <b-col cols="2">
-              <b-form-input
-                type="number"
-                min="1"
-                value="1"
-                id="input-qtd"
-              ></b-form-input>
-            </b-col>
-          </b-row>
-          <b-row class="w-50 p-3">
-            <b-col>
-              <table class="table table-striped table-responsive">
-                <thead>
-                  <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Produto</th>
-                    <th class="text-center" scope="col">Valor</th>
-                    <th class="text-center" scope="col">Quantidade</th>
-                    <th class="text-center" scope="col">Valor parcial</th>
-                    <th class="text-center" scope="col">Opções</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(i, index) in cart" :key="index">
-                    <th scope="row">{{ index + 1 }}</th>
-                    <td>{{ i.name }}</td>
-                    <td class="text-center">
-                      {{ parseFloat(i.price).toFixed(2).replace(".", ",") }}
-                    </td>
-                    <td class="text-center">{{ i.qtd }}</td>
-                    <td class="text-center">
-                      {{
-                        parseFloat(i.qtd * i.price)
-                          .toFixed(2)
-                          .replace(".", ",")
-                      }}
-                    </td>
-                    <td class="text-center">
-                      <b-icon
-                        style="cursor: pointer"
-                        @click="removeItem(index)"
-                        variant="danger"
-                        icon="trash-fill"
-                        aria-hidden="true"
-                      ></b-icon>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <div class="row" style="background: red">
-                <div class="col-4"></div>
-                <div class="col-4"></div>
-                <div class="col-4">
-                  R$ {{ formatMoney(computedOrderAmount) }}
-                </div>
-              </div>
-            </b-col>
-          </b-row>
-        </b-row>
+        <order-component :orderType="0"/>
       </b-tab>
 
       <!--
@@ -100,77 +24,7 @@
         :title-link-class="linkClass(1)"
         @click="changeTab(1)"
       >
-        <b-row>
-          <b-row class="w-50 p-3 mh-100">
-            <b-col cols="10">
-              <b-form-input
-                id="input-product-delivery"
-                v-model="search"
-                list="producs"
-              ></b-form-input>
-              <datalist id="producs">
-                <option v-for="(p, i) in products" :value="p.name" :key="i">
-                  {{ parseFloat(p.price).toFixed(2).replace(".", ",") }}
-                </option>
-              </datalist>
-            </b-col>
-            <b-col cols="2">
-              <b-form-input
-                type="number"
-                min="1"
-                value="1"
-                id="input-qtd-delivery"
-              ></b-form-input>
-            </b-col>
-          </b-row>
-          <b-row class="w-50 p-3">
-            <b-col>
-              <div v-if="custom.name !== undefined" class="text-center">
-                <span>{{ custom.name }} - {{ custom.phone }}</span
-                ><br />
-                <span>{{ custom.address }} - {{ custom.city_name }}</span>
-              </div>
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Produto</th>
-                    <th class="text-center" scope="col">Valor</th>
-                    <th class="text-center" scope="col">Quantidade</th>
-                    <th class="text-center" scope="col">Valor parcial</th>
-                    <th class="text-center" scope="col">Opções</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(i, index) in cart" :key="index">
-                    <th scope="row">{{ index + 1 }}</th>
-                    <td>{{ i.name }}</td>
-                    <td class="text-center">
-                      {{ parseFloat(i.price).toFixed(2).replace(".", ",") }}
-                    </td>
-                    <td class="text-center">{{ i.qtd }}</td>
-                    <td class="text-center">
-                      {{
-                        parseFloat(i.qtd * i.price)
-                          .toFixed(2)
-                          .replace(".", ",")
-                      }}
-                    </td>
-                    <td class="text-center">
-                      <b-icon
-                        style="cursor: pointer"
-                        @click="removeItem(index)"
-                        variant="danger"
-                        icon="trash-fill"
-                        aria-hidden="true"
-                      ></b-icon>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </b-col>
-          </b-row>
-        </b-row>
+        <order-component :orderType="1"/>
       </b-tab>
 
       <!--
@@ -250,31 +104,18 @@
 
     <footer class="footer">
       <div class="row">
-        <div class="col-4">
-          <!-- <button class="btn btn-primary">Abrir caixa</button> -->
+        <div class="col-6">
+          
         </div>
-        <div class="col-4">
-          <!-- <button class="btn btn-primary">Receber pedido</button> -->
-        </div>
-        <div class="col-4">
-          <button
-            v-if="tab == 0"
-            class="btn btn-primary"
-            :title="infoForBtnReceive"
-            @click="closeOrder"
-            :disabled="receiveDisabled"
-          >
-            Encerrar pedido (F9)
-          </button>
-          <button
-            v-if="tab == 1"
-            class="btn btn-primary"
-            :title="infoForBtnReceive"
-            @click="closeOrder"
-            :disabled="receiveDisabled"
-          >
-            Encerrar delivery
-          </button>
+        <div class="col-6">
+          <b-row>
+            <b-col class="font-big">
+              Total
+            </b-col>
+            <b-col class="font-big">
+              R$ {{ formatMoney(totalCart) }}
+            </b-col>
+          </b-row>
         </div>
       </div>
     </footer>
@@ -282,9 +123,33 @@
 </template>
 <style>
 .table-responsive {
-  max-height: 800px;
-  min-height: 800px;
+  /* max-height: 800px; */
+  /* min-height: 800px; */
 }
+
+.card-header{
+  background-color: #2778c4!important;
+  border-radius: 0!important;
+  border: #2778c4!important;
+}
+
+.nav.nav-tabs.card-header-tabs{
+  /* margin: 0!important; */
+}
+
+.nav-link.active.bg-primary.text-light{
+  background-color: rgb(222, 226, 230)!important;
+  color: #2778c4!important;
+  border-color: rgb(222, 226, 230)!important;
+}
+
+.nav-link.bg-light.text-info{
+  border-radius: 0!important;
+  background-color: #2778c4!important;
+  color: white!important;
+  border: #2778c4!important;
+}
+
 .footer {
   position: fixed;
   left: 0;
@@ -313,8 +178,10 @@ import { Payment } from "./models/Payment";
 import { Order } from "./models/Order";
 import { Item } from "./models/Item";
 import { PaymentOrder } from "./models/PaymentOrder";
+import EventBus from "../src/EventBus";
 import { mixins } from "./mixins/mixins";
 import Swal from "sweetalert2";
+import OrderComponent from './components/OrderComponent.vue';
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 
@@ -323,7 +190,6 @@ const product = new Product();
 const helper = new Helper();
 const city = new City();
 const customer = new Customer();
-const ws = new Ws();
 const db = new DB();
 const user = new User();
 const cashier = new Cashier();
@@ -333,8 +199,13 @@ const item = new Item();
 const paymentOrder = new PaymentOrder();
 export default {
   // mixins:[mixins],
+  components:{
+    OrderComponent    
+  },
   data() {
     return {
+      bluePrimary: "#2778c4",
+      event_aux: 0,
       paymentInfo: [],
       receiving: false,
       tabIndex: 0,
@@ -342,6 +213,7 @@ export default {
       products: [],
       cities: [],
       cart: [],
+      totalCart: 0,
       search: "",
       cashierIsOpen: false,
       paymentsFormats: [],
@@ -353,369 +225,26 @@ export default {
   async mounted() {
     this.paymentsFormats = await payment.all();
 
+    EventBus.$on("amount-computed", (e) => {
+      console.log(e)
+      this.totalCart = e
+    });
+
     this.getCashiers();
     await this.isOpen();
     // this.localities = await locality.all();
     this.initLoginProccess();
     // await ws.loadAll();
-
-    document.addEventListener("keypress", async (e) => {
-      if (e.key === "Enter") {
-        if (this.tab === 0 || this.tab === 1) {
-          let inputProd = document.getElementById("input-product");
-          let inputQtd = document.getElementById("input-qtd");
-
-          if (this.tab === 1) {
-            inputProd = document.getElementById("input-product-delivery");
-            inputQtd = document.getElementById("input-qtd-delivery");
-          }
-
-          if (inputProd.value !== "") {
-            if (inputQtd === document.activeElement) {
-              inputProd.focus();
-              let inputProdValue = inputProd.value;
-              let inputQtdValue = inputQtd.value;
-              inputQtd.value = 1;
-              inputProd.value = "";
-              this.insertProdInCart(inputProdValue, inputQtdValue);
-              return;
-            }
-            inputQtd.focus();
-          }
-        }
-      }
-    });
   },
   methods: {
+
     formatMoney(value) {
       return helper.formatMoney(value);
     },
-
-    async insertProdInCart(inputProdValue, inputQtdValue) {
-      let prod = await product.selectProdutcToCart(inputProdValue);
-      prod[0].qtd = inputQtdValue;
-      this.cart.push(JSON.parse(JSON.stringify(prod[0])));
-      // inputProduct.value = "";
-      // inputQtd.value = "1";
-      // this.search = "";
-
-      // inputProd.value = "";
-      console.log("Inserido no carrinho");
-    },
-
-    async closeOrder() {
-      this.receiving = true;
-      let html =
-        '<select id="swal2-select" class="swal2-select" name=""><option selected value disabled>Selecione</option>';
-      this.paymentsFormats.forEach((element) => {
-        html +=
-          '<option value="' + element.id + '">' + element.name + "</option>";
-      });
-      html += '<input id="swal-input1" placeholder="Valor a receber" class="swal2-input">';
-
-      html += "<div class='row font-big text-success'>";
-      html += "<div class='col-6 text-left'>";
-      html += "Receber: "
-      html += "</div>";
-      html += "<div class='col-6 text-right'>";
-      html += helper.formatMoney(this.computedOrderAmount);
-      html += "</div>";
-      html += "</div>";
-
-      html += '<hr>';
-      html += "<div class='row font-big'>";
-      if(this.computedPaymentAmount > 0){
-        for await(const iterator of this.paymentInfo) {
-          // const todo = await fetch(iterator);
-          let paymentName = await payment.get(iterator.payment_id); 
-          html += "<div class='col-6 text-left'>";
-          html += paymentName;
-          html += "</div>";
-          html += "<div class='col-6 text-right'>";
-          html += helper.formatMoney(iterator.price)
-          html += "</div>";
-        }
-      }else{
-        html += "<div class='col-12 text-center text-danger'>";
-        html += "Nehum valor lançado";
-        html += "</div>";
-      }
-      html += "</div>";
-
-      html += '<hr>';
-      html += "<div class='row font-big text-primary'>";
-      html += "<div class='col-6 text-left'>";
-      html += "Recebido: ";
-      html += "</div>";
-      html += "<div class='col-6 text-right'>";
-      html += helper.formatMoney(this.computedPaymentAmount)
-      html += "</div>";
-      html += "</div>";
-      
-      if(this.computedMissedAmount > 0){
-        html += "<div class='row font-big text-danger'>";
-        html += "<div class='col-6 text-left'>";
-        html += "Faltam: ";
-        html += "</div>";
-        html += "<div class='col-6 text-right'>";
-        html += this.formatMoney(this.computedMissedAmount)
-        html += "</div>";
-        html += "</div>";
-      }
-
-      if(this.computedChangeAmount > 0){
-        html += "<div class='row font-big text-success'>";
-        html += "<div class='col-6 text-left'>";
-        html += "Troco: ";
-        html += "</div>";
-        html += "<div class='col-6 text-right'>";
-        html += this.formatMoney(this.computedChangeAmount)
-        html += "</div>";
-        html += "</div>";
-      }
-      Swal.fire({
-        title: "Informações de pagamento",
-        showCancelButton:true,
-        cancelButtonText:"Cancelar",
-        showDenyButton: true,
-        denyButtonText:"Finalizar pagamento",
-        html: html,
-        didOpen: () => {
-          document.getElementById("swal2-select").focus();
-          document.getElementById("swal-input1").value = (this.computedMissedAmount > 0)? this.computedMissedAmount : 0;
-
-          if(this.computedMissedAmount > 0){
-            Swal.getDenyButton().disabled = true
-          }
-        },
-        preConfirm: () => {
-          let payment_id = document.getElementById("swal2-select").value;
-          let price = document.getElementById("swal-input1").value;
-
-          if (payment_id === "") {
-            Swal.showValidationMessage("Informe uma forma de recebimento");
-            Swal.getDenyButton().disabled = true
-          } else if (price === "") {
-            Swal.showValidationMessage("Informe um valor");
-            Swal.getDenyButton().disabled = true
-          }
-          return { payment_id:payment_id, price: parseFloat(price) };
-        },
-        allowEnterKey: true,
-      }).then((result) => {
-          if(result.isConfirmed){
-          this.paymentInfo.push(result.value);
-          this.receiving = false;
-          document.getElementById("input-product").focus();
-          this.closeOrder();
-        }else if(result.isDismissed){
-          this.paymentInfo = []
-        }else{
-          // this.paymentInfo = []
-          Swal.fire({
-            icon:"question",
-            title:"Finalizar recebimento?",
-            showCancelButton: true,
-            cancelButtonText:"Cancelar"
-          }).then(async (result)=>{
-            if(result.isDismissed){
-              this.closeOrder()
-            }else if(result.isConfirmed){
-              let customer_id = null;
-              let order_types_id = 2;
-              if(this.custom.id !== undefined){
-                order_types_id = 1;
-                customer_id = this.custom.id
-              }
-
-              let response_cashier = await cashier.detail();
-
-              db.execute('BEGIN;')
-              //insert the order
-              let order_id = await order.create([{
-                cashier_id: response_cashier.id,
-                customer_id: customer_id,
-                order_types_id: order_types_id
-              }]);
-              
-              // insert items
-              let items = []
-              for await (const iterator of this.cart) {
-                items.push(
-                  {
-                    quantity: iterator.qtd,
-                    product_id: iterator.id,
-                    price: iterator.price,
-                    order_id: order_id
-                  }
-                )
-              }
-
-              let item_id = await item.create(items);
-
-              // insert payments order
-              let paymentsOrder = []
-              for await (const iterator of this.paymentInfo) {
-                paymentsOrder.push(
-                  {
-                    order_id: order_id,
-                    payment_id: iterator.payment_id,
-                    price: iterator.price
-                  }
-                )
-              }
-
-              let payment_id = await paymentOrder.create(paymentsOrder);
-
-              db.execute('COMMIT;');
-
-              this.cart = []
-              this.custom = {}
-              this.paymentInfo = []
-            }
-          })
-        }
-      });
-    },
-
-    removeItem(index) {
-      Swal.fire({
-        title: "Remover item?",
-        icon: "warning",
-        showCancelButton: true,
-        cancelButtonText: "Cancelar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.cart.splice(index, 1);
-        }
-      });
-    },
-
+    
     changeTab(tabIndex) {
+      EventBus.$emit('change-tab', tabIndex);
       this.tab = tabIndex;
-      this.cart = [];
-      if (tabIndex == 1) {
-        this.custom = {};
-        this.initDeliveryOrder();
-      } else if (tabIndex == 0) {
-        setTimeout(() => {
-          document.getElementById("input-product").focus();
-        }, 200);
-      }
-    },
-
-    initDeliveryOrder() {
-      let name = "";
-      let phone = "";
-      let address = "";
-      let complement = "";
-      let city_id = "";
-      let customerResult = {};
-      Swal.fire({
-        title: "Buscar cliente",
-        input: "text",
-        inputPlaceholder: "Telefone do cliente",
-        showCancelButton: true,
-        cancelButtonText: "Cancelar",
-        inputAttributes: {
-          maxlength: 11,
-        },
-        preConfirm: (value) => {
-          if (!value) {
-            Swal.showValidationMessage("Digite o telefone do cliente");
-          } else {
-            return value;
-          }
-        },
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          customerResult = await customer.find(result.value);
-
-          let cities = await city.all();
-          phone = result.value;
-
-
-          let html = '<select id="swal2-select" class="swal2-select" name="">';
-
-          if(!customerResult){
-            html += '<option selected value disabled>Cidade</option>';
-          }
-
-
-          cities.forEach((element) => {
-            html += `<option ${(customerResult && element.id == customerResult.city_id) ? 'selected' : ''} value="${element.id}">${element.name}</option>`;
-          });
-          html += "</select>";
-          Swal.fire({
-            title: "Novo cliente",
-            html:
-              '<input id="swal-input1" placeholder="Nome" maxlength="50" class="swal2-input">' +
-              '<input id="swal-input2" maxlength="11" placeholder="Telefone" class="swal2-input">' +
-              '<input id="swal-input3" placeholder="Endereço" maxlength="30" class="swal2-input">' +
-              '<input id="swal-input4" placeholder="Complemento" maxlength="30" class="swal2-input">' +
-              html,
-            showCancelButton: true,
-            cancelButtonText: "Cancelar",
-            didOpen: () => {
-              if (customerResult) {
-                name = document.getElementById("swal-input1").value =
-                  customerResult.name;
-                phone = document.getElementById("swal-input2").value =
-                  customerResult.phone;
-                address = document.getElementById("swal-input3").value =
-                  customerResult.address;
-                complement = document.getElementById("swal-input4").value =
-                customerResult.complement;
-                city_id = document.getElementById("swal2-select").value =
-                  customerResult.city_id;
-              } else {
-                document.getElementById("swal-input1").focus();
-                phone = document.getElementById("swal-input2").value = phone;
-              }
-            },
-            preConfirm: async () => {
-              // if(!customerResult){
-              name = document.getElementById("swal-input1").value;
-              phone = document.getElementById("swal-input2").value;
-              address = document.getElementById("swal-input3").value;
-              complement = document.getElementById("swal-input4").value;
-              city_id = document.getElementById("swal2-select").value;
-              // }
-
-              if (name == "" || phone == "" || address == "") {
-                Swal.showValidationMessage("Preencha todos os campos");
-              } else if (city_id == "") {
-                Swal.showValidationMessage("Escolha uma localidade");
-              }
-              
-              return {name: name, phone:phone, address:address, complement:complement, city_id: city_id, address_id: customerResult.address_id, customer_id:customerResult.id};
-            },
-          }).then(async (result) => {
-            if (result.isConfirmed) {
-              let response = false;
-              if (!customerResult) {
-                response = await customer.create(result.value);
-              } else {
-                response = await customer.update(result.value);
-              }
-
-              setTimeout(async () => {
-                this.custom = await customer.find(phone);
-              }, 500);
-              let prod = await customer.getRate(phone);
-              prod.qtd = 1;
-              this.cart.unshift(JSON.parse(JSON.stringify(prod)));
-              let inputProductDelivery = document.getElementById(
-                "input-product-delivery"
-              );
-              inputProductDelivery.focus();
-            } else if (result.isDismissed) {
-              // this.initDeliveryOrder()
-              this.custom = {};
-            }
-          });
-        }
-      });
     },
 
     async cashierInfo(cashier_id) {
@@ -838,7 +367,7 @@ export default {
           // remove later
           localStorage.setItem("password", result.value[1]);
 
-          document.getElementById("input-product").focus();
+          document.getElementById("input-product0").focus();
         } else {
           localStorage.removeItem("password");
         }
@@ -934,34 +463,6 @@ export default {
   },
 
   computed: {
-    computedMissedAmount(){
-      let total = this.computedOrderAmount - this.computedPaymentAmount
-      
-      return total; 
-    },
-    computedPaymentAmount() {
-      let total = 0;
-      let values = [];
-
-      this.paymentInfo.forEach((element) => {
-        total += parseFloat(element.price);
-      });
-
-      return total;
-    },
-
-    computedOrderAmount() {
-      let total = 0;
-      this.cart.forEach((element) => {
-        total += parseFloat(element.price) * element.qtd;
-      });
-      return total;
-    },
-
-    computedChangeAmount(){
-      return this.computedPaymentAmount - this.computedOrderAmount;
-    },
-
     infoForBtnReceive() {
       if (!this.cashierIsOpen) {
         return "Caixa fechado";
@@ -978,6 +479,19 @@ export default {
   watch: {
     async search(e) {
       this.products = await product.selectProdutcToCart(e);
+      var opts = document.getElementById('producs').childNodes;
+      for (var i = 0; i < opts.length; i++) {
+        if (opts[i].value === e) {
+          let inputQtd = document.getElementById("input-qtd");
+
+          if (this.tab === 1) {
+            inputQtd = document.getElementById("input-qtd-delivery");
+          }
+
+          inputQtd.focus()
+          break;
+        }
+      }
     },
   },
 };
