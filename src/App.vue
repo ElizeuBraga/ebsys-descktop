@@ -179,7 +179,7 @@ import { Order } from "./models/Order";
 import { Item } from "./models/Item";
 import { PaymentOrder } from "./models/PaymentOrder";
 import EventBus from "../src/EventBus";
-import { mixins } from "./mixins/mixins";
+// import { mixins } from "./mixins/mixins";
 import Swal from "sweetalert2";
 import OrderComponent from './components/OrderComponent.vue';
 Vue.use(BootstrapVue);
@@ -223,20 +223,31 @@ export default {
     };
   },
   async mounted() {
+    this.initLoginProccess();
+
+    this.updateData()
+
+    // console.log()
     this.paymentsFormats = await payment.all();
 
     EventBus.$on("amount-computed", (e) => {
-      console.log(e)
       this.totalCart = e
     });
 
     this.getCashiers();
     await this.isOpen();
     // this.localities = await locality.all();
-    this.initLoginProccess();
     // await ws.loadAll();
   },
   methods: {
+    async updateData(){
+      await new Ws().downloadDataFromServer('insert');
+      await new Ws().downloadDataFromServer('update');
+
+      setTimeout(()=>{
+        this.updateData()
+      },10000)
+    },
 
     formatMoney(value) {
       return helper.formatMoney(value);

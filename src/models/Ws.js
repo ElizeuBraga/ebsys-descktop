@@ -9,7 +9,7 @@ const db = new DB();
 
 let vue = new Vue();
 
-axios.defaults.baseURL = 'http://192.168.1.87:8080/ebsys/public_html/api/'
+axios.defaults.baseURL = 'http://192.168.43.209:8080/ebsys/public_html/api/'
         // axios.defaults.baseURL = 'https://api-api-api-api.herokuapp.com/api/'
         // axios.defaults.headers.common["Host"] = "http://localhost:8000/api/";
         axios.defaults.headers.common["Content-Type"] = "application/json";
@@ -22,19 +22,50 @@ axios.defaults.baseURL = 'http://192.168.1.87:8080/ebsys/public_html/api/'
 export class Ws {
     constructor() {
         this.serverTables = [
-            'users', 'sections','products', 'localities',
+            'profiles', 'users', 'sections', 'products', 'cities'
         ]
         this.localTables = [
             'cashiers'
             , 'customers', 'orders', 'items'
         ]
+
+        axios.defaults.baseURL = 'http://192.168.43.209:8080/ebsys/public_html/api/'
+        // axios.defaults.baseURL = 'https://api-api-api-api.herokuapp.com/api/'
+        // axios.defaults.headers.common["Host"] = "http://localhost:8000/api/";
+        axios.defaults.headers.common["Content-Type"] = "application/json";
+        axios.defaults.headers.common["Access-Control-Allow-Origin"] = "*";
+        axios.defaults.headers.common["Access-Control-Allow-Headers"] = "Content-Type";
+        axios.defaults.headers.common["Authorization"] =
+            "Bearer j2MFvmcsZ5RQY6Wn33q5VdRcafIm8lb2iko8zEeVvkyBNwl67gSdpjI31F9f";
     }
 
-    async loadAll(){
-        for (let t of this.serverTables) {
-            const todo = await fetch(t);
-            await this.downloadDataFromServer(t)
-            vue.$root.$emit("actualized_table", true);
+    async downloadDataFromServer(type){
+        for await(const  table of this.serverTables) {
+            let params = {}
+            if(type == 'insert'){
+                let lastId = await db.getLastId(table)
+                params = {
+                    lastId : lastId
+                }
+            }else{
+                let lastDate = await db.getLastDate(table)
+                params = {
+                    lastDate : lastDate.lastDate
+                }
+            }
+
+            await axios.get(table + '/downloadData', {params}).then(async (response)=>{
+                console.log(response.data)
+                if(response.data.length > 0){
+                    if(type == 'insert'){
+                        db.insert(table, response.data)
+                    }else{
+                        // db.update(table, response.data)
+                    }
+                }
+            })
+                
+                console.log("Download concluido")
         }
 
         for (let t of this.localTables) {
@@ -57,16 +88,5 @@ export class Ws {
         })
 
         return data
-    }
-
-    async downloadDataFromServer(table){
-        await axios.get(table + '/getLastId/').then(async (response)=>{
-            let lastIdLocal = await db.getLastId(table);
-            if(parseInt(response.data[0].lastId) > lastIdLocal){
-                let dataFromServer = await this.getDataFrom(table)
-                db.insert(table, dataFromServer)
-                axios.post(table + '/updatedToFalse/')            
-            }
-        })
     }
 }

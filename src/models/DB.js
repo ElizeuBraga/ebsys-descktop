@@ -13,13 +13,21 @@ export class DB{
             let values = Object.values(a);
             let sql = "UPDATE " + table + " SET ";
             let map = ""
+
+            let count = 0;
             for await (const [j, k] of keys.entries()) {
                 if(keys[j] != 'id'){
                     map += keys[j] + " = '" + values[j] + "', " 
                 }
             }
 
-            sql += map + "updated_at = now() WHERE id = " + a.id
+            let updated_at = "";
+            if(!keys.includes('updated_at')){
+                updated_at = " updated_at = NOW()"
+            }
+            sql += map + updated_at + " WHERE id = " + a.id
+
+            console.log(sql)
 
             await this.execute(sql);
         }
@@ -68,6 +76,12 @@ export class DB{
         });
     }
 
+    async getLastDate(table){
+        let sql = "SELECT CASE WHEN MAX(updated_at) IS NULL THEN false ELSE MAX(updated_at) END AS lastDate FROM " + table
+
+        return await this.selectOne(sql);
+    }
+
     async select(sql){
         return new Promise(function(resolve, reject){
             con.query(sql, async (err, result) => {
@@ -91,7 +105,7 @@ export class DB{
                     console.log(err)
                 }else{
                     if(result.length > 0){
-                        if(result.length){
+                        if(result.length == 1){
                             resolve(result[0])
                         }
                         resolve(result);

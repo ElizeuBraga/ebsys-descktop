@@ -12,23 +12,27 @@ import {Address} from '../models/Address';
 import {PaymentCashier} from '../models/PaymentCashier';
 import {PaymentOrder} from '../models/PaymentOrder';
 import {Payment} from '../models/Payment';
+import {DB} from '../models/DB';
+
+import {Ws} from '../models/Ws';
 test('', async() => {
-  let result = await
+  let result = await new Ws().downloadDataFromServer('profiles');
 
 
-  new Customer().update([
-    {
-      id: 1,
-      name: "Testa S2"
-    },
-    {
-      id: 6,
-      name: "Chana"
-    }
-  ])
+
+  // new Customer().update([
+  //   {
+  //     id: 1,
+  //     name: "Testa S2"
+  //   },
+  //   {
+  //     id: 6,
+  //     name: "Chana"
+  //   }
+  // ])
 
 
 
   // await expect(result).resolves.toBe(11);
-  // console.log(result)
+  console.log(result)
 });

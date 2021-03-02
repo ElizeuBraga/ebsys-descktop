@@ -1,8 +1,12 @@
 begin;
--- 	SET FOREIGN_KEY_CHECKS=ON;
+	SET FOREIGN_KEY_CHECKS=ON;
 	drop database if exists ebsys_descktop;
 	create database if not exists ebsys_descktop;
 	use ebsys_descktop;
+
+-- 	drop database if exists ebsys_web;
+-- 	create database if not exists ebsys_web;
+-- 	use ebsys_web;
 
 	-- made in ws
 	CREATE table if not exists pages(
