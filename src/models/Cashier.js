@@ -14,11 +14,17 @@ export class Cashier {
     }
 
     async all(dates = false) {
+        let user = JSON.parse(localStorage.getItem('user'));
+        
+        if(!user){
+            return false;
+        }
+
         let and = ""
         if(dates){
             and = ` AND c.created_at BETWEEN '${dates[0]}' AND '${dates[1]}'`
         }
-        let user = JSON.parse(localStorage.getItem('user'));
+
         let sql = ` SELECT
                         c.id,
                         u.name as user_name,

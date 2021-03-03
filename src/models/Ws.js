@@ -29,7 +29,7 @@ export class Ws {
             , 'customers', 'orders', 'items'
         ]
 
-        axios.defaults.baseURL = 'http://192.168.43.209:8080/ebsys/public_html/api/'
+        axios.defaults.baseURL = 'http://192.168.01.87:8080/ebsys/public_html/api/'
         // axios.defaults.baseURL = 'https://api-api-api-api.herokuapp.com/api/'
         // axios.defaults.headers.common["Host"] = "http://localhost:8000/api/";
         axios.defaults.headers.common["Content-Type"] = "application/json";

@@ -179,6 +179,7 @@ import { Order } from "./models/Order";
 import { Item } from "./models/Item";
 import { PaymentOrder } from "./models/PaymentOrder";
 import EventBus from "../src/EventBus";
+const Pusher = require("pusher-js");
 // import { mixins } from "./mixins/mixins";
 import Swal from "sweetalert2";
 import OrderComponent from './components/OrderComponent.vue';
@@ -197,6 +198,17 @@ const payment = new Payment();
 const order = new Order();
 const item = new Item();
 const paymentOrder = new PaymentOrder();
+
+// Enable pusher logging - don't include this in production
+// Pusher.logToConsole = true;
+
+var pusher = new Pusher('a885cc143df63df6146a', {
+  cluster: 'us2'
+});
+
+var channel = pusher.subscribe('data-insert');
+
+
 export default {
   // mixins:[mixins],
   components:{
@@ -225,7 +237,10 @@ export default {
   async mounted() {
     this.initLoginProccess();
 
-    this.updateData()
+    channel.bind('insert', (data) => {
+      this.updateData()
+    });
+
 
     // console.log()
     this.paymentsFormats = await payment.all();
@@ -243,10 +258,6 @@ export default {
     async updateData(){
       await new Ws().downloadDataFromServer('insert');
       await new Ws().downloadDataFromServer('update');
-
-      setTimeout(()=>{
-        this.updateData()
-      },10000)
     },
 
     formatMoney(value) {

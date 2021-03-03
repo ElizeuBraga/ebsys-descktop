@@ -25,7 +25,7 @@
     "mousetrap": "^1.6.5",
     "mysql": "^2.18.1",
     "pusher": "^3.0.1",
-    "pusher-js": "^6.0.0",
+    "pusher-js": "^6.0.3",
     "spectron": "^11.1.0",
     "sweetalert2": "^10.3.5",
     "v-money": "^0.8.1",
