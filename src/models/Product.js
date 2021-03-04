@@ -77,7 +77,15 @@ export class Product {
     }
 
     async selectProdutcToCart(name){
+        if(name == ''){
+            return false
+        }
         let sql = `SELECT * FROM ${table} WHERE name like '%${name}%' LIMIT 20`;
+        return await db.select(sql);
+    }
+
+    async selectProdutcByName(name){
+        let sql = `SELECT * FROM ${table} WHERE name = '${name}'`;
 
         return await db.select(sql);
     }

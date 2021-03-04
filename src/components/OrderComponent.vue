@@ -1,75 +1,83 @@
 <template>
-  <b-row>
-    <b-row class="w-50 p-3 mh-20">
-      <b-col cols="8">
+  <div>
+    <!-- <b-row> -->
+    <b-row>
+      <b-col cols="4">
         <label>Nome do produto:</label>
+        <!-- <input maxlength="11" class="swal2-input" placeholder="Telefone do cliente" type="text" style="display: flex; background:white; margin:0"> -->
         <b-form-input
+          class="swal2-input"
           v-model="search"
-          :list="'producs'+orderType"
-          :id="'input-product'+orderType"
+          :list="'producs' + tabIndex"
+          :id="'input-product' + orderType"
         ></b-form-input>
-        <datalist :id="'producs'+orderType">
+        <datalist :id="'producs' + orderType">
           <option v-for="(p, index) in products" :value="p.name" :key="index">
             {{ parseFloat(p.price).toFixed(2).replace(".", ",") }}
           </option>
         </datalist>
       </b-col>
-      <b-col cols="4">
+      <b-col cols="2">
         <label>Quantidade:</label>
         <b-form-input
           type="number"
+          class="swal2-input"
           min="1"
           value="1"
-          :id="'input-qtd'+orderType"
+          @input="preventInputQtd()"
+          :id="'input-qtd' + orderType"
         ></b-form-input>
       </b-col>
-    </b-row>
-    <b-row class="w-50 p-3">
       <!-- <b-row style="background-color:red; height:90%"> -->
-      <label for="" class="text-center">{{customer.name}} - {{customer.phone}} - {{customer.address}}</label>
-      <div style="overflow-y: scroll; max-height: 85vh">
-        <table class="table table-striped" style="background-color: white">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Produto</th>
-              <th class="text-center" scope="col">Valor</th>
-              <th class="text-center" scope="col">Quantidade</th>
-              <th class="text-center" scope="col">Valor parcial</th>
-              <th class="text-center" scope="col">Opções</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(i, index) in cart" :key="index">
-              <th scope="row">{{ index + 1 }}</th>
-              <td>{{ i.name }}</td>
-              <td class="text-center">
-                {{ parseFloat(i.price).toFixed(2).replace(".", ",") }}
-              </td>
-              <td class="text-center">{{ i.qtd }}</td>
-              <td class="text-center">
-                {{
-                  parseFloat(i.qtd * i.price)
-                    .toFixed(2)
-                    .replace(".", ",")
-                }}
-              </td>
-              <td class="text-center">
-                <b-icon
-                  style="cursor: pointer"
-                  @click="removeItem(index)"
-                  variant="danger"
-                  icon="trash-fill"
-                  aria-hidden="true"
-                ></b-icon>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <!-- </b-row> -->
+      <b-col cols="6" class="text-center">
+        <label for=""
+          >{{ customer.name }} - {{ customer.phone }} -
+          {{ customer.address }}</label
+        >
+        <div style="overflow-y: scroll; max-height: 87vh; width: 100%">
+          <table class="table table-striped" style="background-color: white">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Produto</th>
+                <th class="text-center" scope="col">Valor</th>
+                <th class="text-center" scope="col">Quantidade</th>
+                <th class="text-center" scope="col">Valor parcial</th>
+                <th class="text-center" scope="col">Opções</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(i, index) in cart" :key="index">
+                <th scope="row">{{ index + 1 }}</th>
+                <td>{{ i.name }}</td>
+                <td class="text-center">
+                  {{ parseFloat(i.price).toFixed(2).replace(".", ",") }}
+                </td>
+                <td class="text-center">{{ i.qtd }}</td>
+                <td class="text-center">
+                  {{
+                    parseFloat(i.qtd * i.price)
+                      .toFixed(2)
+                      .replace(".", ",")
+                  }}
+                </td>
+                <td class="text-center">
+                  <b-icon
+                    style="cursor: pointer"
+                    @click="removeItem(index)"
+                    variant="danger"
+                    icon="trash-fill"
+                    aria-hidden="true"
+                  ></b-icon>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </b-col>
     </b-row>
-  </b-row>
+    <!-- </b-row> -->
+  </div>
 </template>
 
 <script>
@@ -121,9 +129,8 @@ export default {
 
   async mounted() {
     EventBus.$on("change-tab", (e) => {
-      this.tabIndex = e
-      this.search = "";
-      this.cart = []
+      this.reset();
+      this.tabIndex = e;
       if (e == 1) {
         this.initDeliveryOrder();
       }
@@ -132,13 +139,33 @@ export default {
   },
 
   methods: {
+    preventInputQtd(){
+      let inputQtd = document.getElementById('input-qtd'+this.tabIndex)
+      if(inputQtd.value == ""){
+        setTimeout(()=>{
+          inputQtd.value = "1"
+        }, 100)
+      }
+    },
+
+    reset() {
+      document.getElementById("input-product1").value = "";
+      document.getElementById("input-product0").value = "";
+      document.getElementById("input-qtd0").value = 1;
+      document.getElementById("input-qtd1").value = 1;
+      this.search = "";
+      this.cart = [];
+      this.products = [];
+      this.paymentInfo = [];
+    },
+
     initDeliveryOrder() {
       let name = "";
       let phone = "";
       let address = "";
       let complement = "";
       let city_id = "";
-      let customerResult = {};
+      this.reset();
       this.cart = [];
       Swal.fire({
         title: "Buscar cliente",
@@ -158,20 +185,20 @@ export default {
         },
       }).then(async (result) => {
         if (result.isConfirmed) {
-          customerResult = await customer.find(result.value);
+          this.customer = await customer.find(result.value);
 
           let cities = await city.all();
           phone = result.value;
 
           let html = '<select id="swal2-select" class="swal2-select" name="">';
 
-          if (!customerResult) {
+          if (!this.customer) {
             html += "<option selected value disabled>Cidade</option>";
           }
 
           cities.forEach((element) => {
             html += `<option ${
-              customerResult && element.id == customerResult.city_id
+              this.customer && element.id == this.customer.city_id
                 ? "selected"
                 : ""
             } value="${element.id}">${element.name}</option>`;
@@ -188,24 +215,29 @@ export default {
             showCancelButton: true,
             cancelButtonText: "Cancelar",
             didOpen: () => {
-              if (customerResult) {
-                name = document.getElementById("swal-input1").value =
-                  customerResult.name;
-                phone = document.getElementById("swal-input2").value =
-                  customerResult.phone;
-                address = document.getElementById("swal-input3").value =
-                  customerResult.address;
-                complement = document.getElementById("swal-input4").value =
-                  customerResult.complement;
-                city_id = document.getElementById("swal2-select").value =
-                  customerResult.city_id;
+              if (this.customer) {
+                name = document.getElementById(
+                  "swal-input1"
+                ).value = this.customer.name;
+                phone = document.getElementById(
+                  "swal-input2"
+                ).value = this.customer.phone;
+                address = document.getElementById(
+                  "swal-input3"
+                ).value = this.customer.address;
+                complement = document.getElementById(
+                  "swal-input4"
+                ).value = this.customer.complement;
+                city_id = document.getElementById(
+                  "swal2-select"
+                ).value = this.customer.city_id;
               } else {
                 document.getElementById("swal-input1").focus();
                 phone = document.getElementById("swal-input2").value = phone;
               }
             },
             preConfirm: async () => {
-              // if(!customerResult){
+              // if(!this.customer){
               name = document.getElementById("swal-input1").value;
               phone = document.getElementById("swal-input2").value;
               address = document.getElementById("swal-input3").value;
@@ -225,8 +257,8 @@ export default {
                 address: address,
                 complement: complement,
                 city_id: city_id,
-                address_id: customerResult.address_id,
-                customer_id: customerResult.id,
+                address_id: this.customer.address_id,
+                customer_id: this.customer.id,
               };
             },
           }).then(async (result) => {
@@ -234,7 +266,7 @@ export default {
               let response = false;
               let customer_obj = [
                 {
-                  id: customerResult ? customerResult.id : undefined,
+                  id: this.customer ? this.customer.id : undefined,
                   name: result.value.name,
                   phone: result.value.phone,
                 },
@@ -242,19 +274,19 @@ export default {
 
               let address_obj = [
                 {
-                  id: customerResult ? customerResult.address_id : undefined,
+                  id: this.customer ? this.customer.address_id : undefined,
                   address: result.value.address,
                   complement: result.value.complement,
                   city_id: result.value.city_id,
-                  customer_id: customerResult ? customerResult.id : undefined,
+                  customer_id: this.customer ? this.customer.id : undefined,
                 },
               ];
-              if (!customerResult) {
-                db.execute('BEGIN;');
+              if (!this.customer) {
+                db.execute("BEGIN;");
                 let customer_id = await customer.create(customer_obj);
                 address_obj[0].customer_id = customer_id;
                 let address_id = await address_class.create(address_obj);
-                db.execute('COMMIT;');
+                db.execute("COMMIT;");
               } else {
                 let response = await customer.update(customer_obj);
 
@@ -271,9 +303,8 @@ export default {
                 this.customer = await customer.find(phone);
               }, 500);
               let prod = await customer.getRate(phone);
-              prod.qtd = 1;
-              this.cart.unshift(JSON.parse(JSON.stringify(prod)));
 
+              this.insertProdInCart(prod.name, 1);
             } else if (result.isDismissed) {
               // this.initDeliveryOrder()
               this.custom = {};
@@ -284,13 +315,16 @@ export default {
     },
 
     async insertProdInCart(inputProdValue, inputQtdValue) {
-      console.log(inputProdValue)
-      console.log(inputQtdValue)
-      let prod = await product.selectProdutcToCart(inputProdValue);
-      prod[0].qtd = inputQtdValue;
+      let prod = await product.selectProdutcByName(inputProdValue);
 
-      this.cart.push(JSON.parse(JSON.stringify(prod[0])));
-      console.log("Inserido no carrinho");
+      if (prod && inputQtdValue != "") {
+        prod[0].qtd = inputQtdValue;
+        let teste = JSON.parse(JSON.stringify(prod[0]));
+        this.cart.push(teste);
+        // this.search = "";
+        console.log("Inserido no carrinho");
+      }
+      this.products = [];
     },
 
     async closeOrder() {
@@ -431,9 +465,7 @@ export default {
 
               db.execute("COMMIT;");
 
-              this.cart = [];
-              this.customer = {};
-              this.paymentInfo = [];
+              this.reset();
             }
           });
           // // this.paymentInfo.push(result.value);
@@ -441,7 +473,7 @@ export default {
           // // document.getElementById("input-product").focus();
           // this.closeOrder();
         } else {
-          this.paymentInfo = []
+          this.paymentInfo = [];
         }
       });
     },
@@ -457,92 +489,130 @@ export default {
           this.cart.splice(index, 1);
         }
 
-        let inputProd = document.getElementById("input-product");
+        let inputProd = document.getElementById(
+          "input-product" + this.tabIndex
+        );
         inputProd.focus();
       });
     },
+
+    testaRemve() {
+      console.log("Testa remove");
+    },
   },
   watch: {
-    cart(){
-      this.computedOrderAmount
+    cart() {
+      this.computedOrderAmount;
     },
 
     async search(e) {
       this.products = await product.selectProdutcToCart(e);
-      var opts = document.getElementById("producs"+this.tabIndex).childNodes;
 
+      var opts = document.getElementById("producs" + this.tabIndex).childNodes;
+
+      // document.removeEventListener("keypress", this.testaRemve());
       if (this.search_aux == 0) {
-        document.addEventListener("keypress", async (e) => {
-          let swalInput1 = document.getElementById("swal-input1");
-          let swalInput2 = document.getElementById("swal-input2");
+        console.log("Evento adicionado");
+        this.search_aux++;
+        document.addEventListener(
+          "keypress",
+          async (e) => {
+            e.stopPropagation();
+            let swalInput1 = document.getElementById("swal-input1");
+            let swalInput2 = document.getElementById("swal-input2");
 
-          let inputProd = document.getElementById("input-product"+this.tabIndex);
-          let inputQtd = document.getElementById("input-qtd"+this.tabIndex);
-          if (e.key === "Enter") {
-            if (swalInput1 === document.activeElement) {
-              swalInput2.focus();
-              return;
-            }
+            let inputProd = document.getElementById(
+              "input-product" + this.tabIndex
+            );
+            let inputQtd = document.getElementById("input-qtd" + this.tabIndex);
+            if (e.key === "Enter") {
+              if (swalInput1 === document.activeElement) {
+                swalInput2.focus();
+                return;
+              }
 
-            if (swalInput2 === document.activeElement) {
-              this.paymentFormatInfoInserted = false;
-              if (this.computedMissedAmount > 0) {
-                let paymentInfo = {
-                  payment_id: swalInput1.value,
-                  price: swalInput2.value,
-                };
-                this.paymentInfo.push(JSON.parse(JSON.stringify(paymentInfo)));
-                setTimeout(() => {
-                  this.paymentFormatSelecting = true;
-                  swalInput2.focus();
-                }, 100);
-                this.closeOrder();
+              if (swalInput2 === document.activeElement) {
+                this.paymentFormatInfoInserted = false;
+                if (this.computedMissedAmount > 0) {
+                  let paymentInfo = {
+                    payment_id: swalInput1.value,
+                    price: swalInput2.value,
+                  };
+                  this.paymentInfo.push(
+                    JSON.parse(JSON.stringify(paymentInfo))
+                  );
+                  setTimeout(() => {
+                    this.paymentFormatSelecting = true;
+                    swalInput2.focus();
+                  }, 100);
+                  this.closeOrder();
+
+                  return;
+                }
+              }
+
+              if (
+                inputQtd === document.activeElement &&
+                inputProd.value != ""
+              ) {
+                this.insertProdInCart(inputProd.value, inputQtd.value);
+
+                // setTimeout(() => {
+                  inputQtd.value = 1;
+                  inputProd.value = "";
+                  this.search = "";
+                  this.products = [];
+
+                  inputProd.focus();
+                // }, 100);
 
                 return;
               }
-            }
 
-            if (inputQtd === document.activeElement && inputProd.value != "") {
-              let inputProdValue = inputProd.value;
-              let inputQtdValue = inputQtd.value;
-              inputQtd.value = 1;
-              inputProd.value = "";
-              this.insertProdInCart(inputProdValue, inputQtdValue);
-              this.products = [];
-              this.search = "";
-
-              setTimeout(()=>{
+              if (
+                inputQtd === document.activeElement &&
+                inputProd.value == ""
+              ) {
+                inputQtd.value = 1;
+                inputProd.value = "";
+                this.search = "";
+                this.products = [];
                 inputProd.focus();
-              }, 100)
-              return;
-            }
+                return;
+              }
 
-            if (inputQtd === document.activeElement && inputProd.value == "") {
-              inputProd.focus();
-              return;
+              if (
+                inputProd === document.activeElement &&
+                inputProd.value == "" &&
+                this.cart.length > 0
+              ) {
+                this.closeOrder();
+                return;
+              }
             }
-
-            if (inputProd === document.activeElement && inputProd.value == "" && this.cart.length > 0) {
-              this.closeOrder()
-              return;
-            }
-          }
-        });
+          },
+          true
+        );
       }
 
-      let inputQtd = document.getElementById("input-qtd"+this.tabIndex);
+      let inputQtd = document.getElementById("input-qtd" + this.tabIndex);
       for (var i = 0; i < opts.length; i++) {
         if (opts[i].value === e) {
+          console.log("Oi");
           inputQtd.focus();
           break;
         }
       }
-
-      this.search_aux++;
     },
   },
 
   computed: {
+    customerIsEmpty() {
+      if (this.index == 1) {
+        return this.customer.name == undefined;
+      }
+    },
+
     computedMissedAmount() {
       let total = this.computedOrderAmount - this.computedPaymentAmount;
 
@@ -555,7 +625,7 @@ export default {
         total += parseFloat(element.price) * element.qtd;
       });
 
-      EventBus.$emit('amount-computed', total);
+      EventBus.$emit("amount-computed", total);
       return parseFloat(total).toFixed(2);
     },
     computedPaymentAmount() {

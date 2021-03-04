@@ -1,5 +1,5 @@
 <template>
-  <div style="min-height: 100vh; background-color:#dee2e6">
+  <div style="min-height: 100vh; background-color: #dee2e6">
     <b-tabs v-model="tabIndex" card>
       <!--
         *
@@ -11,7 +11,7 @@
         :title-link-class="linkClass(0)"
         @click="changeTab(0)"
       >
-        <order-component :orderType="0"/>
+        <order-component :orderType="0" />
       </b-tab>
 
       <!--
@@ -24,7 +24,7 @@
         :title-link-class="linkClass(1)"
         @click="changeTab(1)"
       >
-        <order-component :orderType="1"/>
+        <order-component :orderType="1" />
       </b-tab>
 
       <!--
@@ -37,84 +37,77 @@
         :title-link-class="linkClass(2)"
         @click="changeTab(2)"
       >
-        <b-row v-if="cashierIsOpen">
-          <b-col cols="8" class="text-success"> Caixa aberto </b-col>
-          <b-col cols="4" class="text-right">
-            <button
-              class="btn btn-primary m-2"
-              @click="getCashiers((byDate = true))"
-            >
-              Buscar
-            </button>
-            <button class="btn btn-danger" @click="closeCashier">
-              Fechar caixa
-            </button>
+        <b-row style="min-width: 50%">
+          <b-col cols="6">
+          <!-- <b-row style="background-color:red; height:90%"> -->
+          <div style="overflow-y: scroll; max-height: 87vh">
+            <table class="table table-striped" style="background-color: white">
+              <thead>
+                <tr>
+                  <th class="text-center" scope="col">Valor</th>
+                  <th class="text-center" scope="col">Data de abertura</th>
+                  <th class="text-center" scope="col">Data Fechamento</th>
+                  <th class="text-center" scope="col">Opções</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(i, index) in cashiers" :key="index">
+                  <td class="text-center">
+                    {{ parseFloat(i.value).toFixed(2).replace(".", ",") }}
+                  </td>
+                  <td class="text-center">{{ i.created_at }}</td>
+                  <td class="text-center">{{ i.updated_at }}</td>
+                  <td class="text-center">
+                    <!-- <b-icon
+                      style="cursor: pointer"
+                      @click="removeItem(index)"
+                      variant="danger"
+                      icon="trash-fill"
+                      aria-hidden="true"
+                    ></b-icon> -->
+                    <button class="btn btn-secondary btn-sm mr-1" title="Todos">T</button>
+                    <button class="btn btn-primary btn-sm mr-1" title="Balcão">B</button>
+                    <button class="btn btn-success btn-sm mr-1" title="Delivery">D</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           </b-col>
-        </b-row>
-        <b-row v-if="!cashierIsOpen">
-          <b-col cols="8" class="text-danger"> Caixa fechado </b-col>
-          <b-col cols="4" class="text-right">
-            <button
-              class="btn btn-primary m-2"
-              @click="getCashiers((byDate = true))"
-            >
-              Buscar
-            </button>
-            <button class="btn btn-success" @click="openCashier">
-              Abrir caixa
-            </button>
-          </b-col>
-        </b-row>
 
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th class="text-center" scope="col">Data</th>
-              <th class="text-center" scope="col">Valor</th>
-              <th class="text-center" scope="col">Fechado por</th>
-              <th class="text-center" scope="col">Data fechamento</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="text-center text-danger" v-if="cashiers.length == 0">
-              <th></th>
-              <th></th>
-              <th>Nenhum registro encontrado</th>
-              <th></th>
-            </tr>
-            <tr
-              v-else
-              style="cursor: pointer"
-              title="Clique para mais informações"
-              v-for="(c, index) in cashiers"
-              :key="index"
-              @click="cashierInfo(c.id)"
-            >
-              <th class="text-center" scope="row">{{ c.created_at }}</th>
-              <td class="text-center">
-                {{ parseFloat(c.value).toFixed(2).replace(".", ",") }}
-              </td>
-              <td class="text-center">{{ c.user_name }}</td>
-              <td class="text-center">{{ c.updated_at }}</td>
-            </tr>
-          </tbody>
-        </table>
+          <b-col cols="6">
+          <!-- <b-row style="background-color:red; height:90%"> -->
+          <div style="overflow-y: scroll; max-height: 87vh;">
+            <table class="table table-striped" style="background-color: white">
+              <thead>
+                <tr>
+                  <th scope="col">Produto</th>
+                  <th class="text-center" scope="col">Quantidade vendida</th>
+                  <th class="text-center" scope="col">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(i, index) in cashiers" :key="index">
+                  <td>{{ i.user_name }}</td>
+                  <td class="text-center">15</td>
+                  <td class="text-center">{{ parseFloat(i.value).toFixed(2).replace(".", ",") }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          </b-col>
+          <!-- </b-row> -->
+        </b-row>
       </b-tab>
     </b-tabs>
 
     <footer class="footer">
       <div class="row">
-        <div class="col-6">
-          
-        </div>
+        <div class="col-6"></div>
         <div class="col-6">
           <b-row>
-            <b-col class="font-big">
-              Total
-            </b-col>
-            <b-col class="font-big">
-              R$ {{ formatMoney(totalCart) }}
-            </b-col>
+            <b-col class="font-big"> Total </b-col>
+            <b-col class="font-big"> R$ {{ formatMoney(totalCart) }} </b-col>
           </b-row>
         </div>
       </div>
@@ -127,37 +120,55 @@
   /* min-height: 800px; */
 }
 
-.card-header{
-  background-color: #2778c4!important;
-  border-radius: 0!important;
-  border: #2778c4!important;
+/* table tbody {
+  display: block;
+  overflow-y: scroll;
+} */
+
+.card-header {
+  background-color: #2778c4 !important;
+  border-radius: 0 !important;
+  border: #2778c4 !important;
 }
 
-.nav.nav-tabs.card-header-tabs{
+.nav.nav-tabs.card-header-tabs {
   /* margin: 0!important; */
 }
 
-.nav-link.active.bg-primary.text-light{
-  background-color: rgb(222, 226, 230)!important;
-  color: #2778c4!important;
-  border-color: rgb(222, 226, 230)!important;
+.nav-link.active.bg-primary.text-light {
+  background-color: rgb(222, 226, 230) !important;
+  color: #2778c4 !important;
+  border-color: rgb(222, 226, 230) !important;
 }
 
-.nav-link.bg-light.text-info{
-  border-radius: 0!important;
-  background-color: #2778c4!important;
-  color: white!important;
-  border: #2778c4!important;
+.nav-link.bg-light.text-info {
+  border-radius: 0 !important;
+  background-color: #2778c4 !important;
+  color: white !important;
+  border: #2778c4 !important;
+}
+
+.swal2-input, .swal2-input:focus{
+  border: 2px solid #2778c4;
+  background-color: white;
+}
+#input-product0, #input-product1, #input-qtd0, #input-qtd1{
+  margin: 0!important;
+}
+
+.swal2-title{
+  color: #2778c4;
 }
 
 .footer {
   position: fixed;
   left: 0;
   bottom: 0;
-  margin-bottom: 5px;
+  color: white;
+  /* margin-bottom: 5px; */
   padding-top: 5px;
   width: 100%;
-  background: rgba(0, 0, 0, 0.03);
+  background: #2778c4;
   text-align: center;
 }
 </style>
@@ -182,7 +193,7 @@ import EventBus from "../src/EventBus";
 const Pusher = require("pusher-js");
 // import { mixins } from "./mixins/mixins";
 import Swal from "sweetalert2";
-import OrderComponent from './components/OrderComponent.vue';
+import OrderComponent from "./components/OrderComponent.vue";
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 
@@ -202,17 +213,16 @@ const paymentOrder = new PaymentOrder();
 // Enable pusher logging - don't include this in production
 // Pusher.logToConsole = true;
 
-var pusher = new Pusher('a885cc143df63df6146a', {
-  cluster: 'us2'
+var pusher = new Pusher("a885cc143df63df6146a", {
+  cluster: "us2",
 });
 
-var channel = pusher.subscribe('data-insert');
-
+var channel = pusher.subscribe("data-insert");
 
 export default {
   // mixins:[mixins],
-  components:{
-    OrderComponent    
+  components: {
+    OrderComponent,
   },
   data() {
     return {
@@ -237,16 +247,15 @@ export default {
   async mounted() {
     this.initLoginProccess();
 
-    channel.bind('insert', (data) => {
-      this.updateData()
+    channel.bind("insert", (data) => {
+      this.updateData();
     });
-
 
     // console.log()
     this.paymentsFormats = await payment.all();
 
     EventBus.$on("amount-computed", (e) => {
-      this.totalCart = e
+      this.totalCart = e;
     });
 
     this.getCashiers();
@@ -255,17 +264,17 @@ export default {
     // await ws.loadAll();
   },
   methods: {
-    async updateData(){
-      await new Ws().downloadDataFromServer('insert');
-      await new Ws().downloadDataFromServer('update');
+    async updateData() {
+      await new Ws().downloadDataFromServer("insert");
+      await new Ws().downloadDataFromServer("update");
     },
 
     formatMoney(value) {
       return helper.formatMoney(value);
     },
-    
+
     changeTab(tabIndex) {
-      EventBus.$emit('change-tab', tabIndex);
+      EventBus.$emit("change-tab", tabIndex);
       this.tab = tabIndex;
     },
 
@@ -329,6 +338,7 @@ export default {
         });
       } else {
         this.cashiers = await cashier.all();
+        console.log(this.cashiers);
       }
     },
 
@@ -436,31 +446,31 @@ export default {
         preConfirm: () => {
           let payment_id = document.getElementById("swal2-select").value;
           let price = document.getElementById("swal-input1").value;
-          
-          return { payment_id:payment_id, price: parseFloat(price) };
+
+          return { payment_id: payment_id, price: parseFloat(price) };
         },
       }).then(async (result) => {
-        if(result.isConfirmed){
+        if (result.isConfirmed) {
           this.paymentInfo.push(result.value);
           this.closeCashier();
-        }else if(result.isDismissed){
-          this.paymentInfo = []
-        }else{
+        } else if (result.isDismissed) {
+          this.paymentInfo = [];
+        } else {
           // this.paymentInfo = []
           Swal.fire({
-            icon:"question",
-            title:"Finalizar recebimento?",
+            icon: "question",
+            title: "Finalizar recebimento?",
             showCancelButton: true,
-            cancelButtonText:"Cancelar"
-          }).then((result)=>{
-            if(result.isDismissed){
-              this.closeCashier()
-            }else if(result.isConfirmed){
+            cancelButtonText: "Cancelar",
+          }).then((result) => {
+            if (result.isDismissed) {
+              this.closeCashier();
+            } else if (result.isConfirmed) {
               cashier.update(this.paymentInfo);
 
-              this.paymentInfo = []
+              this.paymentInfo = [];
             }
-          })
+          });
         }
       });
     },
@@ -501,7 +511,7 @@ export default {
   watch: {
     async search(e) {
       this.products = await product.selectProdutcToCart(e);
-      var opts = document.getElementById('producs').childNodes;
+      var opts = document.getElementById("producs").childNodes;
       for (var i = 0; i < opts.length; i++) {
         if (opts[i].value === e) {
           let inputQtd = document.getElementById("input-qtd");
@@ -510,7 +520,7 @@ export default {
             inputQtd = document.getElementById("input-qtd-delivery");
           }
 
-          inputQtd.focus()
+          inputQtd.focus();
           break;
         }
       }
@@ -519,7 +529,7 @@ export default {
 };
 </script>
 <style lang="scss">
-  .font-big{
-    font-size: 30px;
-  }
+.font-big {
+  font-size: 30px;
+}
 </style>

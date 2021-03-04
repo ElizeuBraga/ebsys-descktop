@@ -1,5 +1,6 @@
 begin;
-	SET FOREIGN_KEY_CHECKS=ON;
+-- 	SET FOREIGN_KEY_CHECKS=ON;
+-- 	SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 	drop database if exists ebsys_descktop;
 	create database if not exists ebsys_descktop;
 	use ebsys_descktop;

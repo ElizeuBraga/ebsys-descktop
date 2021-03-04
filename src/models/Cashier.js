@@ -20,6 +20,7 @@ export class Cashier {
             return false;
         }
 
+
         let and = ""
         if(dates){
             and = ` AND c.created_at BETWEEN '${dates[0]}' AND '${dates[1]}'`
@@ -28,7 +29,8 @@ export class Cashier {
         let sql = ` SELECT
                         c.id,
                         u.name as user_name,
-                        -- sum(money + debit + credit + ticket) as value,
+                        CASE WHEN (select sum(price) from payments_cashiers pc where cashier_id = c.id) > 0
+                        THEN (select sum(price) from payments_cashiers pc where cashier_id = c.id) ELSE 0 END as value,
                         DATE_FORMAT(c.created_at, '%d-%m-%Y às %H:%i') as created_at,
                         DATE_FORMAT(c.updated_at, '%d-%m-%Y às %H:%i') as updated_at
                     FROM cashiers c 
@@ -36,6 +38,7 @@ export class Cashier {
                     where user_id = ${user.id} AND c.updated_at is not null ${and}
                     GROUP by c.id
                     order by c.created_at DESC`;
+
 
         let cashiers = await db.selectMany(sql);
         

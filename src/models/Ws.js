@@ -22,11 +22,10 @@ axios.defaults.baseURL = 'http://192.168.43.209:8080/ebsys/public_html/api/'
 export class Ws {
     constructor() {
         this.serverTables = [
-            'profiles', 'users', 'sections', 'products', 'cities'
+            'profiles', 'users', 'sections', 'products', 'cities', 'payments'
         ]
         this.localTables = [
-            'cashiers'
-            , 'customers', 'orders', 'items'
+            'cashiers','customers', 'orders', 'items'
         ]
 
         axios.defaults.baseURL = 'http://192.168.01.87:8080/ebsys/public_html/api/'
