@@ -37,67 +37,7 @@
         :title-link-class="linkClass(2)"
         @click="changeTab(2)"
       >
-        <b-row style="min-width: 50%">
-          <b-col cols="6">
-          <!-- <b-row style="background-color:red; height:90%"> -->
-          <div style="overflow-y: scroll; max-height: 87vh">
-            <table class="table table-striped" style="background-color: white">
-              <thead>
-                <tr>
-                  <th class="text-center" scope="col">Valor</th>
-                  <th class="text-center" scope="col">Data de abertura</th>
-                  <th class="text-center" scope="col">Data Fechamento</th>
-                  <th class="text-center" scope="col">Opções</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(i, index) in cashiers" :key="index">
-                  <td class="text-center">
-                    {{ parseFloat(i.value).toFixed(2).replace(".", ",") }}
-                  </td>
-                  <td class="text-center">{{ i.created_at }}</td>
-                  <td class="text-center">{{ i.updated_at }}</td>
-                  <td class="text-center">
-                    <!-- <b-icon
-                      style="cursor: pointer"
-                      @click="removeItem(index)"
-                      variant="danger"
-                      icon="trash-fill"
-                      aria-hidden="true"
-                    ></b-icon> -->
-                    <button class="btn btn-secondary btn-sm mr-1" title="Todos">T</button>
-                    <button class="btn btn-primary btn-sm mr-1" title="Balcão">B</button>
-                    <button class="btn btn-success btn-sm mr-1" title="Delivery">D</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          </b-col>
-
-          <b-col cols="6">
-          <!-- <b-row style="background-color:red; height:90%"> -->
-          <div style="overflow-y: scroll; max-height: 87vh;">
-            <table class="table table-striped" style="background-color: white">
-              <thead>
-                <tr>
-                  <th scope="col">Produto</th>
-                  <th class="text-center" scope="col">Quantidade vendida</th>
-                  <th class="text-center" scope="col">Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(i, index) in cashiers" :key="index">
-                  <td>{{ i.user_name }}</td>
-                  <td class="text-center">15</td>
-                  <td class="text-center">{{ parseFloat(i.value).toFixed(2).replace(".", ",") }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          </b-col>
-          <!-- </b-row> -->
-        </b-row>
+        <cashier-component/>
       </b-tab>
     </b-tabs>
 
@@ -194,6 +134,7 @@ const Pusher = require("pusher-js");
 // import { mixins } from "./mixins/mixins";
 import Swal from "sweetalert2";
 import OrderComponent from "./components/OrderComponent.vue";
+import CashierComponent from "./components/CashierComponent.vue";
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 
@@ -225,6 +166,7 @@ export default {
   // mixins:[mixins],
   components: {
     OrderComponent,
+    CashierComponent
   },
   data() {
     return {
