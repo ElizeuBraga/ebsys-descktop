@@ -14,10 +14,11 @@ export class DB{
             let sql = "UPDATE " + table + " SET ";
             let map = ""
 
-            let count = 0;
+            let count = 1;
             for await (const [j, k] of keys.entries()) {
-                if(keys[j] != 'id'){
-                    map += keys[j] + " = '" + values[j] + "', " 
+                if(keys[j] != 'id' && values[j] != null){
+                    let final = ((keys[j] == 'updated_at') ? "":", ");
+                    map += keys[j] + " = '" + values[j] + "'" + final  
                 }
             }
 
@@ -26,8 +27,6 @@ export class DB{
                 updated_at = " updated_at = NOW()"
             }
             sql += map + updated_at + " WHERE id = " + a.id
-
-            console.log(sql)
 
             await this.execute(sql);
         }

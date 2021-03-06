@@ -316,15 +316,16 @@ export default {
 
     async insertProdInCart(inputProdValue, inputQtdValue) {
       let prod = await product.selectProdutcByName(inputProdValue);
-
       if (prod && inputQtdValue != "") {
         prod[0].qtd = inputQtdValue;
-        let teste = JSON.parse(JSON.stringify(prod[0]));
-        this.cart.push(teste);
-        // this.search = "";
-        console.log("Inserido no carrinho");
+        let prod2 = JSON.parse(JSON.stringify(prod[0]));
+        
+        this.cart.push(prod2);
+        this.search = "";
+        this.products = [];
       }
-      this.products = [];
+
+      return;
     },
 
     async closeOrder() {
@@ -506,13 +507,16 @@ export default {
     },
 
     async search(e) {
+      if(this.tabIndex == 1 && this.customer.name == undefined){
+        this.initDeliveryOrder();
+        return
+      }
       this.products = await product.selectProdutcToCart(e);
 
       var opts = document.getElementById("producs" + this.tabIndex).childNodes;
 
       // document.removeEventListener("keypress", this.testaRemve());
       if (this.search_aux == 0) {
-        console.log("Evento adicionado");
         this.search_aux++;
         document.addEventListener(
           "keypress",
@@ -525,6 +529,7 @@ export default {
               "input-product" + this.tabIndex
             );
             let inputQtd = document.getElementById("input-qtd" + this.tabIndex);
+
             if (e.key === "Enter") {
               if (swalInput1 === document.activeElement) {
                 swalInput2.focus();
@@ -547,15 +552,15 @@ export default {
                   }, 100);
                   this.closeOrder();
 
-                  return;
                 }
+                return;
               }
 
               if (
                 inputQtd === document.activeElement &&
                 inputProd.value != ""
               ) {
-                this.insertProdInCart(inputProd.value, inputQtd.value);
+                await this.insertProdInCart(inputProd.value, inputQtd.value);
 
                 // setTimeout(() => {
                   inputQtd.value = 1;
@@ -598,7 +603,6 @@ export default {
       let inputQtd = document.getElementById("input-qtd" + this.tabIndex);
       for (var i = 0; i < opts.length; i++) {
         if (opts[i].value === e) {
-          console.log("Oi");
           inputQtd.focus();
           break;
         }

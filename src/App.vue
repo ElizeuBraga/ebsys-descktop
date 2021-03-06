@@ -203,6 +203,7 @@ const helper = new Helper();
 const city = new City();
 const customer = new Customer();
 const db = new DB();
+const ws = new Ws();
 const user = new User();
 const cashier = new Cashier();
 const payment = new Payment();
@@ -218,6 +219,7 @@ var pusher = new Pusher("a885cc143df63df6146a", {
 });
 
 var channel = pusher.subscribe("data-insert");
+var channel2 = pusher.subscribe("data-update");
 
 export default {
   // mixins:[mixins],
@@ -247,8 +249,16 @@ export default {
   async mounted() {
     this.initLoginProccess();
 
-    channel.bind("insert", (data) => {
-      this.updateData();
+    channel.bind("insert", async (data) => {
+      await new Ws().downloadDataFromServer("insert");
+      console.log('Insert');
+      // this.updateData();
+    });
+
+    channel2.bind("update", async (data) => {
+      console.log('Update');
+      await new Ws().downloadDataFromServer("update");
+      // this.updateData();
     });
 
     // console.log()
@@ -338,7 +348,6 @@ export default {
         });
       } else {
         this.cashiers = await cashier.all();
-        console.log(this.cashiers);
       }
     },
 

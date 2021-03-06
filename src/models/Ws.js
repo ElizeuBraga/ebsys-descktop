@@ -54,17 +54,14 @@ export class Ws {
             }
 
             await axios.get(table + '/downloadData', {params}).then(async (response)=>{
-                console.log(response.data)
                 if(response.data.length > 0){
                     if(type == 'insert'){
                         db.insert(table, response.data)
                     }else{
-                        // db.update(table, response.data)
+                        db.update(table, response.data)
                     }
                 }
             })
-                
-                console.log("Download concluido")
         }
 
         for (let t of this.localTables) {
