@@ -569,7 +569,24 @@ export default {
                 inputQtd === document.activeElement &&
                 inputProd.value != ""
               ) {
-                await this.insertProdInCart(inputProd.value, inputQtd.value);
+
+                if(!await cashier.isOpen()){
+                  Swal.fire({
+                    title: "Caixa fechado!",
+                    text:"Deseja abri-lo?",
+                    showCancelButton: true,
+                    cancelButtonText:"Cancelar"
+                  }).then((result)=>{
+                    if(result.isConfirmed){
+                      let user = JSON.parse(localStorage.getItem('user'));
+                      cashier.create([{
+                        user_id: user.id 
+                      }]);
+                    }
+                  })
+                  return
+                }
+                  await this.insertProdInCart(inputProd.value, inputQtd.value);
 
                 // setTimeout(() => {
                   inputQtd.value = 1;
