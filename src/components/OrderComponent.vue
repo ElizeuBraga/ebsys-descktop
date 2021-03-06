@@ -347,7 +347,8 @@ export default {
       html += "<hr>";
       html += "<div class='row font-big'>";
       if (this.computedPaymentAmount > 0) {
-        for await (const iterator of this.paymentInfo) {
+        let paymentInfo = await new Payment().tratePayment(this.paymentInfo);
+        for await (const iterator of paymentInfo) {
           // const todo = await fetch(iterator);
           let paymentName = await payment.get(iterator.payment_id);
           html += "<div class='col-6 text-left'>";
@@ -408,7 +409,9 @@ export default {
           document.getElementById("swal-input2").value =
             this.computedMissedAmount > 0 ? this.computedMissedAmount : 0;
         },
-        preConfirm: () => {},
+        preConfirm: () => {
+          
+        },
       }).then((result) => {
         if (result.isConfirmed) {
           Swal.fire({
@@ -500,8 +503,16 @@ export default {
     testaRemve() {
       console.log("Testa remove");
     },
+
+    formatMoney(value) {
+      return helper.formatMoney(value);
+    },
   },
   watch: {
+    paymentInfo(){
+      
+    },
+
     cart() {
       this.computedOrderAmount;
     },
@@ -537,7 +548,6 @@ export default {
               }
 
               if (swalInput2 === document.activeElement) {
-                this.paymentFormatInfoInserted = false;
                 if (this.computedMissedAmount > 0) {
                   let paymentInfo = {
                     payment_id: swalInput1.value,
@@ -547,7 +557,6 @@ export default {
                     JSON.parse(JSON.stringify(paymentInfo))
                   );
                   setTimeout(() => {
-                    this.paymentFormatSelecting = true;
                     swalInput2.focus();
                   }, 100);
                   this.closeOrder();
@@ -615,6 +624,12 @@ export default {
       if (this.index == 1) {
         return this.customer.name == undefined;
       }
+    },
+
+    computedChangeAmount(){
+      let total =  this.computedPaymentAmount - this.computedOrderAmount;
+
+      return parseFloat(total).toFixed(2);
     },
 
     computedMissedAmount() {

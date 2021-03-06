@@ -114,7 +114,7 @@ begin;
 
 	create table if not exists payments(
 		id integer auto_increment primary key,
-		name varchar(7),
+		name varchar(8),
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at timestamp null,
 		deleted_at timestamp null

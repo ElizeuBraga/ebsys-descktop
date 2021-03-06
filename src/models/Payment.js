@@ -31,13 +31,16 @@ export class Payment{
                     total += parseFloat(iterator.price) 
                 }    
             }
-            paymentsArray.push(
-                {
-                    payment_id: pF.id,
-                    price: (pF.id == 1) ? total - change : total,
-                    order_id: order_id
-                }
-            )
+
+            if(total > 0){
+                paymentsArray.push(
+                    {
+                        payment_id: pF.id,
+                        price: (pF.id == 1) ? total - change : total,
+                        order_id: order_id
+                    }
+                )
+            }
             total = 0
         }
 
