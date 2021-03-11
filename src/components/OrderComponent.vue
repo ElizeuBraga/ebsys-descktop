@@ -157,6 +157,7 @@ export default {
       this.cart = [];
       this.products = [];
       this.paymentInfo = [];
+      this.customer = {}
     },
 
     initDeliveryOrder() {
@@ -330,8 +331,10 @@ export default {
 
     async closeOrder() {
       this.receiving = true;
-      let html = `<input id="swal-input1" type="number" min="1" max="${this.paymentsFormats.length}" value="1" placeholder="Valor a receber" class="swal2-input">`;
-
+      let html = `<input style="margin-bottom: 2;" id="swal-input1" type="number" min="1" max="${this.paymentsFormats.length}" value="1" placeholder="Valor a receber" class="swal2-input"><br>`;
+      this.paymentsFormats.forEach(element => {
+        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`
+      });
       html +=
         '<input id="swal-input2" placeholder="Valor a receber" class="swal2-input">';
 
@@ -387,7 +390,7 @@ export default {
       }
 
       if (this.computedChangeAmount > 0) {
-        html += "<div class='row font-big text-success'>";
+        html += "<div class='row font-big text-danger'>";
         html += "<div class='col-6 text-left'>";
         html += "Troco: ";
         html += "</div>";
@@ -424,13 +427,12 @@ export default {
               this.closeOrder();
             } else if (result.isConfirmed) {
               let customer_id = null;
-              let order_types_id = 2;
               if (this.customer.id !== undefined) {
-                order_types_id = 1;
                 customer_id = this.customer.id;
               }
 
               let response_cashier = await cashier.detail();
+              console.log(response_cashier)
 
               db.execute("BEGIN;");
               //insert the order
@@ -438,7 +440,7 @@ export default {
                 {
                   cashier_id: response_cashier.id,
                   customer_id: customer_id,
-                  order_types_id: order_types_id,
+                  order_types_id: this.tabIndex + 1,
                 },
               ]);
 
@@ -461,7 +463,7 @@ export default {
                 paymentsOrder.push({
                   order_id: order_id,
                   payment_id: iterator.payment_id,
-                  price: iterator.price,
+                  price: (iterator.payment_id == 1 && iterator.price > this.computedChangeAmount) ? (iterator.price - this.computedChangeAmount) : iterator.price
                 });
               }
 
@@ -645,8 +647,7 @@ export default {
 
     computedChangeAmount(){
       let total =  this.computedPaymentAmount - this.computedOrderAmount;
-
-      return parseFloat(total).toFixed(2);
+      return parseFloat(total);
     },
 
     computedMissedAmount() {

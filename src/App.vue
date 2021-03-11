@@ -189,6 +189,7 @@ export default {
     };
   },
   async mounted() {
+    this.updateData();
     this.initLoginProccess();
 
     channel.bind("insert", async (data) => {
@@ -481,6 +482,6 @@ export default {
 </script>
 <style lang="scss">
 .font-big {
-  font-size: 30px;
+  font-size: 25px;
 }
 </style>

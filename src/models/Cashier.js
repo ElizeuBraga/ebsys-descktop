@@ -60,6 +60,7 @@ export class Cashier {
         let payments = await payment.tratePayment(amounts)
 
         console.log(payments)
+        // db.update(payments)
     }
 
     async getCashierInfo(cashier_id){

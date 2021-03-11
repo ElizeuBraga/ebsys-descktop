@@ -22,8 +22,9 @@ axios.defaults.baseURL = 'http://192.168.43.209:8080/ebsys/public_html/api/'
 export class Ws {
     constructor() {
         this.serverTables = [
-            'profiles', 'users', 'sections', 'products', 'cities', 'payments'
+            'profiles', 'users', 'sections', 'products', 'cities', 'payments', 'order_types'
         ]
+
         this.localTables = [
             'cashiers','customers', 'orders', 'items'
         ]
@@ -55,6 +56,7 @@ export class Ws {
 
             await axios.get(table + '/downloadData', {params}).then(async (response)=>{
                 if(response.data.length > 0){
+                    console.log(response.data)
                     if(type == 'insert'){
                         db.insert(table, response.data)
                     }else{
