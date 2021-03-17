@@ -43,7 +43,10 @@
 
     <footer class="footer">
       <div class="row">
-        <div class="col-6"></div>
+        <div class="col-6">
+          <button v-if="cashierIsOpen && tabIndex == 2" @click="closeCashier" class="btn btn-light text-danger">Fechar caixa</button>
+          <button v-else-if="!cashierIsOpen && tabIndex == 2" @click="openCashier" class="btn btn-light text-success">Abrir caixa</button>
+        </div>
         <div class="col-6">
           <b-row>
             <b-col class="font-big"> Total </b-col>
@@ -211,8 +214,20 @@ export default {
       this.totalCart = e;
     });
 
+    EventBus.$on("cashier-closed", async(e) => {
+      this.cashierIsOpen = await cashier.isOpen();
+    });
+
+    EventBus.$on("cashier-opened", async(e) => {
+      this.$nextTick( async ()=>{
+        this.cashierIsOpen = await cashier.isOpen();
+      })
+      // this.cashierIsOpen = await cashier.isOpen();
+    });
+
     this.getCashiers();
-    await this.isOpen();
+
+    this.cashierIsOpen = await cashier.isOpen();
     // this.localities = await locality.all();
     // await ws.loadAll();
   },
@@ -290,6 +305,7 @@ export default {
           this.cashiers = await cashier.all(result.value);
         });
       } else {
+        console.log('Chama')
         this.cashiers = await cashier.all();
       }
     },
@@ -359,70 +375,169 @@ export default {
     },
 
     async openCashier() {
-      await cashier.create();
+      let user = JSON.parse(localStorage.getItem('user'));
+      await cashier.create([
+        {
+          user_id: user.id
+        }
+      ]);
 
       setTimeout(async () => {
-        await this.isOpen();
+        this.cashierIsOpen = await cashier.isOpen();
       }, 1000);
     },
 
-    closeCashier() {
-      var keepOpen = true;
-      let amounts = [];
-      let html =
-        '<select id="swal2-select" class="swal2-select" name=""><option selected value disabled>Selecione</option>';
-      this.paymentsFormats.forEach((element) => {
-        html +=
-          '<option value="' + element.id + '">' + element.name + "</option>";
+    async closeCashier() {
+      this.receiving = true;
+      let html = `<input style="margin-bottom: 2;" id="swal-input1" type="number" min="1" max="${this.paymentsFormats.length}" value="1" placeholder="Valor a receber" class="swal2-input"><br>`;
+      this.paymentsFormats.forEach(element => {
+        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`
       });
-      html += "</select>";
       html +=
-        '<input id="swal-input1" placeholder="Valor" class="swal2-input">';
-      Swal.fire({
-        title: "Fechamento",
-        html: html,
-        allowOutsideClick: false,
-        confirmButtonText: "Inserir",
-        denyButtonText: "Fechar o caixa",
-        cancelButtonText: "Cancelar",
-        showCancelButton: true,
-        showDenyButton: true,
-        didOpen: () => {
-          let btnConfirm = document.querySelector(".swal2-confirm");
+        '<input id="swal-input2" placeholder="Valor a lançar" class="swal2-input">';
 
-          btnConfirm.addEventListener("click", () => {
-            keepOpen = true;
-          });
-          //  Swal.disableButtons()
+      // html += "<div class='row font-big text-success'>";
+      // html += "<div class='col-6 text-left'>";
+      // html += "Receber: ";
+      // html += "</div>";
+      // html += "<div class='col-6 text-right'>";
+      // html += helper.formatMoney(this.computedOrderAmount);
+      // html += "</div>";
+      // html += "</div>";
+
+      html += "<hr>";
+      html += "<div class='row font-big'>";
+      if (this.computedPaymentAmount > 0) {
+        let paymentInfo = await new Payment().tratePayment(this.paymentInfo);
+        for await (const iterator of paymentInfo) {
+          // const todo = await fetch(iterator);
+          let paymentName = await payment.get(iterator.payment_id);
+          html += "<div class='col-6 text-left'>";
+          html += paymentName;
+          html += "</div>";
+          html += "<div class='col-6 text-right'>";
+          html += helper.formatMoney(iterator.price);
+          html += "</div>";
+        }
+      } else {
+        html += "<div class='col-12 text-center text-danger'>";
+        html += "Nehum valor lançado";
+        html += "</div>";
+      }
+      html += "</div>";
+
+      // html += "<hr>";
+      // html += "<div class='row font-big text-primary'>";
+      // html += "<div class='col-6 text-left'>";
+      // html += "Recebido: ";
+      // html += "</div>";
+      // html += "<div class='col-6 text-right'>";
+      // html += helper.formatMoney(this.computedPaymentAmount);
+      // html += "</div>";
+      // html += "</div>";
+
+      if (this.computedMissedAmount > 0) {
+        html += "<div class='row font-big text-danger'>";
+        html += "<div class='col-6 text-left'>";
+        html += "Faltam: ";
+        html += "</div>";
+        html += "<div class='col-6 text-right'>";
+        html += helper.formatMoney(this.computedMissedAmount);
+        html += "</div>";
+        html += "</div>";
+      }
+
+      // if (this.computedChangeAmount > 0) {
+      //   html += "<div class='row font-big text-danger'>";
+      //   html += "<div class='col-6 text-left'>";
+      //   html += "Troco: ";
+      //   html += "</div>";
+      //   html += "<div class='col-6 text-right'>";
+      //   html += this.formatMoney(this.computedChangeAmount);
+      //   html += "</div>";
+      //   html += "</div>";
+      // }
+      Swal.fire({
+        title: "Informações do fechamento",
+        showCancelButton: true,
+        cancelButtonText: "Cancelar",
+        confirmButtonText: "Finalizar",
+        html: html,
+        didOpen: () => {
+          if (this.computedMissedAmount > 0) {
+            document.getElementById("swal-input1").focus();
+          }
+          document.getElementById("swal-input2").value =
+            this.computedMissedAmount > 0 ? this.computedMissedAmount : 0;
         },
         preConfirm: () => {
-          let payment_id = document.getElementById("swal2-select").value;
-          let price = document.getElementById("swal-input1").value;
-
-          return { payment_id: payment_id, price: parseFloat(price) };
+          
         },
-      }).then(async (result) => {
+      }).then((result) => {
         if (result.isConfirmed) {
-          this.paymentInfo.push(result.value);
-          this.closeCashier();
-        } else if (result.isDismissed) {
-          this.paymentInfo = [];
-        } else {
-          // this.paymentInfo = []
           Swal.fire({
             icon: "question",
             title: "Finalizar recebimento?",
             showCancelButton: true,
             cancelButtonText: "Cancelar",
-          }).then((result) => {
+          }).then(async (result) => {
             if (result.isDismissed) {
-              this.closeCashier();
+              this.closeOrder();
             } else if (result.isConfirmed) {
-              cashier.update(this.paymentInfo);
+              let customer_id = null;
+              if (this.customer.id !== undefined) {
+                customer_id = this.customer.id;
+              }
 
-              this.paymentInfo = [];
+              let response_cashier = await cashier.detail();
+              console.log(response_cashier)
+
+              db.execute("BEGIN;");
+              //insert the order
+              let order_id = await order.create([
+                {
+                  cashier_id: response_cashier.id,
+                  customer_id: customer_id,
+                  order_types_id: this.tabIndex + 1,
+                },
+              ]);
+
+              // insert items
+              let items = [];
+              for await (const iterator of this.cart) {
+                items.push({
+                  quantity: iterator.qtd,
+                  product_id: iterator.id,
+                  price: iterator.price,
+                  order_id: order_id,
+                });
+              }
+
+              let item_id = await item.create(items);
+
+              // insert payments order
+              let paymentsOrder = [];
+              for await (const iterator of this.paymentInfo) {
+                paymentsOrder.push({
+                  order_id: order_id,
+                  payment_id: iterator.payment_id,
+                  price: (iterator.payment_id == 1 && iterator.price > this.computedChangeAmount) ? (iterator.price - this.computedChangeAmount) : iterator.price
+                });
+              }
+
+              let payment_id = await paymentOrder.create(paymentsOrder);
+
+              db.execute("COMMIT;");
+
+              this.reset();
             }
           });
+          // // this.paymentInfo.push(result.value);
+          // // this.receiving = false;
+          // // document.getElementById("input-product").focus();
+          // this.closeOrder();
+        } else {
+          this.paymentInfo = [];
         }
       });
     },

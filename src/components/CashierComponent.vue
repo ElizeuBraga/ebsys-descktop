@@ -102,6 +102,11 @@ export default {
     EventBus.$on("change-tab", (e) => {
       
     });
+
+    EventBus.$on("cashier-closed", async(e) => {
+        this.getCashiers();
+    });
+
     this.getCashiers();
   },
 

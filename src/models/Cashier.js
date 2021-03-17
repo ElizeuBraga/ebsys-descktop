@@ -56,11 +56,9 @@ export class Cashier {
         return (part1 + part2);
     }
 
-    async update(amounts) {
-        let payments = await payment.tratePayment(amounts)
-
-        console.log(payments)
-        // db.update(payments)
+    async update(cashiers) {
+        let sql = `UPDATE ${table} set updated_at = now() WHERE id = ${cashiers[0].id}`
+        return await db.execute(sql)
     }
 
     async getCashierInfo(cashier_id){
@@ -109,7 +107,7 @@ export class Cashier {
         let sql = "select * from cashiers c2 where updated_at is null"
 
         let result = await db.selectOne(sql);
-
+        
         if(result){
             return true
         }

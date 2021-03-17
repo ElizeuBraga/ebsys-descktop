@@ -90,6 +90,7 @@ import { Customer } from "../models/Customer";
 import { City } from "../models/City";
 import { Address } from "../models/Address";
 import { PaymentOrder } from "../models/PaymentOrder";
+import { PaymentCashier } from "../models/PaymentCashier";
 import { Helper } from "../models/Helper";
 import EventBus from "../EventBus";
 import { DB } from "../models/DB";
@@ -104,6 +105,7 @@ const order = new Order();
 const item = new Item();
 const address_class = new Address();
 const paymentOrder = new PaymentOrder();
+const paymentCashier = new PaymentCashier();
 const db = new DB();
 
 export default {
@@ -139,6 +141,140 @@ export default {
   },
 
   methods: {
+    async closeCashier() {
+      this.receiving = true;
+      let html = `<input style="margin-bottom: 2;" id="swal-input1" type="number" min="1" max="${this.paymentsFormats.length}" value="1" placeholder="Valor a receber" class="swal2-input"><br>`;
+      this.paymentsFormats.forEach(element => {
+        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`
+      });
+      html +=
+        '<input id="swal-input2" placeholder="Valor a lançar" class="swal2-input">';
+
+      // html += "<div class='row font-big text-success'>";
+      // html += "<div class='col-6 text-left'>";
+      // html += "Receber: ";
+      // html += "</div>";
+      // html += "<div class='col-6 text-right'>";
+      // html += helper.formatMoney(this.computedOrderAmount);
+      // html += "</div>";
+      // html += "</div>";
+
+      html += "<hr>";
+      html += "<div class='row font-big'>";
+      if (this.computedPaymentAmount > 0) {
+        let paymentInfo = await new Payment().tratePayment(this.paymentInfo);
+        for await (const iterator of paymentInfo) {
+          // const todo = await fetch(iterator);
+          let paymentName = await payment.get(iterator.payment_id);
+          html += "<div class='col-6 text-left'>";
+          html += paymentName;
+          html += "</div>";
+          html += "<div class='col-6 text-right'>";
+          html += helper.formatMoney(iterator.price);
+          html += "</div>";
+        }
+      } else {
+        html += "<div class='col-12 text-center text-danger'>";
+        html += "Nehum valor lançado";
+        html += "</div>";
+      }
+      html += "</div>";
+
+      // html += "<hr>";
+      // html += "<div class='row font-big text-primary'>";
+      // html += "<div class='col-6 text-left'>";
+      // html += "Recebido: ";
+      // html += "</div>";
+      // html += "<div class='col-6 text-right'>";
+      // html += helper.formatMoney(this.computedPaymentAmount);
+      // html += "</div>";
+      // html += "</div>";
+
+      if (this.computedMissedAmount > 0) {
+        html += "<div class='row font-big text-danger'>";
+        html += "<div class='col-6 text-left'>";
+        html += "Faltam: ";
+        html += "</div>";
+        html += "<div class='col-6 text-right'>";
+        html += helper.formatMoney(this.computedMissedAmount);
+        html += "</div>";
+        html += "</div>";
+      }
+
+      // if (this.computedChangeAmount > 0) {
+      //   html += "<div class='row font-big text-danger'>";
+      //   html += "<div class='col-6 text-left'>";
+      //   html += "Troco: ";
+      //   html += "</div>";
+      //   html += "<div class='col-6 text-right'>";
+      //   html += this.formatMoney(this.computedChangeAmount);
+      //   html += "</div>";
+      //   html += "</div>";
+      // }
+      Swal.fire({
+        title: "Informações do fechamento",
+        showCancelButton: true,
+        cancelButtonText: "Cancelar",
+        confirmButtonText: "Finalizar",
+        html: html,
+        didOpen: () => {
+          if (this.computedMissedAmount > 0) {
+            document.getElementById("swal-input1").focus();
+          }
+          document.getElementById("swal-input2").value =
+            this.computedMissedAmount > 0 ? this.computedMissedAmount : 0;
+        },
+        preConfirm: () => {
+          
+        },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire({
+            icon: "question",
+            title: "Finalizar fechamento de caixa?",
+            showCancelButton: true,
+            cancelButtonText: "Cancelar",
+          }).then(async (result) => {
+            if (result.isDismissed) {
+              this.closeCashier();
+            } else if (result.isConfirmed) {
+
+              let response_cashier = await cashier.detail();
+
+              db.execute("BEGIN;");
+
+              await cashier.update([
+                response_cashier
+              ]);
+
+              // insert payments order
+              let paymentsCashiers = [];
+              for await (const iterator of this.paymentInfo) {
+                paymentsCashiers.push({
+                  cashier_id: response_cashier.id,
+                  payment_id: iterator.payment_id,
+                  price: iterator.price
+                });
+              }
+
+              await paymentCashier.create(paymentsCashiers);
+
+              db.execute("COMMIT;");
+
+              EventBus.$emit("cashier-closed", true);
+
+              this.reset();
+            }
+          });
+          // // this.paymentInfo.push(result.value);
+          // // this.receiving = false;
+          // // document.getElementById("input-product").focus();
+          // this.closeOrder();
+        } else {
+          this.paymentInfo = [];
+        }
+      });
+    },
     preventInputQtd(){
       let inputQtd = document.getElementById('input-qtd'+this.tabIndex)
       if(inputQtd.value == ""){
@@ -545,12 +681,11 @@ export default {
 
             if (e.key === "Enter") {
               if (swalInput1 === document.activeElement) {
-                swalInput2.focus();
                 return;
               }
 
               if (swalInput2 === document.activeElement) {
-                if (this.computedMissedAmount > 0) {
+                if (this.computedMissedAmount > 0 ||  this.tabIndex == 2) {
                   let paymentInfo = {
                     payment_id: swalInput1.value,
                     price: swalInput2.value,
@@ -561,7 +696,12 @@ export default {
                   setTimeout(() => {
                     swalInput2.focus();
                   }, 100);
-                  this.closeOrder();
+
+                  if(this.tabIndex === 2){
+                    this.closeCashier();
+                  }else{
+                    this.closeOrder();
+                  }
 
                 }
                 return;
@@ -575,16 +715,19 @@ export default {
                 if(!await cashier.isOpen()){
                   Swal.fire({
                     title: "Caixa fechado!",
-                    text:"Deseja abri-lo?",
-                    showCancelButton: true,
-                    cancelButtonText:"Cancelar"
+                    text:"Abra o caixa",
+                    icon: "error"
+                    // showCancelButton: true,
+                    // cancelButtonText:"Cancelar"
                   }).then((result)=>{
-                    if(result.isConfirmed){
-                      let user = JSON.parse(localStorage.getItem('user'));
-                      cashier.create([{
-                        user_id: user.id 
-                      }]);
-                    }
+                    // if(result.isConfirmed){
+                    //   let user = JSON.parse(localStorage.getItem('user'));
+                    //   cashier.create([{
+                    //     user_id: user.id 
+                    //   }]);
+
+                    //   EventBus.$emit("cashier-opened", true);
+                    // }
                   })
                   return
                 }
