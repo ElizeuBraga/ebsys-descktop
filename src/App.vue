@@ -375,16 +375,27 @@ export default {
     },
 
     async openCashier() {
-      let user = JSON.parse(localStorage.getItem('user'));
-      await cashier.create([
-        {
-          user_id: user.id
-        }
-      ]);
+      Swal.fire({
+        title:"Abrir caixa?",
+        text:"Apenas você ou administrador poderá fechá-lo.",
+        icon:"question"
+      }).then(async()=>{
+        let user = JSON.parse(localStorage.getItem('user'));
+        await cashier.create([
+          {
+            user_id: user.id
+          }
+        ]);
 
-      setTimeout(async () => {
-        this.cashierIsOpen = await cashier.isOpen();
-      }, 1000);
+        Swal.fire({
+          title:"Caixa aberto",
+          icon:"success"
+        })
+
+        setTimeout(async () => {
+          this.cashierIsOpen = await cashier.isOpen();
+        }, 1000);
+      })
     },
 
     async closeCashier() {

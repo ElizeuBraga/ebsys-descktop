@@ -264,6 +264,11 @@ export default {
               EventBus.$emit("cashier-closed", true);
 
               this.reset();
+
+              Swal.fire({
+                text:"Caixa fechado!",
+                icon:"success"
+              })
             }
           });
           // // this.paymentInfo.push(result.value);
