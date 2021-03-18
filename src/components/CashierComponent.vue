@@ -4,6 +4,7 @@
     <b-row style="min-width: 50%">
           <b-col cols="6">
           <!-- <b-row style="background-color:red; height:90%"> -->
+          <div class="text-center">Meus caixas</div>
           <div style="overflow-y: scroll; max-height: 87vh">
             <table class="table table-striped" style="background-color: white">
               <thead>
@@ -15,7 +16,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(i, index) in cashiers" :key="index">
+                <tr v-for="(i, index) in cashiers" :key="index" :id="i.id">
                   <td class="text-center">
                     {{ parseFloat(i.value).toFixed(2).replace(".", ",") }}
                   </td>
@@ -29,9 +30,9 @@
                       icon="trash-fill"
                       aria-hidden="true"
                     ></b-icon> -->
-                    <button class="btn btn-secondary btn-sm mr-1" title="Todos">T</button>
-                    <button class="btn btn-primary btn-sm mr-1" title="Balcão">B</button>
-                    <button class="btn btn-success btn-sm mr-1" title="Delivery">D</button>
+                    <button class="btn btn-secondary btn-sm mr-1" title="Todos" @click="getCashierInfo(i.id, 'T')">T</button>
+                    <button class="btn btn-primary btn-sm mr-1" title="Balcão" @click="getCashierInfo(i.id, 'B')">B</button>
+                    <button class="btn btn-success btn-sm mr-1" title="Delivery" @click="getCashierInfo(i.id, 'D')">D</button>
                   </td>
                 </tr>
               </tbody>
@@ -41,20 +42,21 @@
 
           <b-col cols="6">
           <!-- <b-row style="background-color:red; height:90%"> -->
+          <div class="text-center">{{itemsCashierTitle}}</div>
           <div style="overflow-y: scroll; max-height: 87vh;">
             <table class="table table-striped" style="background-color: white">
               <thead>
                 <tr>
                   <th scope="col">Produto</th>
-                  <th class="text-center" scope="col">Quantidade vendida</th>
+                  <th class="text-center" scope="col">Preço X Quantidade</th>
                   <th class="text-center" scope="col">Valor</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(i, index) in cashiers" :key="index">
-                  <td>{{ i.user_name }}</td>
-                  <td class="text-center">15</td>
-                  <td class="text-center">{{ parseFloat(i.value).toFixed(2).replace(".", ",") }}</td>
+                <tr v-for="(i, index) in items" :key="index">
+                  <td>{{ i.name }}</td>
+                  <td class="text-center"><strong>R$</strong> {{parseFloat(i.price).toFixed(2).replace(".", ",")}} <strong>X </strong>{{i.quantity}} <strong>Unds</strong></td>
+                  <td class="text-center">{{ parseFloat(i.total).toFixed(2).replace(".", ",") }}</td>
                 </tr>
               </tbody>
             </table>
@@ -80,6 +82,7 @@ import { Helper } from "../models/Helper";
 import EventBus from "../EventBus";
 import { DB } from "../models/DB";
 import Swal from "sweetalert2";
+import { PaymentCashier } from '../models/PaymentCashier';
 const product = new Product();
 const customer = new Customer();
 const city = new City();
@@ -95,7 +98,11 @@ const db = new DB();
 export default {
   props: ["orderType"],
   data: () => ({
-    cashiers: []
+    cashiers: [],
+    items:[],
+    itemsCashierTitle:"Todos",
+    cashier_id: null,
+    type: null,
   }),
 
   async mounted() {
@@ -107,10 +114,27 @@ export default {
         this.getCashiers();
     });
 
-    this.getCashiers();
+    await this.getCashiers();
+    if(this.cashiers.length > 0){
+      this.items = await cashier.getCashierInfo(this.cashiers[0].id);
+    }
   },
 
   methods: {
+    async getCashierInfo(cashier_id, type = 'T'){
+      if(type == 'B'){
+        this.itemsCashierTitle = 'Balcão'
+      }else if(type == 'D'){
+        this.itemsCashierTitle = 'Delivery'
+      }else{
+        this.itemsCashierTitle = 'Todos'
+      }
+      
+      this.cashier_id = cashier_id
+      this.type = type
+      this.items = await cashier.getCashierInfo(cashier_id, type)
+    },
+
     async getCashiers(byDate = false) {
       if (byDate) {
         Swal.fire({
@@ -137,11 +161,28 @@ export default {
     },
   },
   watch: {
-    
+    items(){
+      this.computedAmountItems
+    }
   },
 
   computed: {
-    
+    async computedAmountItems(){
+      let total = 0;
+      // this.items.forEach((element) => {
+      //   total += parseFloat(element.total);
+      // });
+
+      let detailPayments = await new PaymentCashier().paymentsForCashier(this.cashier_id, this.type)
+
+      detailPayments.forEach(element => {
+        total += parseFloat(element.total);
+      });
+
+      detailPayments.push({name: 'Total', total: total})
+      EventBus.$emit("amount-computed-items", [total, detailPayments]);
+      return parseFloat(total).toFixed(2);
+    }
   },
 };
 </script>

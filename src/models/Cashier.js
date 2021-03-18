@@ -61,19 +61,29 @@ export class Cashier {
         return await db.execute(sql)
     }
 
-    async getCashierInfo(cashier_id){
-        let sql = ` SELECT
+    async getCashierInfo(cashier_id, type){
+        let and = '';
+        if(type == 'B'){
+            and = ' AND o.order_types_id = 1'
+        }else if(type == 'D'){
+            and = ' AND o.order_types_id = 2'
+        }
+        // return
+        let sql = ` 
+                SELECT
                     p.name,
-                    SUM(i.quantity) as quantity,
-                    SUM(i.price) as total
+                SUM(i.quantity) as quantity,
+                SUM(i.price * i.quantity) as total,
+                i.price
                 FROM products p
                 JOIN items i ON i.product_id = p.id
                 JOIN orders o ON o.id = i.order_id 
                 JOIN cashiers c ON c.id = o.cashier_id
-                WHERE c.id = ${cashier_id}
-                GROUP BY p.name, c.id;`;
-
-        let info = await db.select(table, sql)
+                WHERE c.id = ${cashier_id} ${and}
+                GROUP BY p.id, i.price;
+            `;
+        
+        let info = await db.select(sql)
 
         if(info){
             return info;

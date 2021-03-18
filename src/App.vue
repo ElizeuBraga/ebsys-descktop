@@ -43,13 +43,28 @@
 
     <footer class="footer">
       <div class="row">
+        <!-- <div v-if="tabIndex == 2" class="col-12">
+          <div v-for="(p, index) in paymentsFormats" :key="index" class="row">
+            <div :class="'col-' + Math.round((12 / paymentsFormats.length))">
+              Teste
+            </div>
+          </div>
+        </div> -->
         <div class="col-6">
           <button v-if="cashierIsOpen && tabIndex == 2" @click="closeCashier" class="btn btn-light text-danger">Fechar caixa</button>
           <button v-else-if="!cashierIsOpen && tabIndex == 2" @click="openCashier" class="btn btn-light text-success">Abrir caixa</button>
         </div>
-        <div class="col-6">
+        <div class="col-6" v-if="tabIndex === 2">
+          <b-row>
+            <b-col v-for="(pFc, index) in paymentInfoCashier" :key="index">
+              {{pFc.name}} <br> {{formatMoney(pFc.total)}}
+            </b-col>
+          </b-row>
+        </div>
+        <div class="col-6" v-if="tabIndex !== 2">
           <b-row>
             <b-col class="font-big"> Total </b-col>
+            <!-- <b-col v-if="tabIndex == 2" class="font-big"> R$ {{ formatMoney(totalItems) }} </b-col> -->
             <b-col class="font-big"> R$ {{ formatMoney(totalCart) }} </b-col>
           </b-row>
         </div>
@@ -183,12 +198,14 @@ export default {
       cities: [],
       cart: [],
       totalCart: 0,
+      totalItems: 0,
       search: "",
       cashierIsOpen: false,
       paymentsFormats: [],
       cashiers: [],
       order: {},
       custom: [],
+      paymentInfoCashier:[]
     };
   },
   async mounted() {
@@ -212,6 +229,11 @@ export default {
 
     EventBus.$on("amount-computed", (e) => {
       this.totalCart = e;
+    });
+
+    EventBus.$on("amount-computed-items", (e) => {
+      this.totalItems = e[0];
+      this.paymentInfoCashier = e[1] 
     });
 
     EventBus.$on("cashier-closed", async(e) => {
