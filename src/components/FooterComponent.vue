@@ -2,29 +2,34 @@
   <div>
     <footer class="footer">
       <div class="row">
-        <!-- <div v-if="tabIndex == 2" class="col-12">
-          <div v-for="(p, index) in paymentsFormats" :key="index" class="row">
-            <div :class="'col-' + Math.round((12 / paymentsFormats.length))">
-              Teste
-            </div>
-          </div>
-        </div> -->
         <div class="col-6">
-          <button v-if="cashierIsOpen && tabIndex == 2" @click="closeCashier" class="btn btn-light text-danger">Fechar caixa</button>
-          <button v-else-if="!cashierIsOpen && tabIndex == 2" @click="openCashier" class="btn btn-light text-success">Abrir caixa</button>
+          <button
+            v-if="cashierIsOpen && tabIndex == 2"
+            @click="closeCashier"
+            class="btn btn-light text-danger"
+          >
+            Fechar caixa
+          </button>
+          <button
+            @click="openCashier"
+            class="btn btn-light text-success"
+            v-else-if="!cashierIsOpen && tabIndex == 2"
+          >
+            Abrir caixa
+          </button>
         </div>
         <div class="col-6" v-if="tabIndex === 2">
           <b-row>
-            <b-col style="margin-top: 5px;">Vendas</b-col>
+            <b-col style="margin-top: 5px">Vendas</b-col>
             <b-col v-for="(pFc, index) in paymentInfoCashier" :key="index">
-              {{pFc.name}} <br> {{formatMoney(pFc.total)}}
+              {{ pFc.name }} <br />
+              {{ formatMoney(pFc.total) }}
             </b-col>
           </b-row>
         </div>
         <div class="col-6" v-if="tabIndex !== 2">
           <b-row>
             <b-col class="font-big"> Total </b-col>
-            <!-- <b-col v-if="tabIndex == 2" class="font-big"> R$ {{ formatMoney(totalItems) }} </b-col> -->
             <b-col class="font-big"> R$ {{ formatMoney(totalCart) }} </b-col>
           </b-row>
         </div>
@@ -34,83 +39,71 @@
 </template>
 
 <script>
-import mixins from "../mixins/mixins";
-import EventBus from '../EventBus';
 import Swal from "sweetalert2";
-import { Cashier } from '../models/Cashier';
+import EventBus from "../EventBus";
+import mixins from "../mixins/mixins";
+import { Cashier } from "../models/Cashier";
 export default {
-  mixins:[mixins],
+  mixins: [mixins],
   data: () => ({
     totalCart: 0,
-    paymentInfoCashier:[],
-    totalItems:[]
+    totalItems: [],
+    paymentInfoCashier: [],
   }),
 
-  async mounted() {
-  
-  },
+  async mounted() {},
 
-  async created(){
+  async created() {
     EventBus.$on("amount-computed-items", (e) => {
       this.totalItems = e[0];
-      this.paymentInfoCashier = e[1] 
+      this.paymentInfoCashier = e[1];
     });
 
     this.cashierIsOpen = await new Cashier().isOpen();
   },
 
   methods: {
-    formatMoney(value){
-        return parseFloat(value).toFixed(2).replace('.', ',')
+    formatMoney(value) {
+      return parseFloat(value).toFixed(2).replace(".", ",");
     },
 
-async openCashier() {
+    async openCashier() {
       Swal.fire({
-        title:"Abrir caixa?",
-        text:"Apenas você ou administrador poderá fechá-lo.",
-        icon:"question"
-      }).then(async()=>{
-        let user = JSON.parse(localStorage.getItem('user'));
+        title: "Abrir caixa?",
+        text: "Apenas você ou administrador poderá fechá-lo.",
+        icon: "question",
+      }).then(async () => {
+        let user = JSON.parse(localStorage.getItem("user"));
         await new Cashier().create([
           {
-            user_id: user.id
-          }
+            user_id: user.id,
+          },
         ]);
 
         Swal.fire({
-          title:"Caixa aberto",
-          icon:"success"
-        })
+          title: "Caixa aberto",
+          icon: "success",
+        });
 
         setTimeout(async () => {
           this.cashierIsOpen = await new Cashier().isOpen();
         }, 1000);
-      })
+      });
     },
     async closeCashier() {
       this.receiving = true;
       let html = `<input style="margin-bottom: 2;" id="swal-input1" type="number" min="1" max="${this.paymentsFormats.length}" value="1" placeholder="Valor a receber" class="swal2-input"><br>`;
-      this.paymentsFormats.forEach(element => {
-        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`
+      this.paymentsFormats.forEach((element) => {
+        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`;
       });
       html +=
         '<input id="swal-input2" placeholder="Valor a lançar" class="swal2-input">';
-
-      // html += "<div class='row font-big text-success'>";
-      // html += "<div class='col-6 text-left'>";
-      // html += "Receber: ";
-      // html += "</div>";
-      // html += "<div class='col-6 text-right'>";
-      // html += helper.formatMoney(this.computedOrderAmount);
-      // html += "</div>";
-      // html += "</div>";
 
       html += "<hr>";
       html += "<div class='row font-big'>";
       if (this.computedPaymentAmount > 0) {
         let paymentInfo = await new Payment().tratePayment(this.paymentInfo);
         for await (const iterator of paymentInfo) {
-          // const todo = await fetch(iterator);
           let paymentName = await payment.get(iterator.payment_id);
           html += "<div class='col-6 text-left'>";
           html += paymentName;
@@ -126,16 +119,6 @@ async openCashier() {
       }
       html += "</div>";
 
-      // html += "<hr>";
-      // html += "<div class='row font-big text-primary'>";
-      // html += "<div class='col-6 text-left'>";
-      // html += "Recebido: ";
-      // html += "</div>";
-      // html += "<div class='col-6 text-right'>";
-      // html += helper.formatMoney(this.computedPaymentAmount);
-      // html += "</div>";
-      // html += "</div>";
-
       if (this.computedMissedAmount > 0) {
         html += "<div class='row font-big text-danger'>";
         html += "<div class='col-6 text-left'>";
@@ -147,16 +130,6 @@ async openCashier() {
         html += "</div>";
       }
 
-      // if (this.computedChangeAmount > 0) {
-      //   html += "<div class='row font-big text-danger'>";
-      //   html += "<div class='col-6 text-left'>";
-      //   html += "Troco: ";
-      //   html += "</div>";
-      //   html += "<div class='col-6 text-right'>";
-      //   html += this.formatMoney(this.computedChangeAmount);
-      //   html += "</div>";
-      //   html += "</div>";
-      // }
       Swal.fire({
         title: "Informações do fechamento",
         showCancelButton: true,
@@ -168,11 +141,9 @@ async openCashier() {
           document.getElementById("swal-input2").value = 0;
         },
         preConfirm: () => {
-          if(this.paymentInfoCashier.length < 2){
-            // console.log(this.paymentInfoCashier)
-            return Swal.showValidationMessage("Insira pelo menos um valor")
+          if (this.paymentInfoCashier.length < 2) {
+            return Swal.showValidationMessage("Insira pelo menos um valor");
           }
-
         },
       }).then((result) => {
         if (result.isConfirmed) {
@@ -191,7 +162,7 @@ async openCashier() {
               }
 
               let response_cashier = await cashier.detail();
-              console.log(response_cashier)
+              console.log(response_cashier);
 
               db.execute("BEGIN;");
               //insert the order
@@ -222,7 +193,11 @@ async openCashier() {
                 paymentsOrder.push({
                   order_id: order_id,
                   payment_id: iterator.payment_id,
-                  price: (iterator.payment_id == 1 && iterator.price > this.computedChangeAmount) ? (iterator.price - this.computedChangeAmount) : iterator.price
+                  price:
+                    iterator.payment_id == 1 &&
+                    iterator.price > this.computedChangeAmount
+                      ? iterator.price - this.computedChangeAmount
+                      : iterator.price,
                 });
               }
 
@@ -233,15 +208,11 @@ async openCashier() {
               this.reset();
             }
           });
-          // // this.paymentInfo.push(result.value);
-          // // this.receiving = false;
-          // // document.getElementById("input-product").focus();
-          // this.closeOrder();
         } else {
           this.paymentInfo = [];
         }
       });
     },
-  }
+  },
 };
 </script>
