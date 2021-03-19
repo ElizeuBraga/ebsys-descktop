@@ -1,11 +1,14 @@
 import Swal from "sweetalert2";
+import { DB } from '../models/DB';
 import EventBus from '../EventBus';
 import { Payment } from '../models/Payment';
+import { Cashier } from '../models/Cashier';
+import { PaymentCashier } from '../models/PaymentCashier';
 export default {
     data() {
         return {
             tabIndex: 0,
-            paymentInfo:[],
+            paymentInfo: [],
             paymentsFormats: [],
             cashierIsOpen: false,
             bluePrimary: "#2778c4",
@@ -39,7 +42,25 @@ export default {
 
             html += "<hr>";
             html += "<div class='row font-big'>";
+            if (this.computedPaymentAmount > 0) {
+                let paymentInfo = await new Payment().tratePayment(this.paymentInfo);
+                for await (const iterator of paymentInfo) {
+                    let paymentName = await new Payment().get(iterator.payment_id);
+                    html += "<div class='col-6 text-left'>";
+                    html += paymentName;
+                    html += "</div>";
+                    html += "<div class='col-6 text-right'>";
+                    html += this.formatMoney(iterator.price);
+                    html += "</div>";
+                }
+            } else {
+                html += "<div class='col-12 text-center text-danger'>";
+                html += "Nehum valor lançado";
+                html += "</div>";
+            }
+
             html += "</div>";
+            html += "<hr>";
 
             Swal.fire({
                 title: "Informações do fechamento",
@@ -48,7 +69,8 @@ export default {
                 confirmButtonText: "Finalizar",
                 html: html,
                 didOpen: () => {
-                    document.getElementById("swal-input2").value = 0 
+                    document.getElementById("swal-input1").focus()
+                    document.getElementById("swal-input2").value = 0
                 },
                 preConfirm: () => { },
             }).then((result) => {
