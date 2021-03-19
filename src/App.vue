@@ -162,8 +162,6 @@ export default {
       event_aux: 0,
       products: [],
       paymentInfo: [],
-      receiving: false,
-      paymentsFormats: [],
       cashierIsOpen: false,
       paymentInfoCashier: [],
     };

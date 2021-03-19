@@ -105,8 +105,6 @@ export default {
     customer: {},
     products: [],
     search_aux: 0,
-    paymentInfo: [],
-    receiving: false,
     insertedInCart: false,
     isCanceledReceivement: false,
     paymentFormatSelected: false,
@@ -126,106 +124,6 @@ export default {
   },
 
   methods: {
-    async closeCashier() {
-      this.receiving = true;
-      let html = `<input style="margin-bottom: 2;" id="swal-input1" type="number" min="1" max="${this.paymentsFormats.length}" value="1" placeholder="Valor a receber" class="swal2-input"><br>`;
-      this.paymentsFormats.forEach((element) => {
-        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`;
-      });
-      html +=
-        '<input id="swal-input2" placeholder="Valor a lançar" class="swal2-input">';
-
-      html += "<hr>";
-      html += "<div class='row font-big'>";
-      if (this.computedPaymentAmount > 0) {
-        let paymentInfo = await new Payment().tratePayment(this.paymentInfo);
-        for await (const iterator of paymentInfo) {
-          let paymentName = await new Payment().get(iterator.payment_id);
-          html += "<div class='col-6 text-left'>";
-          html += paymentName;
-          html += "</div>";
-          html += "<div class='col-6 text-right'>";
-          html += this.formatMoney(iterator.price);
-          html += "</div>";
-        }
-      } else {
-        html += "<div class='col-12 text-center text-danger'>";
-        html += "Nehum valor lançado";
-        html += "</div>";
-      }
-      html += "</div>";
-
-      if (this.computedMissedAmount > 0) {
-        html += "<div class='row font-big text-danger'>";
-        html += "<div class='col-6 text-left'>";
-        html += "Faltam: ";
-        html += "</div>";
-        html += "<div class='col-6 text-right'>";
-        html += this.formatMoney(this.computedMissedAmount);
-        html += "</div>";
-        html += "</div>";
-      }
-      Swal.fire({
-        title: "Informações do fechamento",
-        showCancelButton: true,
-        cancelButtonText: "Cancelar",
-        confirmButtonText: "Finalizar",
-        html: html,
-        didOpen: () => {
-          if (this.computedMissedAmount > 0) {
-            document.getElementById("swal-input1").focus();
-          }
-          document.getElementById("swal-input2").value =
-            this.computedMissedAmount > 0 ? this.computedMissedAmount : 0;
-        },
-        preConfirm: () => {},
-      }).then((result) => {
-        if (result.isConfirmed) {
-          Swal.fire({
-            icon: "question",
-            title: "Finalizar fechamento de caixa?",
-            showCancelButton: true,
-            cancelButtonText: "Cancelar",
-          }).then(async (result) => {
-            if (result.isDismissed) {
-              this.closeCashier();
-            } else if (result.isConfirmed) {
-              let response_cashier = await new Cashier().detail();
-
-              await new DB().execute("BEGIN;");
-
-              await new Cashier().update([response_cashier]);
-
-              // insert payments order
-              let paymentsCashiers = [];
-              for await (const iterator of this.paymentInfo) {
-                paymentsCashiers.push({
-                  cashier_id: response_cashier.id,
-                  payment_id: iterator.payment_id,
-                  price: iterator.price,
-                });
-              }
-
-              await new PaymentCashier().create(paymentsCashiers);
-
-              await new DB().execute("COMMIT;");
-
-              EventBus.$emit("cashier-closed", true);
-
-              this.reset();
-
-              Swal.fire({
-                text: "Caixa fechado!",
-                icon: "success",
-              });
-            }
-          });
-          
-        } else {
-          this.paymentInfo = [];
-        }
-      });
-    },
     preventInputQtd() {
       let inputQtd = document.getElementById("input-qtd" + this.tabIndex);
       if (inputQtd.value == "") {
@@ -256,11 +154,11 @@ export default {
       this.reset();
       this.cart = [];
       Swal.fire({
-        title: "Buscar cliente",
         input: "text",
-        inputPlaceholder: "Telefone do cliente",
         showCancelButton: true,
+        title: "Buscar cliente",
         cancelButtonText: "Cancelar",
+        inputPlaceholder: "Telefone do cliente",
         inputAttributes: {
           maxlength: 11,
         },
@@ -414,7 +312,6 @@ export default {
     },
 
     async closeOrder() {
-      this.receiving = true;
       let html = `<input style="margin-bottom: 2;" id="swal-input1" type="number" min="1" max="${this.paymentsFormats.length}" value="1" placeholder="Valor a receber" class="swal2-input"><br>`;
       this.paymentsFormats.forEach((element) => {
         html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`;
