@@ -105,8 +105,6 @@ import mixins from "./mixins/mixins";
 import { User } from "./models/User";
 import EventBus from "../src/EventBus";
 import "bootstrap/dist/css/bootstrap.css";
-import { Payment } from "./models/Payment";
-import { Cashier } from "./models/Cashier";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
 import OrderComponent from "./components/OrderComponent.vue";
