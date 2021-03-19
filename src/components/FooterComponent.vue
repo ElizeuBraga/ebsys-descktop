@@ -59,6 +59,10 @@ export default {
       this.paymentInfoCashier = e[1];
     });
 
+    EventBus.$on("amount-computed", (e) => {
+      this.totalCart = e
+    });
+
     this.cashierIsOpen = await new Cashier().isOpen();
   },
 
