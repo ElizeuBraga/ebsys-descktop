@@ -99,42 +99,21 @@
 <script>
 import Vue from "vue";
 import Swal from "sweetalert2";
-import { DB } from "./models/DB";
 import { Ws } from "./models/Ws";
 const Pusher = require("pusher-js");
-import { City } from "./models/City";
-import { Item } from "./models/Item";
 import mixins from "./mixins/mixins";
 import { User } from "./models/User";
 import EventBus from "../src/EventBus";
-import { Order } from "./models/Order";
-import { Helper } from "./models/Helper";
 import "bootstrap/dist/css/bootstrap.css";
-import { Product } from "./models/Product";
 import { Payment } from "./models/Payment";
 import { Cashier } from "./models/Cashier";
-import { Customer } from "./models/Customer";
 import "bootstrap-vue/dist/bootstrap-vue.css";
-import { PaymentOrder } from "./models/PaymentOrder";
 import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
 import OrderComponent from "./components/OrderComponent.vue";
 import CashierComponent from "./components/CashierComponent.vue";
 import FooterComponent from "./components/FooterComponent.vue";
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
-
-const db = new DB();
-const ws = new Ws();
-const item = new Item();
-const city = new City();
-const user = new User();
-const order = new Order();
-const helper = new Helper();
-const cashier = new Cashier();
-const product = new Product();
-const payment = new Payment();
-const customer = new Customer();
-const paymentOrder = new PaymentOrder();
 
 var pusher = new Pusher("a885cc143df63df6146a", {
   cluster: "us2",
@@ -178,7 +157,7 @@ export default {
       await new Ws().downloadDataFromServer("update");
     });
 
-    this.paymentsFormats = await payment.all();
+    this.paymentsFormats = await new Payment().all();
 
     EventBus.$on("amount-computed", (e) => {
       this.totalCart = e;
@@ -190,16 +169,16 @@ export default {
     });
 
     EventBus.$on("cashier-closed", async (e) => {
-      this.cashierIsOpen = await cashier.isOpen();
+      this.cashierIsOpen = await new Cashier().isOpen();
     });
 
     EventBus.$on("cashier-opened", async (e) => {
       this.$nextTick(async () => {
-        this.cashierIsOpen = await cashier.isOpen();
+        this.cashierIsOpen = await new Cashier().isOpen();
       });
     });
 
-    this.cashierIsOpen = await cashier.isOpen();
+    this.cashierIsOpen = await new Cashier().isOpen();
   },
   methods: {
     async updateData() {
@@ -257,7 +236,7 @@ export default {
           return [value1, value2, value3.checked];
         },
       }).then(async (result) => {
-        let auth = await user.auth(result.value[0], result.value[1]);
+        let auth = await new User().auth(result.value[0], result.value[1]);
         if (!auth) {
           Swal.showValidationMessage("Email e/ou senha estão incorretos!");
           this.initLoginProccess();
@@ -277,7 +256,7 @@ export default {
     },
 
     async isOpen() {
-      this.cashierIsOpen = await cashier.isOpen();
+      this.cashierIsOpen = await new Cashier().isOpen();
     },
 
     linkClass(idx) {
