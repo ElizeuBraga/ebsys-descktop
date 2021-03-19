@@ -8,8 +8,8 @@
       -->
       <b-tab
         title="Balcão"
-        :title-link-class="linkClass(0)"
         @click="changeTab(0)"
+        :title-link-class="linkClass(0)"
       >
         <order-component :orderType="0" />
       </b-tab>
@@ -21,8 +21,8 @@
         -->
       <b-tab
         title="Entregas"
-        :title-link-class="linkClass(1)"
         @click="changeTab(1)"
+        :title-link-class="linkClass(1)"
       >
         <order-component :orderType="1" />
       </b-tab>
@@ -34,117 +34,107 @@
         -->
       <b-tab
         title="Meus caixas"
-        :title-link-class="linkClass(2)"
         @click="changeTab(2)"
+        :title-link-class="linkClass(2)"
       >
-        <cashier-component/>
+        <cashier-component />
       </b-tab>
     </b-tabs>
 
-    <footer-component/>
+    <!--
+      *
+      *
+      * Footer component
+    -->
+    <footer-component />
   </div>
 </template>
 <style>
-.table-responsive {
-  /* max-height: 800px; */
-  /* min-height: 800px; */
-}
-
-/* table tbody {
-  display: block;
-  overflow-y: scroll;
-} */
-
 .card-header {
-  background-color: #2778c4 !important;
   border-radius: 0 !important;
   border: #2778c4 !important;
-}
-
-.nav.nav-tabs.card-header-tabs {
-  /* margin: 0!important; */
+  background-color: #2778c4 !important;
 }
 
 .nav-link.active.bg-primary.text-light {
-  background-color: rgb(222, 226, 230) !important;
   color: #2778c4 !important;
   border-color: rgb(222, 226, 230) !important;
+  background-color: rgb(222, 226, 230) !important;
 }
 
 .nav-link.bg-light.text-info {
   border-radius: 0 !important;
-  background-color: #2778c4 !important;
   color: white !important;
   border: #2778c4 !important;
+  background-color: #2778c4 !important;
 }
 
-.swal2-input, .swal2-input:focus{
-  border: 2px solid #2778c4;
+.swal2-input,
+.swal2-input:focus {
   background-color: white;
+  border: 2px solid #2778c4;
 }
-#input-product0, #input-product1, #input-qtd0, #input-qtd1{
-  margin: 0!important;
+#input-product0,
+#input-product1,
+#input-qtd0,
+#input-qtd1 {
+  margin: 0 !important;
 }
 
-.swal2-title{
+.swal2-title {
   color: #2778c4;
 }
 
 .footer {
-  position: fixed;
   left: 0;
   bottom: 0;
-  color: white;
-  /* margin-bottom: 5px; */
-  padding-top: 5px;
   width: 100%;
-  background: #2778c4;
+  color: white;
+  position: fixed;
+  padding-top: 5px;
   text-align: center;
+  background: #2778c4;
 }
 </style>
 <script>
 import Vue from "vue";
-import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
-import "bootstrap/dist/css/bootstrap.css";
-import "bootstrap-vue/dist/bootstrap-vue.css";
-import { Product } from "./models/Product";
+import Swal from "sweetalert2";
 import { DB } from "./models/DB";
 import { Ws } from "./models/Ws";
-import { User } from "./models/User";
-import { Cashier } from "./models/Cashier";
-import { City } from "./models/City";
-import { Helper } from "./models/Helper";
-import { Customer } from "./models/Customer";
-import { Payment } from "./models/Payment";
-import { Order } from "./models/Order";
-import { Item } from "./models/Item";
-import { PaymentOrder } from "./models/PaymentOrder";
-import EventBus from "../src/EventBus";
 const Pusher = require("pusher-js");
+import { City } from "./models/City";
+import { Item } from "./models/Item";
 import mixins from "./mixins/mixins";
-import Swal from "sweetalert2";
+import { User } from "./models/User";
+import EventBus from "../src/EventBus";
+import { Order } from "./models/Order";
+import { Helper } from "./models/Helper";
+import "bootstrap/dist/css/bootstrap.css";
+import { Product } from "./models/Product";
+import { Payment } from "./models/Payment";
+import { Cashier } from "./models/Cashier";
+import { Customer } from "./models/Customer";
+import "bootstrap-vue/dist/bootstrap-vue.css";
+import { PaymentOrder } from "./models/PaymentOrder";
+import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
 import OrderComponent from "./components/OrderComponent.vue";
 import CashierComponent from "./components/CashierComponent.vue";
-import FooterComponent from './components/FooterComponent.vue';
+import FooterComponent from "./components/FooterComponent.vue";
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 
-// const db = new DB().createDatabase();
-const product = new Product();
-const helper = new Helper();
-const city = new City();
-const customer = new Customer();
 const db = new DB();
 const ws = new Ws();
-const user = new User();
-const cashier = new Cashier();
-const payment = new Payment();
-const order = new Order();
 const item = new Item();
+const city = new City();
+const user = new User();
+const order = new Order();
+const helper = new Helper();
+const cashier = new Cashier();
+const product = new Product();
+const payment = new Payment();
+const customer = new Customer();
 const paymentOrder = new PaymentOrder();
-
-// Enable pusher logging - don't include this in production
-// Pusher.logToConsole = true;
 
 var pusher = new Pusher("a885cc143df63df6146a", {
   cluster: "us2",
@@ -154,32 +144,28 @@ var channel = pusher.subscribe("data-insert");
 var channel2 = pusher.subscribe("data-update");
 
 export default {
-  mixins:[mixins],
+  mixins: [mixins],
   components: {
     OrderComponent,
+    FooterComponent,
     CashierComponent,
-    FooterComponent
   },
   data() {
     return {
-      // bluePrimary: "#2778c4",
-      event_aux: 0,
-      paymentInfo: [],
-      receiving: false,
-      // tabIndex: 0,
       tab: 0,
-      products: [],
-      cities: [],
       cart: [],
-      // totalCart: 0,
-      // totalItems: 0,
       search: "",
-      cashierIsOpen: false,
-      paymentsFormats: [],
-      cashiers: [],
       order: {},
       custom: [],
-      paymentInfoCashier:[]
+      cities: [],
+      cashiers: [],
+      event_aux: 0,
+      products: [],
+      paymentInfo: [],
+      receiving: false,
+      paymentsFormats: [],
+      cashierIsOpen: false,
+      paymentInfoCashier: [],
     };
   },
   async mounted() {
@@ -188,17 +174,12 @@ export default {
 
     channel.bind("insert", async (data) => {
       await new Ws().downloadDataFromServer("insert");
-      console.log('Insert');
-      // this.updateData();
     });
 
     channel2.bind("update", async (data) => {
-      console.log('Update');
       await new Ws().downloadDataFromServer("update");
-      // this.updateData();
     });
 
-    // console.log()
     this.paymentsFormats = await payment.all();
 
     EventBus.$on("amount-computed", (e) => {
@@ -207,25 +188,20 @@ export default {
 
     EventBus.$on("amount-computed-items", (e) => {
       this.totalItems = e[0];
-      this.paymentInfoCashier = e[1] 
+      this.paymentInfoCashier = e[1];
     });
 
-    EventBus.$on("cashier-closed", async(e) => {
+    EventBus.$on("cashier-closed", async (e) => {
       this.cashierIsOpen = await cashier.isOpen();
     });
 
-    EventBus.$on("cashier-opened", async(e) => {
-      this.$nextTick( async ()=>{
+    EventBus.$on("cashier-opened", async (e) => {
+      this.$nextTick(async () => {
         this.cashierIsOpen = await cashier.isOpen();
-      })
-      // this.cashierIsOpen = await cashier.isOpen();
+      });
     });
 
-    this.getCashiers();
-
     this.cashierIsOpen = await cashier.isOpen();
-    // this.localities = await locality.all();
-    // await ws.loadAll();
   },
   methods: {
     async updateData() {
@@ -236,70 +212,6 @@ export default {
     changeTab(tabIndex) {
       EventBus.$emit("change-tab", tabIndex);
       this.tab = tabIndex;
-    },
-
-    async cashierInfo(cashier_id) {
-      let items = await cashier.getCashierInfo(cashier_id);
-      let html = "";
-      if (items.length == 0) {
-        html +=
-          "<tr><span class='text-danger'>Nehnum item encontrado</span><tr>";
-      } else {
-        html = `
-            <table class="table  table-striped">
-              <thead>
-                <tr>
-                  <th>Produto</th>
-                  <th class="text-center" scope="col">Quantidade</th>
-                  <th class="text-center" scope="col">Total</th>
-                </tr>
-              </thead>
-              <tbody>`;
-
-        items.forEach((i) => {
-          html += `<tr>
-                          <th>${i.name}</th>
-                          <td class="text-center">${i.quantity}</td>
-                          <td class="text-center">${parseFloat(i.total)
-                            .toFixed(2)
-                            .replace(".", ",")}</td>
-                        </tr>`;
-        });
-
-        html += `</tbody>
-            </table>`;
-      }
-      Swal.fire({
-        title: "Informações",
-        html: html,
-        showCloseButton: true,
-      });
-    },
-
-    async getCashiers(byDate = false) {
-      if (byDate) {
-        Swal.fire({
-          title: "Buscar por data",
-          html:
-            '<input type="date" id="swal-input1" placeholder="Data inicial" class="swal2-input">' +
-            '<input type="date" id="swal-input2" placeholder="Data final" class="swal2-input">',
-          preConfirm: () => {
-            let start = document.getElementById("swal-input1").value;
-            let end = document.getElementById("swal-input2").value;
-
-            if (start == "" || end == "") {
-              Swal.showValidationMessage("Escolha data inicial e data final");
-            } else {
-              return [start, end];
-            }
-          },
-        }).then(async (result) => {
-          this.cashiers = await cashier.all(result.value);
-        });
-      } else {
-        console.log('Chama')
-        this.cashiers = await cashier.all();
-      }
     },
 
     async initLoginProccess() {
@@ -366,15 +278,8 @@ export default {
       });
     },
 
-
     async isOpen() {
       this.cashierIsOpen = await cashier.isOpen();
-    },
-
-    async login() {
-      let auth = await user.auth();
-      if (!auth) {
-      }
     },
 
     linkClass(idx) {
@@ -387,36 +292,11 @@ export default {
   },
 
   computed: {
-    infoForBtnReceive() {
-      if (!this.cashierIsOpen) {
-        return "Caixa fechado";
-      }
-      if (this.cart == 0) {
-        return "Pedido vazio";
-      }
-    },
 
-    receiveDisabled() {
-      return this.cart.length == 0;
-    },
   },
+  
   watch: {
-    async search(e) {
-      this.products = await product.selectProdutcToCart(e);
-      var opts = document.getElementById("producs").childNodes;
-      for (var i = 0; i < opts.length; i++) {
-        if (opts[i].value === e) {
-          let inputQtd = document.getElementById("input-qtd");
 
-          if (this.tab === 1) {
-            inputQtd = document.getElementById("input-qtd-delivery");
-          }
-
-          inputQtd.focus();
-          break;
-        }
-      }
-    },
   },
 };
 </script>

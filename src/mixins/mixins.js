@@ -10,7 +10,8 @@ export default {
         return {
             tabIndex:0,
             paymentsFormats: [],
-            cashierIsOpen: false
+            cashierIsOpen: false,
+            bluePrimary: "#2778c4",
         }
     },
 
