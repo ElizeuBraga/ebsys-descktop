@@ -131,18 +131,6 @@ export default {
   },
   data() {
     return {
-      tab: 0,
-      cart: [],
-      search: "",
-      order: {},
-      custom: [],
-      cities: [],
-      cashiers: [],
-      event_aux: 0,
-      products: [],
-      paymentInfo: [],
-      cashierIsOpen: false,
-      paymentInfoCashier: [],
     };
   },
   async mounted() {
@@ -156,30 +144,8 @@ export default {
     channel2.bind("update", async (data) => {
       await new Ws().downloadDataFromServer("update");
     });
-
-    this.paymentsFormats = await new Payment().all();
-
-    EventBus.$on("amount-computed", (e) => {
-      this.totalCart = e;
-    });
-
-    EventBus.$on("amount-computed-items", (e) => {
-      this.totalItems = e[0];
-      this.paymentInfoCashier = e[1];
-    });
-
-    EventBus.$on("cashier-closed", async (e) => {
-      this.cashierIsOpen = await new Cashier().isOpen();
-    });
-
-    EventBus.$on("cashier-opened", async (e) => {
-      this.$nextTick(async () => {
-        this.cashierIsOpen = await new Cashier().isOpen();
-      });
-    });
-
-    this.cashierIsOpen = await new Cashier().isOpen();
   },
+
   methods: {
     async updateData() {
       await new Ws().downloadDataFromServer("insert");
@@ -188,7 +154,6 @@ export default {
 
     changeTab(tabIndex) {
       EventBus.$emit("change-tab", tabIndex);
-      this.tab = tabIndex;
     },
 
     async initLoginProccess() {
@@ -253,10 +218,6 @@ export default {
           localStorage.removeItem("password");
         }
       });
-    },
-
-    async isOpen() {
-      this.cashierIsOpen = await new Cashier().isOpen();
     },
 
     linkClass(idx) {
