@@ -1,13 +1,11 @@
 <template>
   <div>
-    <!-- <b-row> -->
     <b-row>
       <b-col cols="4">
         <label>Nome do produto:</label>
-        <!-- <input maxlength="11" class="swal2-input" placeholder="Telefone do cliente" type="text" style="display: flex; background:white; margin:0"> -->
         <b-form-input
-          class="swal2-input"
           v-model="search"
+          class="swal2-input"
           :list="'producs' + tabIndex"
           :id="'input-product' + orderType"
         ></b-form-input>
@@ -20,10 +18,10 @@
       <b-col cols="2">
         <label>Quantidade:</label>
         <b-form-input
-          type="number"
-          class="swal2-input"
           min="1"
           value="1"
+          type="number"
+          class="swal2-input"
           @input="preventInputQtd()"
           :id="'input-qtd' + orderType"
         ></b-form-input>
@@ -76,59 +74,44 @@
         </div>
       </b-col>
     </b-row>
-    <!-- </b-row> -->
   </div>
 </template>
 
 <script>
-import { Product } from "../models/Product";
-import { Payment } from "../models/Payment";
-import { Cashier } from "../models/Cashier";
-import { Order } from "../models/Order";
-import { Item } from "../models/Item";
-import { Customer } from "../models/Customer";
+import Swal from "sweetalert2";
+import { DB } from "../models/DB";
+import EventBus from "../EventBus";
 import { City } from "../models/City";
+import { Item } from "../models/Item";
+import mixins from "../mixins/mixins";
+import { Order } from "../models/Order";
+import { Helper } from "../models/Helper";
 import { Address } from "../models/Address";
+import { Cashier } from "../models/Cashier";
+import { Payment } from "../models/Payment";
+import { Product } from "../models/Product";
+import { Customer } from "../models/Customer";
 import { PaymentOrder } from "../models/PaymentOrder";
 import { PaymentCashier } from "../models/PaymentCashier";
-import { Helper } from "../models/Helper";
-import EventBus from "../EventBus";
-import { DB } from "../models/DB";
-import Swal from "sweetalert2";
-import mixins from "../mixins/mixins";
-const product = new Product();
-const customer = new Customer();
-const city = new City();
-const helper = new Helper();
-const payment = new Payment();
-const cashier = new Cashier();
-const order = new Order();
-const item = new Item();
-const address_class = new Address();
-const paymentOrder = new PaymentOrder();
-const paymentCashier = new PaymentCashier();
-const db = new DB();
 
 export default {
+  mixins: [mixins],
   props: ["orderType"],
-  mixins:[mixins],
   data: () => ({
     tab: "-",
-    // tabIndex: 0,
     next: "",
-    search: "",
-    products: [],
     cart: [],
-    search_aux: 0,
-    // paymentsFormats: [],
-    paymentInfo: [],
+    search: "",
     customer: {},
+    products: [],
+    search_aux: 0,
+    paymentInfo: [],
     receiving: false,
-    paymentFormatSelecting: false,
-    paymentFormatSelected: false,
-    paymentFormatInfoInserted: false,
     insertedInCart: false,
     isCanceledReceivement: false,
+    paymentFormatSelected: false,
+    paymentFormatSelecting: false,
+    paymentFormatInfoInserted: false,
   }),
 
   async mounted() {
@@ -139,40 +122,30 @@ export default {
         this.initDeliveryOrder();
       }
     });
-    this.paymentsFormats = await payment.all();
+    this.paymentsFormats = await new Payment().all();
   },
 
   methods: {
     async closeCashier() {
       this.receiving = true;
       let html = `<input style="margin-bottom: 2;" id="swal-input1" type="number" min="1" max="${this.paymentsFormats.length}" value="1" placeholder="Valor a receber" class="swal2-input"><br>`;
-      this.paymentsFormats.forEach(element => {
-        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`
+      this.paymentsFormats.forEach((element) => {
+        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`;
       });
       html +=
         '<input id="swal-input2" placeholder="Valor a lançar" class="swal2-input">';
-
-      // html += "<div class='row font-big text-success'>";
-      // html += "<div class='col-6 text-left'>";
-      // html += "Receber: ";
-      // html += "</div>";
-      // html += "<div class='col-6 text-right'>";
-      // html += helper.formatMoney(this.computedOrderAmount);
-      // html += "</div>";
-      // html += "</div>";
 
       html += "<hr>";
       html += "<div class='row font-big'>";
       if (this.computedPaymentAmount > 0) {
         let paymentInfo = await new Payment().tratePayment(this.paymentInfo);
         for await (const iterator of paymentInfo) {
-          // const todo = await fetch(iterator);
-          let paymentName = await payment.get(iterator.payment_id);
+          let paymentName = await new Payment().get(iterator.payment_id);
           html += "<div class='col-6 text-left'>";
           html += paymentName;
           html += "</div>";
           html += "<div class='col-6 text-right'>";
-          html += helper.formatMoney(iterator.price);
+          html += this.formatMoney(iterator.price);
           html += "</div>";
         }
       } else {
@@ -182,37 +155,16 @@ export default {
       }
       html += "</div>";
 
-      // html += "<hr>";
-      // html += "<div class='row font-big text-primary'>";
-      // html += "<div class='col-6 text-left'>";
-      // html += "Recebido: ";
-      // html += "</div>";
-      // html += "<div class='col-6 text-right'>";
-      // html += helper.formatMoney(this.computedPaymentAmount);
-      // html += "</div>";
-      // html += "</div>";
-
       if (this.computedMissedAmount > 0) {
         html += "<div class='row font-big text-danger'>";
         html += "<div class='col-6 text-left'>";
         html += "Faltam: ";
         html += "</div>";
         html += "<div class='col-6 text-right'>";
-        html += helper.formatMoney(this.computedMissedAmount);
+        html += this.formatMoney(this.computedMissedAmount);
         html += "</div>";
         html += "</div>";
       }
-
-      // if (this.computedChangeAmount > 0) {
-      //   html += "<div class='row font-big text-danger'>";
-      //   html += "<div class='col-6 text-left'>";
-      //   html += "Troco: ";
-      //   html += "</div>";
-      //   html += "<div class='col-6 text-right'>";
-      //   html += this.formatMoney(this.computedChangeAmount);
-      //   html += "</div>";
-      //   html += "</div>";
-      // }
       Swal.fire({
         title: "Informações do fechamento",
         showCancelButton: true,
@@ -226,9 +178,7 @@ export default {
           document.getElementById("swal-input2").value =
             this.computedMissedAmount > 0 ? this.computedMissedAmount : 0;
         },
-        preConfirm: () => {
-          
-        },
+        preConfirm: () => {},
       }).then((result) => {
         if (result.isConfirmed) {
           Swal.fire({
@@ -240,14 +190,11 @@ export default {
             if (result.isDismissed) {
               this.closeCashier();
             } else if (result.isConfirmed) {
+              let response_cashier = await new Cashier().detail();
 
-              let response_cashier = await cashier.detail();
+              await new DB().execute("BEGIN;");
 
-              db.execute("BEGIN;");
-
-              await cashier.update([
-                response_cashier
-              ]);
+              await new Cashier().update([response_cashier]);
 
               // insert payments order
               let paymentsCashiers = [];
@@ -255,39 +202,36 @@ export default {
                 paymentsCashiers.push({
                   cashier_id: response_cashier.id,
                   payment_id: iterator.payment_id,
-                  price: iterator.price
+                  price: iterator.price,
                 });
               }
 
-              await paymentCashier.create(paymentsCashiers);
+              await new PaymentCashier().create(paymentsCashiers);
 
-              db.execute("COMMIT;");
+              await new DB().execute("COMMIT;");
 
               EventBus.$emit("cashier-closed", true);
 
               this.reset();
 
               Swal.fire({
-                text:"Caixa fechado!",
-                icon:"success"
-              })
+                text: "Caixa fechado!",
+                icon: "success",
+              });
             }
           });
-          // // this.paymentInfo.push(result.value);
-          // // this.receiving = false;
-          // // document.getElementById("input-product").focus();
-          // this.closeOrder();
+          
         } else {
           this.paymentInfo = [];
         }
       });
     },
-    preventInputQtd(){
-      let inputQtd = document.getElementById('input-qtd'+this.tabIndex)
-      if(inputQtd.value == ""){
-        setTimeout(()=>{
-          inputQtd.value = "1"
-        }, 100)
+    preventInputQtd() {
+      let inputQtd = document.getElementById("input-qtd" + this.tabIndex);
+      if (inputQtd.value == "") {
+        setTimeout(() => {
+          inputQtd.value = "1";
+        }, 100);
       }
     },
 
@@ -300,7 +244,7 @@ export default {
       this.cart = [];
       this.products = [];
       this.paymentInfo = [];
-      this.customer = {}
+      this.customer = {};
     },
 
     initDeliveryOrder() {
@@ -329,9 +273,9 @@ export default {
         },
       }).then(async (result) => {
         if (result.isConfirmed) {
-          this.customer = await customer.find(result.value);
+          this.customer = await new Customer().find(result.value);
 
-          let cities = await city.all();
+          let cities = await new City().all();
           phone = result.value;
 
           let html = '<select id="swal2-select" class="swal2-select" name="">';
@@ -381,13 +325,11 @@ export default {
               }
             },
             preConfirm: async () => {
-              // if(!this.customer){
               name = document.getElementById("swal-input1").value;
               phone = document.getElementById("swal-input2").value;
               address = document.getElementById("swal-input3").value;
               complement = document.getElementById("swal-input4").value;
               city_id = document.getElementById("swal2-select").value;
-              // }
 
               if (name == "" || phone == "" || address == "") {
                 Swal.showValidationMessage("Preencha todos os campos");
@@ -426,31 +368,30 @@ export default {
                 },
               ];
               if (!this.customer) {
-                db.execute("BEGIN;");
-                let customer_id = await customer.create(customer_obj);
+                await new DB().execute("BEGIN;");
+                let customer_id = await new Customer().create(customer_obj);
                 address_obj[0].customer_id = customer_id;
-                let address_id = await address_class.create(address_obj);
-                db.execute("COMMIT;");
+                let address_id = await new Address().create(address_obj);
+                await new DB().execute("COMMIT;");
               } else {
-                let response = await customer.update(customer_obj);
+                let response = await new Customer().update(customer_obj);
 
                 if (address_obj[0].id === undefined) {
-                  response = await address_class.create(address_obj);
+                  response = await new Address().create(address_obj);
                 } else {
-                  response = await address_class.update(address_obj);
+                  response = await new Address().update(address_obj);
                 }
               }
 
               setTimeout(async () => {
                 let teste = document.getElementById("input-product1");
                 teste.focus();
-                this.customer = await customer.find(phone);
+                this.customer = await new Customer().find(phone);
               }, 500);
-              let prod = await customer.getRate(phone);
+              let prod = await new Customer().getRate(phone);
 
               this.insertProdInCart(prod.name, 1);
             } else if (result.isDismissed) {
-              // this.initDeliveryOrder()
               this.custom = {};
             }
           });
@@ -459,11 +400,11 @@ export default {
     },
 
     async insertProdInCart(inputProdValue, inputQtdValue) {
-      let prod = await product.selectProdutcByName(inputProdValue);
+      let prod = await new Product().selectProdutcByName(inputProdValue);
       if (prod && inputQtdValue != "") {
         prod[0].qtd = inputQtdValue;
         let prod2 = JSON.parse(JSON.stringify(prod[0]));
-        
+
         this.cart.push(prod2);
         this.search = "";
         this.products = [];
@@ -475,8 +416,8 @@ export default {
     async closeOrder() {
       this.receiving = true;
       let html = `<input style="margin-bottom: 2;" id="swal-input1" type="number" min="1" max="${this.paymentsFormats.length}" value="1" placeholder="Valor a receber" class="swal2-input"><br>`;
-      this.paymentsFormats.forEach(element => {
-        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`
+      this.paymentsFormats.forEach((element) => {
+        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`;
       });
       html +=
         '<input id="swal-input2" placeholder="Valor a receber" class="swal2-input">';
@@ -486,7 +427,7 @@ export default {
       html += "Receber: ";
       html += "</div>";
       html += "<div class='col-6 text-right'>";
-      html += helper.formatMoney(this.computedOrderAmount);
+      html += this.formatMoney(this.computedOrderAmount);
       html += "</div>";
       html += "</div>";
 
@@ -495,13 +436,12 @@ export default {
       if (this.computedPaymentAmount > 0) {
         let paymentInfo = await new Payment().tratePayment(this.paymentInfo);
         for await (const iterator of paymentInfo) {
-          // const todo = await fetch(iterator);
-          let paymentName = await payment.get(iterator.payment_id);
+          let paymentName = await new Payment().get(iterator.payment_id);
           html += "<div class='col-6 text-left'>";
           html += paymentName;
           html += "</div>";
           html += "<div class='col-6 text-right'>";
-          html += helper.formatMoney(iterator.price);
+          html += this.formatMoney(iterator.price);
           html += "</div>";
         }
       } else {
@@ -517,7 +457,7 @@ export default {
       html += "Recebido: ";
       html += "</div>";
       html += "<div class='col-6 text-right'>";
-      html += helper.formatMoney(this.computedPaymentAmount);
+      html += this.formatMoney(this.computedPaymentAmount);
       html += "</div>";
       html += "</div>";
 
@@ -527,7 +467,7 @@ export default {
         html += "Faltam: ";
         html += "</div>";
         html += "<div class='col-6 text-right'>";
-        html += helper.formatMoney(this.computedMissedAmount);
+        html += this.formatMoney(this.computedMissedAmount);
         html += "</div>";
         html += "</div>";
       }
@@ -555,9 +495,7 @@ export default {
           document.getElementById("swal-input2").value =
             this.computedMissedAmount > 0 ? this.computedMissedAmount : 0;
         },
-        preConfirm: () => {
-          
-        },
+        preConfirm: () => {},
       }).then((result) => {
         if (result.isConfirmed) {
           Swal.fire({
@@ -574,11 +512,11 @@ export default {
                 customer_id = this.customer.id;
               }
 
-              let response_cashier = await cashier.detail();
+              let response_cashier = await new Cashier().detail();
 
-              db.execute("BEGIN;");
+              await new DB().execute("BEGIN;");
               //insert the order
-              let order_id = await order.create([
+              let order_id = await new Order().create([
                 {
                   cashier_id: response_cashier.id,
                   customer_id: customer_id,
@@ -597,7 +535,7 @@ export default {
                 });
               }
 
-              let item_id = await item.create(items);
+              let item_id = await new Item().create(items);
 
               // insert payments order
               let paymentsOrder = [];
@@ -605,21 +543,21 @@ export default {
                 paymentsOrder.push({
                   order_id: order_id,
                   payment_id: iterator.payment_id,
-                  price: (iterator.payment_id == 1 && iterator.price > this.computedChangeAmount) ? (iterator.price - this.computedChangeAmount) : iterator.price
+                  price:
+                    iterator.payment_id == 1 &&
+                    iterator.price > this.computedChangeAmount
+                      ? iterator.price - this.computedChangeAmount
+                      : iterator.price,
                 });
               }
 
-              let payment_id = await paymentOrder.create(paymentsOrder);
+              let payment_id = await new PaymentOrder().create(paymentsOrder);
 
-              db.execute("COMMIT;");
+              await new DB().execute("COMMIT;");
 
               this.reset();
             }
           });
-          // // this.paymentInfo.push(result.value);
-          // // this.receiving = false;
-          // // document.getElementById("input-product").focus();
-          // this.closeOrder();
         } else {
           this.paymentInfo = [];
         }
@@ -647,30 +585,23 @@ export default {
     testaRemve() {
       console.log("Testa remove");
     },
-
-    formatMoney(value) {
-      return helper.formatMoney(value);
-    },
   },
   watch: {
-    paymentInfo(){
-      
-    },
+    paymentInfo() {},
 
     cart() {
       this.computedOrderAmount;
     },
 
     async search(e) {
-      if(this.tabIndex == 1 && this.customer.name == undefined){
+      if (this.tabIndex == 1 && this.customer.name == undefined) {
         this.initDeliveryOrder();
-        return
+        return;
       }
-      this.products = await product.selectProdutcToCart(e);
+      this.products = await new Product().selectProdutcToCart(e);
 
       var opts = document.getElementById("producs" + this.tabIndex).childNodes;
 
-      // document.removeEventListener("keypress", this.testaRemve());
       if (this.search_aux == 0) {
         this.search_aux++;
         document.addEventListener(
@@ -688,12 +619,12 @@ export default {
             if (e.key === "Enter") {
               if (swalInput1 === document.activeElement) {
                 swalInput2.focus();
-                swalInput2.select()
+                swalInput2.select();
                 return;
               }
 
               if (swalInput2 === document.activeElement) {
-                if (this.computedMissedAmount > 0 ||  this.tabIndex == 2) {
+                if (this.computedMissedAmount > 0 || this.tabIndex == 2) {
                   let paymentInfo = {
                     payment_id: swalInput1.value,
                     price: swalInput2.value,
@@ -705,12 +636,11 @@ export default {
                     swalInput2.focus();
                   }, 100);
 
-                  if(this.tabIndex === 2){
+                  if (this.tabIndex === 2) {
                     this.closeCashier();
-                  }else{
+                  } else {
                     this.closeOrder();
                   }
-
                 }
                 return;
               }
@@ -719,36 +649,24 @@ export default {
                 inputQtd === document.activeElement &&
                 inputProd.value != ""
               ) {
-
-                if(!await cashier.isOpen()){
+                if (!(await new Cashier().isOpen())) {
                   Swal.fire({
                     title: "Caixa fechado!",
-                    text:"Abra o caixa",
-                    icon: "error"
-                    // showCancelButton: true,
-                    // cancelButtonText:"Cancelar"
-                  }).then((result)=>{
-                    // if(result.isConfirmed){
-                    //   let user = JSON.parse(localStorage.getItem('user'));
-                    //   cashier.create([{
-                    //     user_id: user.id 
-                    //   }]);
-
-                    //   EventBus.$emit("cashier-opened", true);
-                    // }
-                  })
-                  return
+                    text: "Abra o caixa",
+                    icon: "error",
+                  }).then((result) => {
+                    
+                  });
+                  return;
                 }
-                  await this.insertProdInCart(inputProd.value, inputQtd.value);
+                await this.insertProdInCart(inputProd.value, inputQtd.value);
 
-                // setTimeout(() => {
-                  inputQtd.value = 1;
-                  inputProd.value = "";
-                  this.search = "";
-                  this.products = [];
+                inputQtd.value = 1;
+                inputProd.value = "";
+                this.search = "";
+                this.products = [];
 
-                  inputProd.focus();
-                // }, 100);
+                inputProd.focus();
 
                 return;
               }
@@ -796,8 +714,8 @@ export default {
       }
     },
 
-    computedChangeAmount(){
-      let total =  this.computedPaymentAmount - this.computedOrderAmount;
+    computedChangeAmount() {
+      let total = this.computedPaymentAmount - this.computedOrderAmount;
       return parseFloat(total);
     },
 
