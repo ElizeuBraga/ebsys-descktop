@@ -28,8 +28,7 @@ export class DB{
             }
             sql += map + updated_at + " WHERE id = " + a.id
 
-            console.log(sql)
-            // await this.execute(sql);
+            await this.execute(sql);
         }
 
         this.execute('COMMIT;');

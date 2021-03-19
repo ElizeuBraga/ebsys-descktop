@@ -41,35 +41,7 @@
       </b-tab>
     </b-tabs>
 
-    <footer class="footer">
-      <div class="row">
-        <!-- <div v-if="tabIndex == 2" class="col-12">
-          <div v-for="(p, index) in paymentsFormats" :key="index" class="row">
-            <div :class="'col-' + Math.round((12 / paymentsFormats.length))">
-              Teste
-            </div>
-          </div>
-        </div> -->
-        <div class="col-6">
-          <button v-if="cashierIsOpen && tabIndex == 2" @click="closeCashier" class="btn btn-light text-danger">Fechar caixa</button>
-          <button v-else-if="!cashierIsOpen && tabIndex == 2" @click="openCashier" class="btn btn-light text-success">Abrir caixa</button>
-        </div>
-        <div class="col-6" v-if="tabIndex === 2">
-          <b-row>
-            <b-col v-for="(pFc, index) in paymentInfoCashier" :key="index">
-              {{pFc.name}} <br> {{formatMoney(pFc.total)}}
-            </b-col>
-          </b-row>
-        </div>
-        <div class="col-6" v-if="tabIndex !== 2">
-          <b-row>
-            <b-col class="font-big"> Total </b-col>
-            <!-- <b-col v-if="tabIndex == 2" class="font-big"> R$ {{ formatMoney(totalItems) }} </b-col> -->
-            <b-col class="font-big"> R$ {{ formatMoney(totalCart) }} </b-col>
-          </b-row>
-        </div>
-      </div>
-    </footer>
+    <footer-component/>
   </div>
 </template>
 <style>
@@ -149,10 +121,11 @@ import { Item } from "./models/Item";
 import { PaymentOrder } from "./models/PaymentOrder";
 import EventBus from "../src/EventBus";
 const Pusher = require("pusher-js");
-// import { mixins } from "./mixins/mixins";
+import mixins from "./mixins/mixins";
 import Swal from "sweetalert2";
 import OrderComponent from "./components/OrderComponent.vue";
 import CashierComponent from "./components/CashierComponent.vue";
+import FooterComponent from './components/FooterComponent.vue';
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 
@@ -181,24 +154,25 @@ var channel = pusher.subscribe("data-insert");
 var channel2 = pusher.subscribe("data-update");
 
 export default {
-  // mixins:[mixins],
+  mixins:[mixins],
   components: {
     OrderComponent,
-    CashierComponent
+    CashierComponent,
+    FooterComponent
   },
   data() {
     return {
-      bluePrimary: "#2778c4",
+      // bluePrimary: "#2778c4",
       event_aux: 0,
       paymentInfo: [],
       receiving: false,
-      tabIndex: 0,
+      // tabIndex: 0,
       tab: 0,
       products: [],
       cities: [],
       cart: [],
-      totalCart: 0,
-      totalItems: 0,
+      // totalCart: 0,
+      // totalItems: 0,
       search: "",
       cashierIsOpen: false,
       paymentsFormats: [],
@@ -257,10 +231,6 @@ export default {
     async updateData() {
       await new Ws().downloadDataFromServer("insert");
       await new Ws().downloadDataFromServer("update");
-    },
-
-    formatMoney(value) {
-      return helper.formatMoney(value);
     },
 
     changeTab(tabIndex) {
@@ -396,184 +366,6 @@ export default {
       });
     },
 
-    async openCashier() {
-      Swal.fire({
-        title:"Abrir caixa?",
-        text:"Apenas você ou administrador poderá fechá-lo.",
-        icon:"question"
-      }).then(async()=>{
-        let user = JSON.parse(localStorage.getItem('user'));
-        await cashier.create([
-          {
-            user_id: user.id
-          }
-        ]);
-
-        Swal.fire({
-          title:"Caixa aberto",
-          icon:"success"
-        })
-
-        setTimeout(async () => {
-          this.cashierIsOpen = await cashier.isOpen();
-        }, 1000);
-      })
-    },
-
-    async closeCashier() {
-      this.receiving = true;
-      let html = `<input style="margin-bottom: 2;" id="swal-input1" type="number" min="1" max="${this.paymentsFormats.length}" value="1" placeholder="Valor a receber" class="swal2-input"><br>`;
-      this.paymentsFormats.forEach(element => {
-        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`
-      });
-      html +=
-        '<input id="swal-input2" placeholder="Valor a lançar" class="swal2-input">';
-
-      // html += "<div class='row font-big text-success'>";
-      // html += "<div class='col-6 text-left'>";
-      // html += "Receber: ";
-      // html += "</div>";
-      // html += "<div class='col-6 text-right'>";
-      // html += helper.formatMoney(this.computedOrderAmount);
-      // html += "</div>";
-      // html += "</div>";
-
-      html += "<hr>";
-      html += "<div class='row font-big'>";
-      if (this.computedPaymentAmount > 0) {
-        let paymentInfo = await new Payment().tratePayment(this.paymentInfo);
-        for await (const iterator of paymentInfo) {
-          // const todo = await fetch(iterator);
-          let paymentName = await payment.get(iterator.payment_id);
-          html += "<div class='col-6 text-left'>";
-          html += paymentName;
-          html += "</div>";
-          html += "<div class='col-6 text-right'>";
-          html += helper.formatMoney(iterator.price);
-          html += "</div>";
-        }
-      } else {
-        html += "<div class='col-12 text-center text-danger'>";
-        html += "Nehum valor lançado";
-        html += "</div>";
-      }
-      html += "</div>";
-
-      // html += "<hr>";
-      // html += "<div class='row font-big text-primary'>";
-      // html += "<div class='col-6 text-left'>";
-      // html += "Recebido: ";
-      // html += "</div>";
-      // html += "<div class='col-6 text-right'>";
-      // html += helper.formatMoney(this.computedPaymentAmount);
-      // html += "</div>";
-      // html += "</div>";
-
-      if (this.computedMissedAmount > 0) {
-        html += "<div class='row font-big text-danger'>";
-        html += "<div class='col-6 text-left'>";
-        html += "Faltam: ";
-        html += "</div>";
-        html += "<div class='col-6 text-right'>";
-        html += helper.formatMoney(this.computedMissedAmount);
-        html += "</div>";
-        html += "</div>";
-      }
-
-      // if (this.computedChangeAmount > 0) {
-      //   html += "<div class='row font-big text-danger'>";
-      //   html += "<div class='col-6 text-left'>";
-      //   html += "Troco: ";
-      //   html += "</div>";
-      //   html += "<div class='col-6 text-right'>";
-      //   html += this.formatMoney(this.computedChangeAmount);
-      //   html += "</div>";
-      //   html += "</div>";
-      // }
-      Swal.fire({
-        title: "Informações do fechamento",
-        showCancelButton: true,
-        cancelButtonText: "Cancelar",
-        confirmButtonText: "Finalizar",
-        html: html,
-        didOpen: () => {
-          if (this.computedMissedAmount > 0) {
-            document.getElementById("swal-input1").focus();
-          }
-          document.getElementById("swal-input2").value =
-            this.computedMissedAmount > 0 ? this.computedMissedAmount : 0;
-        },
-        preConfirm: () => {
-          
-        },
-      }).then((result) => {
-        if (result.isConfirmed) {
-          Swal.fire({
-            icon: "question",
-            title: "Finalizar recebimento?",
-            showCancelButton: true,
-            cancelButtonText: "Cancelar",
-          }).then(async (result) => {
-            if (result.isDismissed) {
-              this.closeOrder();
-            } else if (result.isConfirmed) {
-              let customer_id = null;
-              if (this.customer.id !== undefined) {
-                customer_id = this.customer.id;
-              }
-
-              let response_cashier = await cashier.detail();
-              console.log(response_cashier)
-
-              db.execute("BEGIN;");
-              //insert the order
-              let order_id = await order.create([
-                {
-                  cashier_id: response_cashier.id,
-                  customer_id: customer_id,
-                  order_types_id: this.tabIndex + 1,
-                },
-              ]);
-
-              // insert items
-              let items = [];
-              for await (const iterator of this.cart) {
-                items.push({
-                  quantity: iterator.qtd,
-                  product_id: iterator.id,
-                  price: iterator.price,
-                  order_id: order_id,
-                });
-              }
-
-              let item_id = await item.create(items);
-
-              // insert payments order
-              let paymentsOrder = [];
-              for await (const iterator of this.paymentInfo) {
-                paymentsOrder.push({
-                  order_id: order_id,
-                  payment_id: iterator.payment_id,
-                  price: (iterator.payment_id == 1 && iterator.price > this.computedChangeAmount) ? (iterator.price - this.computedChangeAmount) : iterator.price
-                });
-              }
-
-              let payment_id = await paymentOrder.create(paymentsOrder);
-
-              db.execute("COMMIT;");
-
-              this.reset();
-            }
-          });
-          // // this.paymentInfo.push(result.value);
-          // // this.receiving = false;
-          // // document.getElementById("input-product").focus();
-          // this.closeOrder();
-        } else {
-          this.paymentInfo = [];
-        }
-      });
-    },
 
     async isOpen() {
       this.cashierIsOpen = await cashier.isOpen();

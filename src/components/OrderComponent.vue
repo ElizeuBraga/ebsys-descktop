@@ -95,6 +95,7 @@ import { Helper } from "../models/Helper";
 import EventBus from "../EventBus";
 import { DB } from "../models/DB";
 import Swal from "sweetalert2";
+import mixins from "../mixins/mixins";
 const product = new Product();
 const customer = new Customer();
 const city = new City();
@@ -110,15 +111,16 @@ const db = new DB();
 
 export default {
   props: ["orderType"],
+  mixins:[mixins],
   data: () => ({
     tab: "-",
-    tabIndex: 0,
+    // tabIndex: 0,
     next: "",
     search: "",
     products: [],
     cart: [],
     search_aux: 0,
-    paymentsFormats: [],
+    // paymentsFormats: [],
     paymentInfo: [],
     customer: {},
     receiving: false,
@@ -573,7 +575,6 @@ export default {
               }
 
               let response_cashier = await cashier.detail();
-              console.log(response_cashier)
 
               db.execute("BEGIN;");
               //insert the order
@@ -686,6 +687,8 @@ export default {
 
             if (e.key === "Enter") {
               if (swalInput1 === document.activeElement) {
+                swalInput2.focus();
+                swalInput2.select()
                 return;
               }
 
