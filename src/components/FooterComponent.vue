@@ -19,11 +19,18 @@
           </button>
         </div>
         <div class="col-6" v-if="tabIndex === 2">
-          <b-row>
-            <b-col style="margin-top: 5px">Vendas</b-col>
-            <b-col v-for="(pFc, index) in paymentInfoCashier" :key="index">
+          <b-row :no-gutters="true">
+            <b-col style="margin-top: 22px">Atendimento</b-col>
+            <b-col v-for="(pFc, index) in paymentInfoCashierOrders" :key="index">
               {{ pFc.name }} <br />
-              {{ formatMoney(pFc.total) }}
+              <span :style="(pFc.total > 0)? '' : 'color:gray'">{{ formatMoney(pFc.total) }}</span>
+            </b-col>
+          </b-row>
+          <!-- <hr> -->
+          <b-row :no-gutters="true">
+            <b-col>Fechamento</b-col>
+            <b-col v-for="(pFc, index) in paymentInfoCashier" :key="index">
+              <span :style="(pFc.total > 0)? '' : 'color:gray'">{{ formatMoney(pFc.total) }}</span>
             </b-col>
           </b-row>
         </div>
@@ -49,13 +56,14 @@ export default {
     totalCart: 0,
     totalItems: [],
     paymentInfoCashier: [],
+    paymentInfoCashierOrders: [],
   }),
 
   async mounted() {},
 
   async created() {
     EventBus.$on("amount-computed-items", (e) => {
-      this.totalItems = e[0];
+      this.paymentInfoCashierOrders = e[0];
       this.paymentInfoCashier = e[1];
     });
 

@@ -85,6 +85,7 @@ import Swal from "sweetalert2";
 import EventBus from "../EventBus";
 import { Cashier } from "../models/Cashier";
 import { PaymentCashier } from "../models/PaymentCashier";
+import { PaymentOrder } from '../models/PaymentOrder';
 
 export default {
   props: ["orderType"],
@@ -157,20 +158,32 @@ export default {
 
   computed: {
     async computedAmountItems() {
-      let total = 0;
       
-      let detailPayments = await new PaymentCashier().paymentsForCashier(
+      let detailPaymentsCashier = await new PaymentCashier().paymentsForCashier(
         this.cashier_id,
         this.type
       );
 
-      detailPayments.forEach((element) => {
-        total += parseFloat(element.total);
-      });
+      let detailPaymentsCashierOrders = await new PaymentOrder().paymentsForCashierOrder(
+        this.cashier_id,
+        this.type
+      );
 
-      detailPayments.push({ name: "Total", total: total });
-      EventBus.$emit("amount-computed-items", [total, detailPayments]);
-      return parseFloat(total).toFixed(2);
+      let total = 0;
+      for await(const iterator of detailPaymentsCashier) {
+        total += parseFloat(iterator.total);
+      }
+
+      detailPaymentsCashier.push({ name: "Total", total: total });
+
+      total = 0;
+      for await(const iterator of detailPaymentsCashierOrders) {
+        total += parseFloat(iterator.total);
+      }
+
+      detailPaymentsCashierOrders.push({ name: "Total", total: total });
+      EventBus.$emit("amount-computed-items", [detailPaymentsCashierOrders, detailPaymentsCashier]);
+      // return parseFloat(total).toFixed(2);
     },
   },
 };
