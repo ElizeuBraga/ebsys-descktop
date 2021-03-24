@@ -97,14 +97,18 @@ export default {
     itemsCashierTitle: "Todos",
   }),
 
+  async created(){
+    await this.getCashiers();
+  },
+
   async mounted() {
+
     EventBus.$on("change-tab", (e) => {});
 
     EventBus.$on("cashier-closed", async (e) => {
       this.getCashiers();
     });
 
-    await this.getCashiers();
     if (this.cashiers.length > 0) {
       this.items = await new Cashier().getCashierInfo(this.cashiers[0].id);
     }
@@ -123,6 +127,9 @@ export default {
       this.cashier_id = cashier_id;
       this.type = type;
       this.items = await new Cashier().getCashierInfo(cashier_id, type);
+
+      // to amounts comput in clic of buttons in cashiers
+      this.computedAmountItems;
     },
 
     async getCashiers(byDate = false) {
@@ -146,19 +153,23 @@ export default {
           this.cashiers = await new Cashier().all(result.value);
         });
       } else {
+        
         this.cashiers = await new Cashier().all();
+        if (this.cashiers.length > 0) {
+          }
+        // initiate info payments for the first item of the list of cashiers
+        this.cashier_id = this.cashiers[0].id
+        this.items = await new Cashier().getCashierInfo(this.cashier_id);
+        await this.computedAmountItems
       }
     },
   },
   watch: {
-    items() {
-      this.computedAmountItems;
-    },
+    
   },
 
   computed: {
     async computedAmountItems() {
-      
       let detailPaymentsCashier = await new PaymentCashier().paymentsForCashier(
         this.cashier_id,
         this.type

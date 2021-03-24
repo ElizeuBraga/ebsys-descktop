@@ -29,7 +29,7 @@ export class PaymentOrder{
                         join orders o on o.cashier_id = c.id
                         join payments_orders po on po.order_id = o.id
                         join payments p on p.id = po.payment_id
-                        where c.id = ${cashier_id}
+                        where c.id = ${cashier_id} ${and}
                         GROUP by p.id
                         
                         union all
@@ -45,7 +45,7 @@ export class PaymentOrder{
                                 join orders o on o.cashier_id = c.id
                                 join payments_orders po on po.order_id = o.id
                                 join payments p on p.id = po.payment_id
-                                where c.id = ${cashier_id}
+                                where c.id = ${cashier_id} ${and}
                                 GROUP by p.id	
                         )
                     ) as foo order by name;
