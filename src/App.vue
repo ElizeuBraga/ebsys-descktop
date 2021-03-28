@@ -103,6 +103,7 @@ import { Ws } from "./models/Ws";
 const Pusher = require("pusher-js");
 import mixins from "./mixins/mixins";
 import { User } from "./models/User";
+import { DB } from "./models/DB";
 import EventBus from "../src/EventBus";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
@@ -113,7 +114,7 @@ import FooterComponent from "./components/FooterComponent.vue";
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 
-var pusher = new Pusher("a885cc143df63df6146a", {
+var pusher = new Pusher(process.env.VUE_APP_PUSHER_KEY, {
   cluster: "us2",
 });
 
@@ -132,7 +133,9 @@ export default {
     };
   },
   async mounted() {
-    this.updateData();
+    // this.updateData();
+
+    new DB().backupData();
     this.initLoginProccess();
 
     channel.bind("insert", async (data) => {

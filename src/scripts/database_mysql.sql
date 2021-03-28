@@ -149,6 +149,7 @@ begin;
 		cashier_id integer not null,
 		customer_id integer,
 		order_types_id integer not null,
+		is_open bool DEFAULT 1,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at timestamp null,
 		deleted_at timestamp null,

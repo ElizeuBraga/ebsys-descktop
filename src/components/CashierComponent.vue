@@ -97,10 +97,6 @@ export default {
     itemsCashierTitle: "Todos",
   }),
 
-  async created(){
-    await this.getCashiers();
-  },
-
   async mounted() {
 
     EventBus.$on("change-tab", (e) => {});
