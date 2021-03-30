@@ -182,6 +182,16 @@ export default {
             html += "<option selected value disabled>Cidade</option>";
           }
 
+          if(!cities){
+            Swal.fire({
+              icon:"warning",
+              title:"Ops!",
+              text:"Nenhuma cidade cadastrada, contate o administrador."
+            })
+
+            return
+          }
+
           cities.forEach((element) => {
             html += `<option ${
               this.customer && element.id == this.customer.city_id
