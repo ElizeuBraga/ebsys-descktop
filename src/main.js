@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
 // import 'material-design-icons-iconfont/dist/material-design-icons.css'
+import 'typeface-roboto/index.css'
 
 // Make BootstrapVue available throughout your project
 Vue.use(BootstrapVue)

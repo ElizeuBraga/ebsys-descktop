@@ -31,6 +31,7 @@
     "pusher-js": "^6.0.3",
     "spectron": "^11.1.0",
     "sweetalert2": "^10.3.5",
+    "typeface-roboto": "^1.1.13",
     "v-money": "^0.8.1",
     "vue": "^2.6.12",
     "vue-router": "^3.1.5",

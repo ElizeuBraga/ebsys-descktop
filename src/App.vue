@@ -59,6 +59,12 @@
 .app-style{
   background-color: var(--gray);
   min-height: 100vh;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  /* font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; */
+}
+
+.swal2-modal{
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 .card-header {
