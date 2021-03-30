@@ -56,14 +56,14 @@
   --gray: #dee2e6;
 }
 
-.app-style{
+.app-style {
   background-color: var(--gray);
   min-height: 100vh;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   /* font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; */
 }
 
-.swal2-modal{
+.swal2-modal {
   font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
@@ -129,7 +129,8 @@ import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
 import OrderComponent from "./components/OrderComponent.vue";
 import CashierComponent from "./components/CashierComponent.vue";
 import FooterComponent from "./components/FooterComponent.vue";
-import { Console } from 'console';
+import { Console } from "console";
+import { measureMemory } from 'vm';
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 
@@ -148,9 +149,7 @@ export default {
     CashierComponent,
   },
   data() {
-    return {
-      
-    };
+    return {};
   },
   async mounted() {
     // this.updateData();
@@ -159,24 +158,21 @@ export default {
     this.initLoginProccess();
 
     channel.bind("insert-event", async (data) => {
-
-      await new DB().execute('BEGIN;');
+      await new DB().execute("BEGIN;");
       for (const element of data) {
         let inserted = false;
-        inserted = await new DB().insert(element.table, element.data)
+        inserted = await new DB().insert(element.table, element.data);
 
-        if(!Number.isInteger(inserted)){
-          await new DB().execute('ROLLBACK');
-          console.log(inserted)
-          return
+        if (!Number.isInteger(inserted)) {
+          await new DB().execute("ROLLBACK");
+          console.log(inserted);
+          return;
         }
-        console.log(element.table + ' inserted')
+        console.log(element.table + " inserted");
       }
 
-      console.log('Comitando')
-      await new DB().execute('COMMIT');
-      
-
+      console.log("Comitando");
+      await new DB().execute("COMMIT");
 
       // await new Ws().downloadDataFromServer("insert");
     });
@@ -198,7 +194,7 @@ export default {
 
     async initLoginProccess() {
       let html =
-        '<input id="swal-input1" placeholder="Dinheiro" class="swal2-input">';
+        '<input id="swal-input1" placeholder="Email/telefone" class="swal2-input">';
       html +=
         '<input id="swal-input2" type="password" placeholder="Senha" class="swal2-input">';
       html +=
@@ -229,24 +225,38 @@ export default {
             ).checked = true);
           }
         },
-        preConfirm: () => {
+        preConfirm: async () => {
           let value1 = document.getElementById("swal-input1").value;
           let value2 = document.getElementById("swal-input2").value;
           let value3 = document.getElementById("swal-input3");
+
+          let message = "";
           if (value1 == "") {
-            Swal.showValidationMessage("Digite seu email/telefone");
+            message = "Digite seu email/telefone";
           } else if (value2 == "") {
-            Swal.showValidationMessage("Digite sua senha");
+            message = "Digite sua senha";
+          }else{
+            let response = await new User().auth(value1, value2)
+
+            if(response == 'user_not_found'){
+              message = "Usuario não encontrado"
+            }else if(!response){
+              message = "Acesso negado"
+            }
           }
+
+          if (message !== "") {
+            Swal.showValidationMessage(message);
+            message = ""
+            return;
+            // setTimeout(() => {
+            //   document.getElementById("swal2-validation-message").remove();
+            // }, 3000);
+          }
+
           return [value1, value2, value3.checked];
         },
       }).then(async (result) => {
-        let auth = await new User().auth(result.value[0], result.value[1]);
-        if (!auth) {
-          Swal.showValidationMessage("Email e/ou senha estão incorretos!");
-          this.initLoginProccess();
-        }
-
         if (result.value[2]) {
           localStorage.setItem("email_phone", result.value[0]);
 

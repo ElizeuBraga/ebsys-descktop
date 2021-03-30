@@ -52,7 +52,7 @@ export class User {
         let user = await db.selectOne(sql);
         
         if(!user){
-            return false;
+            return 'user_not_found';
         }
         return new Promise(function(resolve, reject){
             bcrypt.compare(password, user.password.replace('$2y$', '$2a$'), (err, result)=>{
