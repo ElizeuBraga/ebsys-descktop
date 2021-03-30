@@ -135,7 +135,7 @@ export default {
   async mounted() {
     // this.updateData();
 
-    new DB().backupData();
+    // new DB().backupData();
     this.initLoginProccess();
 
     channel.bind("insert", async (data) => {
