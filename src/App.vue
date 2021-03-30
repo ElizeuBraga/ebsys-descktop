@@ -1,5 +1,5 @@
 <template>
-  <div style="min-height: 100vh; background-color: #dee2e6">
+  <div class="app-style">
     <b-tabs v-model="tabIndex" card>
       <!--
         *
@@ -50,10 +50,21 @@
   </div>
 </template>
 <style>
+:root {
+  --blue: #2778c4;
+  --white: #faf0e6;
+  --gray: #dee2e6;
+}
+
+.app-style{
+  background-color: var(--gray);
+  min-height: 100vh;
+}
+
 .card-header {
   border-radius: 0 !important;
   border: #2778c4 !important;
-  background-color: #2778c4 !important;
+  background-color: var(--blue) !important;
 }
 
 .nav-link.active.bg-primary.text-light {
@@ -69,11 +80,12 @@
   background-color: #2778c4 !important;
 }
 
-.swal2-input,
+/* .swal2-input,
 .swal2-input:focus {
   background-color: white;
   border: 2px solid #2778c4;
-}
+} */
+
 #input-product0,
 #input-product1,
 #input-qtd0,
@@ -130,6 +142,7 @@ export default {
   },
   data() {
     return {
+      
     };
   },
   async mounted() {
@@ -230,13 +243,9 @@ export default {
     },
   },
 
-  computed: {
+  computed: {},
 
-  },
-  
-  watch: {
-
-  },
+  watch: {},
 };
 </script>
 <style lang="scss">

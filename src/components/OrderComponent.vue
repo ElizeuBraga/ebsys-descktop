@@ -312,6 +312,16 @@ export default {
     },
 
     async closeOrder() {
+      console.log(this.paymentsFormats)
+      if(!this.paymentsFormats.length){
+        Swal.fire({
+          icon:"warning",
+          title:"Ops!",
+          text:"Nenhuma forma de pagamento cadastrada, contate o adiministrador."
+        })
+
+        return
+      }
       let html = `<input style="margin-bottom: 2;" id="swal-input1" type="number" min="1" max="${this.paymentsFormats.length}" value="1" placeholder="Valor a receber" class="swal2-input"><br>`;
       this.paymentsFormats.forEach((element) => {
         html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`;
@@ -463,8 +473,9 @@ export default {
 
     removeItem(index) {
       Swal.fire({
+        icon: "question",
         title: "Remover item?",
-        icon: "warning",
+        text:"Esta ação não poderá ser desfeita.",
         showCancelButton: true,
         cancelButtonText: "Cancelar",
       }).then((result) => {
