@@ -1,0 +1,79 @@
+[
+    {
+        "table":"sections",
+        "data":[
+            {"name":"Hamburguers"}
+        ]
+    },
+    {
+        "table":"products",
+        "data":[
+            {
+                "name":"X tudo",
+                "price":15.00,
+                "section_id":1
+            }
+        ]
+    },
+    {
+        "table":"profiles",
+        "data":[
+            {
+                "name":"Adimin"
+            },
+            {
+                "name":"Caixa"
+            }
+        ]
+    },
+    {
+        "table": "users",
+        "data": [
+            {
+                "name": "Elizeu Braga",
+                "email":"elizeu@gmail.com",
+                "phone":"61998636231",
+                "password":"$2y$10$2Jt2LvRA2daqs6oqXSHsYOOCYnED65QIVjv.bvTDkagK3cjgtJdNS",
+                "profile_id": 1
+            }
+        ]
+    },
+    {
+        "table": "cities",
+        "data": [
+            {
+                "name": "Sobradinho 2",
+                "product_id": 1
+            },
+            {
+                "name": "Fercal",
+                "product_id": 1
+            }
+        ]
+    },
+    {
+        "table":"payments",
+        "data":[
+            {
+                "name":"Dinheiro"
+            },
+            {
+                "name":"Crédito"
+            },
+            {
+                "name":"Débito"
+            }
+        ]
+    },
+    {
+        "table":"order_types",
+        "data":[
+            {
+                "name":"Balcão"
+            },
+            {
+                "name":"Delivery"
+            }
+        ]
+    }
+]

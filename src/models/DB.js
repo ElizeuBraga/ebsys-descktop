@@ -133,6 +133,7 @@ export class DB {
             con.query(sql, (err, result) => {
                 if (err) {
                     console.log(err)
+                    resolve(false)
                 } else {
                     // let sql = `INSERT INTO updateds(table_name, made_in)VALUES(${table}, 'local')`;
                     // this.execute(sql);

@@ -92,7 +92,9 @@ import { Payment } from "../models/Payment";
 import { Product } from "../models/Product";
 import { Customer } from "../models/Customer";
 import { PaymentOrder } from "../models/PaymentOrder";
+import { OrderType } from "../models/OrderType";
 import { PaymentCashier } from "../models/PaymentCashier";
+import { error } from 'console';
 
 export default {
   mixins: [mixins],
@@ -322,12 +324,21 @@ export default {
     },
 
     async closeOrder() {
-      console.log(this.paymentsFormats)
       if(!this.paymentsFormats.length){
         Swal.fire({
           icon:"warning",
           title:"Ops!",
           text:"Nenhuma forma de pagamento cadastrada, contate o adiministrador."
+        })
+
+        return
+      }
+
+      if(!this.paymentsFormats.length){
+        Swal.fire({
+          icon:"warning",
+          title:"Ops!",
+          text:"Nenhum tipo de pedido cadastrado, contate o administrador."
         })
 
         return
@@ -429,6 +440,26 @@ export default {
                 customer_id = this.customer.id;
               }
 
+              let order_types_id = false
+
+              if(this.tabIndex == 0){
+                let response = await new OrderType().find('Balcão');
+                order_types_id = response.id
+              }else{
+                let response = await new OrderType().find('Balcão');
+                order_types_id = response.id
+              }
+
+              if(!order_types_id){
+                Swal.fire({
+                  icon:"warning",
+                  title:"Ops!",
+                  text:"Nenhum dipo de pedido cadastrado, contate o administrador."
+                })
+
+                return
+              }
+
               let response_cashier = await new Cashier().detail();
 
               await new DB().execute("BEGIN;");
@@ -437,7 +468,7 @@ export default {
                 {
                   cashier_id: response_cashier.id,
                   customer_id: customer_id,
-                  order_types_id: this.tabIndex + 1,
+                  order_types_id: order_types_id,
                 },
               ]);
 
@@ -512,6 +543,12 @@ export default {
     },
 
     async search(e) {
+
+      // prevent childNodes error
+      if(this.tabIndex == 2){
+        return
+      }
+
       if (this.tabIndex == 1 && this.customer.name == undefined) {
         this.initDeliveryOrder();
         return;

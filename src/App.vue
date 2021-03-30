@@ -129,6 +129,7 @@ import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
 import OrderComponent from "./components/OrderComponent.vue";
 import CashierComponent from "./components/CashierComponent.vue";
 import FooterComponent from "./components/FooterComponent.vue";
+import { Console } from 'console';
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 
@@ -136,8 +137,8 @@ var pusher = new Pusher(process.env.VUE_APP_PUSHER_KEY, {
   cluster: "us2",
 });
 
-var channel = pusher.subscribe("data-insert");
-var channel2 = pusher.subscribe("data-update");
+var channel = pusher.subscribe("insert-channel");
+var channel2 = pusher.subscribe("update-channel");
 
 export default {
   mixins: [mixins],
@@ -157,12 +158,31 @@ export default {
     // new DB().backupData();
     this.initLoginProccess();
 
-    channel.bind("insert", async (data) => {
-      await new Ws().downloadDataFromServer("insert");
+    channel.bind("insert-event", async (data) => {
+
+      await new DB().execute('BEGIN;');
+      for (const element of data) {
+        let inserted = false;
+        inserted = await new DB().insert(element.table, element.data)
+
+        if(!Number.isInteger(inserted)){
+          await new DB().execute('ROLLBACK');
+          console.log(inserted)
+          return
+        }
+        console.log(element.table + ' inserted')
+      }
+
+      console.log('Comitando')
+      await new DB().execute('COMMIT');
+      
+
+
+      // await new Ws().downloadDataFromServer("insert");
     });
 
-    channel2.bind("update", async (data) => {
-      await new Ws().downloadDataFromServer("update");
+    channel2.bind("update-event", async (data) => {
+      // await new Ws().downloadDataFromServer("update");
     });
   },
 

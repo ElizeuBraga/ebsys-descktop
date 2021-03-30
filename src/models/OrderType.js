@@ -13,4 +13,10 @@ export class OrderType{
         let response = db.insert(table, orderTypes);
         return response;
     }
+
+    async find(name){
+        let sql = `SELECT id FROM ${table} WHERE name = '${name}'`;
+
+        return await db.selectOne(sql)
+    }
 }
