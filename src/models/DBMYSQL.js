@@ -3,7 +3,6 @@ var nodemailer = require("nodemailer");
 import mysqldump from 'mysqldump';
 const encrypt = require('node-file-encrypt');
 'use strict';
-const util = require('util');
 require('dotenv/config');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
@@ -15,16 +14,6 @@ var dbCredencials = {
    database : process.env.VUE_APP_DB_NAME
 }
 var con = mysql.createConnection(dbCredencials);
-
-let db = new sqlite3.Database('/home/basis/Documentos/ebsys-descktop/src/database/database.db', [sqlite3.OPEN_CREATE, sqlite3.OPEN_READWRITE], (err)=>{
-    if(err){
-        console.log('Erro ao conectar ao banco de dados')
-    }else{
-        console.log('Conecdado ao banco de dados')
-    }
-});
-
-db.run = util.promisify(db.run);
 export class DB {
     teste(){
         console.log(process.env)
@@ -141,8 +130,17 @@ export class DB {
         let sql = "INSERT INTO " + table + "(" + Object.keys(items[0]) + ") values " + values;
 
         return new Promise(function (resolve, reject) {
-            db.run(sql).then(()=>{
-               resolve(true) 
+            con.query(sql, (err, result) => {
+                if (err) {
+                    console.log(err)
+                    resolve(false)
+                } else {
+                    // let sql = `INSERT INTO updateds(table_name, made_in)VALUES(${table}, 'local')`;
+                    // this.execute(sql);
+                    // console.log('Insert successfull')
+                    resolve(result.insertId)
+                    // resolve(true)
+                }
             });
         });
     }

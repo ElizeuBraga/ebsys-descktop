@@ -1,4 +1,4 @@
-begin;
+-- begin;
 -- 	SET FOREIGN_KEY_CHECKS=ON;
 -- 	SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 -- 	drop database if exists ebsys_descktop;
@@ -8,10 +8,11 @@ begin;
 -- 	drop database if exists ebsys_web;
 -- 	create database if not exists ebsys_web;
 -- 	use ebsys_web;
-	
+	PRAGMA foreign_keys = ON;
+
 	-- made in ws
 	CREATE TABLE IF NOT EXISTS sections(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name VARCHAR(50) not null,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NULL,
@@ -20,7 +21,7 @@ begin;
 	
 	-- made in ws
 	CREATE TABLE IF NOT EXISTS products (
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name VARCHAR(50) NOT NULL,
 		price REAL NOT NULL,
 		section_id INTEGER NOT NULL,
@@ -32,7 +33,7 @@ begin;
 	);
 	
 	CREATE TABLE IF NOT EXISTS profiles(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name VARCHAR(15),
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NULL,
@@ -41,7 +42,7 @@ begin;
 
 	-- made in ws
 	CREATE TABLE IF NOT EXISTS users(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name VARCHAR(20) NOT NULL,
 		email VARCHAR(50) UNIQUE NOT NULL,
 		phone VARCHAR(11) UNIQUE NOT NULL,
@@ -57,7 +58,7 @@ begin;
 	
 	-- made in ws
 	CREATE TABLE IF NOT EXISTS cities(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name VARCHAR(20) NOT NULL,
 		product_id INTEGER NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -68,7 +69,7 @@ begin;
 	
 	-- made in local
 	CREATE TABLE IF NOT EXISTS customers(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name VARCHAR(50) NOT NULL,
 		phone VARCHAR(11) UNIQUE NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -78,7 +79,7 @@ begin;
 
 	-- made in ws
 	CREATE TABLE IF NOT EXISTS adresses(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		address VARCHAR(30) NOT NULL,
 		complement VARCHAR(30),
 		city_id INTEGER NOT NULL,
@@ -93,7 +94,7 @@ begin;
 	
 	-- made in local
 	CREATE TABLE IF NOT EXISTS cashiers(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NULL,
@@ -102,7 +103,7 @@ begin;
 	);
 
 	CREATE TABLE IF NOT EXISTS payments(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name VARCHAR(8),
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NULL,
@@ -111,7 +112,7 @@ begin;
 	
 	-- made in local
 	CREATE TABLE IF NOT EXISTS payments_cashiers(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		payment_id INTEGER NOT NULL,
 		cashier_id INTEGER NOT NULL,
 		price REAL NOT NULL,
@@ -125,7 +126,7 @@ begin;
 	
 	-- made in local
 	CREATE TABLE IF NOT EXISTS order_types(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name VARCHAR(10),
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NULL,
@@ -134,7 +135,7 @@ begin;
 
 	-- made in local
 	CREATE TABLE IF NOT EXISTS orders(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		cashier_id INTEGER NOT NULL,
 		customer_id INTEGER,
 		order_types_id INTEGER NOT NULL,
@@ -149,7 +150,7 @@ begin;
 	
 	-- made in local
 	CREATE TABLE IF NOT EXISTS items(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		quantity INTEGER NOT NULL,
 		product_id INTEGER NOT NULL,
 		price REAL NOT NULL,
@@ -163,7 +164,7 @@ begin;
 
 
 	CREATE TABLE IF NOT EXISTS payments_orders(
-		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		order_id INTEGER NOT NULL,
 		payment_id INTEGER NOT NULL,
 		price REAL NOT NULL,
@@ -173,4 +174,4 @@ begin;
 		FOREIGN KEY (payment_id) REFERENCES payments (id),
 		FOREIGN KEY (order_id) REFERENCES orders (id)
 	);
-commit;
+-- commit;

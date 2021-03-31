@@ -158,21 +158,21 @@ export default {
     this.initLoginProccess();
 
     channel.bind("insert-event", async (data) => {
-      await new DB().execute("BEGIN;");
+      // await new DB().execute("BEGIN;");
       for (const element of data) {
         let inserted = false;
         inserted = await new DB().insert(element.table, element.data);
 
-        if (!Number.isInteger(inserted)) {
-          await new DB().execute("ROLLBACK");
-          console.log(inserted);
-          return;
-        }
+        // if (!Number.isInteger(inserted)) {
+        //   // await new DB().execute("ROLLBACK");
+        //   console.log(inserted);
+        //   return;
+        // }
         console.log(element.table + " inserted");
       }
 
       console.log("Comitando");
-      await new DB().execute("COMMIT");
+      // await new DB().execute("COMMIT");
 
       // await new Ws().downloadDataFromServer("insert");
     });
