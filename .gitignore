@@ -24,4 +24,5 @@ yarn-error.log*
 /dist_electron
 
 #database_bacups
-/src/database/backups/
+/src/database/
+src/database/database.db
