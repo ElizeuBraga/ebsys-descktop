@@ -9,7 +9,7 @@ export class Product {
     }
 
     async get(){
-        return await db.select(table);
+        return await db.selectMany(table);
     }
 
     async findByLocalityPhone(phone){
@@ -81,12 +81,12 @@ export class Product {
             return false
         }
         let sql = `SELECT * FROM ${table} WHERE name like '%${name}%' LIMIT 20`;
-        return await db.select(sql);
+        return await db.selectMany(sql);
     }
 
     async selectProdutcByName(name){
         let sql = `SELECT * FROM ${table} WHERE name = '${name}'`;
 
-        return await db.select(sql);
+        return await db.selectMany(sql);
     }
 }

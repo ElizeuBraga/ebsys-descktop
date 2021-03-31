@@ -10,13 +10,13 @@ export class Payment{
 
     async get(id){
         let sql = `SELECT name FROM ${table} WHERE id = ${id}`
-        let payment = await db.select(sql);
+        let payment = await db.selectMany(sql);
         return payment[0].name;
     }
 
     async all(){
         let sql = `SELECT * from ${table}`;
-        let payments = await db.select(sql);
+        let payments = await db.selectMany(sql);
         return payments;
     }
 

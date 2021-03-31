@@ -57,7 +57,7 @@ export class Cashier {
     }
 
     async update(cashiers) {
-        let sql = `UPDATE ${table} set updated_at = now() WHERE id = ${cashiers[0].id}`
+        let sql = `UPDATE ${table} set updated_at = DATETIME() WHERE id = ${cashiers[0].id}`
         return await db.execute(sql)
     }
 
@@ -83,7 +83,7 @@ export class Cashier {
                 GROUP BY p.id, i.price;
             `;
         
-        let info = await db.select(sql)
+        let info = await db.selectMany(sql)
 
         if(info){
             return info;
@@ -175,7 +175,7 @@ export class Cashier {
 
     async checkUserOpenedCashier(){
         let sql = "SELECT u.* FROM cashiers c2 JOIN users u ON u.id = c2.user_id WHERE c2.updated_at IS NULL";
-        let result = await db.select(table, sql);
+        let result = await db.selectMany(table, sql);
 
         return result[0]
     }

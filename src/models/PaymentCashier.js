@@ -48,7 +48,7 @@ export class PaymentCashier{
                     ) as foo order by  name;
         `;
 
-        let detailPayment = await db.select(sql)
+        let detailPayment = await db.selectMany(sql)
         return (detailPayment) ? detailPayment : []
     }
     

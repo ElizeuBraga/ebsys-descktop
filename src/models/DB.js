@@ -1,35 +1,29 @@
-import mysql from 'mysql';
-var nodemailer = require("nodemailer");
-import mysqldump from 'mysqldump';
-const encrypt = require('node-file-encrypt');
 'use strict';
-const util = require('util');
-require('dotenv/config');
+
+import Swal from 'sweetalert2';
+
 const fs = require('fs');
+require('dotenv/config');
+const util = require('util');
+var nodemailer = require("nodemailer");
+const encrypt = require('node-file-encrypt');
 const sqlite3 = require('sqlite3').verbose();
 
-var dbCredencials = {
-   host : process.env.VUE_APP_DB_HOST,
-   user : process.env.VUE_APP_DB_USERNAME,
-   password : process.env.VUE_APP_DB_PASSWORD,
-   database : process.env.VUE_APP_DB_NAME
-}
-var con = mysql.createConnection(dbCredencials);
-
-let db = new sqlite3.Database('/home/basis/Documentos/ebsys-descktop/src/database/database.db', [sqlite3.OPEN_CREATE, sqlite3.OPEN_READWRITE], (err)=>{
-    if(err){
-        console.log('Erro ao conectar ao banco de dados')
-    }else{
+let db = new sqlite3.Database(process.env.VUE_APP_DB_URL_SQLITE, [sqlite3.OPEN_CREATE, sqlite3.OPEN_READWRITE], (err) => {
+    if (err) {
+        Swal.fire({
+            icon:"error",
+            title:"Erro!",
+            text:"Não foi possível conectar ao banco de dados"
+        })
+    } else {
         console.log('Conecdado ao banco de dados')
     }
 });
 
 db.run = util.promisify(db.run);
-export class DB {
-    teste(){
-        console.log(process.env)
-    }
 
+export class DB {
     async backupData() {
         // dump the result straight to a file
         let filePath = './src/database/backups/ebsys_descktop_backup.sql'
@@ -117,7 +111,7 @@ export class DB {
 
             let updated_at = "";
             if (!keys.includes('updated_at')) {
-                updated_at = " updated_at = NOW()"
+                updated_at = " updated_at = DATETIME()"
             }
             sql += map + updated_at + " WHERE id = " + a.id
 
@@ -141,8 +135,8 @@ export class DB {
         let sql = "INSERT INTO " + table + "(" + Object.keys(items[0]) + ") values " + values;
 
         return new Promise(function (resolve, reject) {
-            db.run(sql).then(()=>{
-               resolve(true) 
+            db.run(sql).then(() => {
+                resolve(true)
             });
         });
     }
@@ -166,36 +160,20 @@ export class DB {
         return await this.selectOne(sql);
     }
 
-    async select(sql) {
-        return new Promise(function (resolve, reject) {
-            con.query(sql, async (err, result) => {
-                if (err) {
-                    console.log(err)
-                } else {
-                    if (result.length > 0) {
-                        resolve(result);
-                    }
-
-                    resolve(false);
-                }
-            })
-        });
-    }
-
     async selectOne(sql) {
         return new Promise(function (resolve, reject) {
-            con.query(sql, async (err, result) => {
+            db.all(sql, [], async (err, rows) => {
                 if (err) {
                     console.log(err)
                 } else {
-                    if (result.length > 0) {
-                        if (result.length == 1) {
-                            resolve(result[0])
-                        }
-                        resolve(result);
+                    // console.log(rows)
+                    if(rows.length == 0){
+                        resolve(false)
+                    }else if(rows.length == 1){
+                        resolve(rows[0])
+                    }else{
+                        resolve(rows)
                     }
-
-                    resolve(false);
                 }
             })
         });
@@ -203,15 +181,16 @@ export class DB {
 
     async selectMany(sql) {
         return new Promise(function (resolve, reject) {
-            con.query(sql, async (err, result) => {
+            db.all(sql, [], async (err, rows) => {
                 if (err) {
                     console.log(err)
                 } else {
-                    if (result.length > 0) {
-                        resolve(result);
+                    // console.log(rows)
+                    if(rows.length > 0){
+                        resolve(rows)
+                    }else{
+                        resolve(false)
                     }
-
-                    resolve(false);
                 }
             })
         });
@@ -219,23 +198,19 @@ export class DB {
 
     async execute(sql) {
         return new Promise(function (resolve, reject) {
-            con.query(sql, function (err, result) {
-                if (err) {
-                    console.log(err)
-                    resolve(false)
-                }
+            db.run(sql).then(() => {
                 resolve(true)
             });
-        })
+        });
     }
 
-    async createDatabaseAndTables(){
+    async createDatabaseAndTables() {
         Swal.fire({
-            title:"Aguarde",
-            text:"Configurando banco de dados",
-            timer:5000,
+            title: "Aguarde",
+            text: "Configurando banco de dados",
+            timer: 5000,
             // timerProgressBar:true,
-            didOpen:()=>{
+            didOpen: () => {
                 Swal.showLoading();
             }
         })
@@ -253,7 +228,7 @@ export class DB {
                 deleted_at TIMESTAMP NULL
             );
         `;
-        
+
         await this.execute(sqlCreateTableSections);
 
         let sqlCreateTableProducts = `
