@@ -12,7 +12,6 @@ var dbCredencials = {
    password : process.env.VUE_APP_DB_PASSWORD,
    database : process.env.VUE_APP_DB_NAME
 }
-
 var con = mysql.createConnection(dbCredencials);
 export class DB {
     teste(){
@@ -225,5 +224,231 @@ export class DB {
                 resolve(true)
             });
         })
+    }
+
+    async createDatabaseAndTables(){
+        Swal.fire({
+            title:"Aguarde",
+            text:"Configurando banco de dados",
+            timer:5000,
+            // timerProgressBar:true,
+            didOpen:()=>{
+                Swal.showLoading();
+            }
+        })
+
+        // return;
+        // let sqlCreateDataBase = "CREATE DATABASE IF NOT EXISTS ebsys_descktop";
+        // await this.execute(sqlCreateDataBase);
+
+        let sqlCreateTableSections = `
+            CREATE TABLE IF NOT EXISTS sections(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(50) not null,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL
+            );
+        `;
+        
+        await this.execute(sqlCreateTableSections);
+
+        let sqlCreateTableProducts = `
+            CREATE TABLE IF NOT EXISTS products (
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(50) NOT NULL,
+                price REAL NOT NULL,
+                section_id INTEGER NOT NULL,
+                ask_obs BOOLEAN NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                FOREIGN KEY (section_id) REFERENCES sections(id)
+            );
+        `;
+
+        await this.execute(sqlCreateTableProducts);
+
+        let sqlCreateTableProfiles = `
+            CREATE TABLE IF NOT EXISTS profiles(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(15),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL
+            );
+        `;
+
+        await this.execute(sqlCreateTableProfiles);
+
+        let sqlCreateTableUsers = `
+            CREATE TABLE IF NOT EXISTS users(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(20) NOT NULL,
+                email VARCHAR(50) UNIQUE NOT NULL,
+                phone VARCHAR(11) UNIQUE NOT NULL,
+                password VARCHAR(60) NOT NULL,
+                token VARCHAR(60),
+                change_password BOOLEAN NOT NULL DEFAULT 1,
+                profile_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                FOREIGN KEY (profile_id) REFERENCES profiles(id)
+            );
+        `;
+
+        await this.execute(sqlCreateTableUsers);
+
+        let sqlCreateTableCities = `
+            CREATE TABLE IF NOT EXISTS cities(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(20) NOT NULL,
+                product_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                FOREIGN KEY (product_id) REFERENCES products (id)
+            );
+        `;
+
+        await this.execute(sqlCreateTableCities);
+
+        let sqlCreateTableCustomers = `
+            CREATE TABLE IF NOT EXISTS customers(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(50) NOT NULL,
+                phone VARCHAR(11) UNIQUE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL
+            );
+        `;
+
+        await this.execute(sqlCreateTableCustomers);
+
+        let sqlCreateTableAdresses = `
+            CREATE TABLE IF NOT EXISTS adresses(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                address VARCHAR(30) NOT NULL,
+                complement VARCHAR(30),
+                city_id INTEGER NOT NULL,
+                customer_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                FOREIGN KEY (customer_id) REFERENCES customers (id),
+                FOREIGN KEY (city_id) REFERENCES cities (id)
+                
+            );
+        `;
+
+        await this.execute(sqlCreateTableAdresses);
+
+        let sqlCreateTableCashiers = `
+            CREATE TABLE IF NOT EXISTS cashiers(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            );
+        `;
+
+        await this.execute(sqlCreateTableCashiers);
+
+        let sqlCreateTablePayments = `
+            CREATE TABLE IF NOT EXISTS payments(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(8),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL
+            );
+        `;
+
+        await this.execute(sqlCreateTablePayments);
+
+        let sqlCreateTablePaymentsCashiers = `
+            CREATE TABLE IF NOT EXISTS payments_cashiers(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                payment_id INTEGER NOT NULL,
+                cashier_id INTEGER NOT NULL,
+                price REAL NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                FOREIGN KEY (payment_id) REFERENCES payments (id),
+                FOREIGN KEY (cashier_id) REFERENCES cashiers (id)
+            );
+        `;
+
+        await this.execute(sqlCreateTablePaymentsCashiers);
+
+        let sqlCreateTableOrderTypes = `
+            CREATE TABLE IF NOT EXISTS order_types(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(10),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL
+            );
+        `;
+
+        await this.execute(sqlCreateTableOrderTypes);
+
+        let sqlCreateTableOrders = `
+            CREATE TABLE IF NOT EXISTS orders(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                cashier_id INTEGER NOT NULL,
+                customer_id INTEGER,
+                order_types_id INTEGER NOT NULL,
+                is_open bool DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                FOREIGN KEY (cashier_id) REFERENCES cashiers (id),
+                FOREIGN KEY (customer_id) REFERENCES customers (id),
+                FOREIGN KEY (order_types_id) REFERENCES order_types (id)
+            );
+        `;
+
+        await this.execute(sqlCreateTableOrders);
+
+        let sqlCreateTableItems = `
+            CREATE TABLE IF NOT EXISTS items(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                quantity INTEGER NOT NULL,
+                product_id INTEGER NOT NULL,
+                price REAL NOT NULL,
+                order_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                FOREIGN KEY (order_id) REFERENCES orders (id),
+                FOREIGN KEY (product_id) REFERENCES products (id)
+            );
+        `;
+
+        await this.execute(sqlCreateTableItems);
+
+        let sqlCreateTablePaymentsOrders = `
+            CREATE TABLE IF NOT EXISTS payments_orders(
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                order_id INTEGER NOT NULL,
+                payment_id INTEGER NOT NULL,
+                price REAL NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                FOREIGN KEY (payment_id) REFERENCES payments (id),
+                FOREIGN KEY (order_id) REFERENCES orders (id)
+            );
+        `;
+
+        await this.execute(sqlCreateTablePaymentsOrders);
+
+        return false;
     }
 }

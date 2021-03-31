@@ -8,189 +8,169 @@ begin;
 -- 	drop database if exists ebsys_web;
 -- 	create database if not exists ebsys_web;
 -- 	use ebsys_web;
+	
+	-- made in ws
+	CREATE TABLE IF NOT EXISTS sections(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(50) not null,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL
+	);
+	
+	-- made in ws
+	CREATE TABLE IF NOT EXISTS products (
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(50) NOT NULL,
+		price REAL NOT NULL,
+		section_id INTEGER NOT NULL,
+		ask_obs BOOLEAN NOT NULL DEFAULT 1,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL,
+		FOREIGN KEY (section_id) REFERENCES sections(id)
+	);
+	
+	CREATE TABLE IF NOT EXISTS profiles(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(15),
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL
+	);
 
 	-- made in ws
-	CREATE table if not exists pages(
-		id integer auto_increment primary key,
-		name varchar(50) not null,
-		model varchar(50),
-		url varchar(100),
-		visible boolean default false,
+	CREATE TABLE IF NOT EXISTS users(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(20) NOT NULL,
+		email VARCHAR(50) UNIQUE NOT NULL,
+		phone VARCHAR(11) UNIQUE NOT NULL,
+		"password" VARCHAR(60) NOT NULL,
+		token VARCHAR(60),
+		change_password BOOLEAN NOT NULL DEFAULT 1,
+		profile_id INTEGER NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP null,
-		deleted_at TIMESTAMP null
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL,
+		FOREIGN KEY (profile_id) REFERENCES profiles(id)
 	);
 	
 	-- made in ws
-	CREATE table if not exists sections(
-		id integer auto_increment primary key,
-		name varchar(50) not null,
+	CREATE TABLE IF NOT EXISTS cities(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(20) NOT NULL,
+		product_id INTEGER NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP null,
-		deleted_at TIMESTAMP null
-	);
-	
-	-- made in ws
-	create table if not exists products (
-		id integer auto_increment primary key,
-		name varchar(50) not null,
-		price real not null,
-		section_id integer not null,
-		ask_obs boolean not null default 1,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP null,
-		deleted_at TIMESTAMP null,
-		foreign key (section_id) references sections(id)
-	);
-	
-	CREATE table profiles(
-		id integer auto_increment primary key,
-		name varchar(15),
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null
-	);
-	-- made in ws
-	CREATE table if not exists users(
-		id integer auto_increment primary key,
-		name varchar(20) not null,
-		email varchar(50) unique not null,
-		phone varchar(11) unique not null,
-		password varchar(60) not null,
-		token varchar(60),
-		change_password boolean not null default 1,
-		profile_id integer not null,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null,
-		foreign key (profile_id) references profiles(id)
-	);
-	
-	-- made in ws
-	CREATE table if not exists cities(
-		id integer auto_increment primary key,
-		name varchar(20) not null,
-		product_id integer not null,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null,
-		foreign key (product_id) references products (id)
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL,
+		FOREIGN KEY (product_id) REFERENCES products (id)
 	);
 	
 	-- made in local
-	CREATE table if not exists customers(
-		id integer auto_increment primary key,
-		name varchar(50) not null,
-		phone varchar(11) unique not null,
+	CREATE TABLE IF NOT EXISTS customers(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(50) NOT NULL,
+		phone VARCHAR(11) UNIQUE NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL
 	);
 
 	-- made in ws
-	CREATE table if not exists adresses(
-		id integer auto_increment primary key,
-		address varchar(30) not null,
-		complement varchar(30),
-		city_id integer not null,
-		customer_id integer not null,
+	CREATE TABLE IF NOT EXISTS adresses(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		address VARCHAR(30) NOT NULL,
+		complement VARCHAR(30),
+		city_id INTEGER NOT NULL,
+		customer_id INTEGER NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null,
-		foreign key (customer_id) references customers (id),
-		foreign key (city_id) references cities (id)
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL,
+		FOREIGN KEY (customer_id) REFERENCES customers (id),
+		FOREIGN KEY (city_id) REFERENCES cities (id)
 		
 	);
 	
 	-- made in local
-	create table if not exists cashiers(
-		id integer auto_increment primary key,
-		user_id integer not null,
+	CREATE TABLE IF NOT EXISTS cashiers(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		user_id INTEGER NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null,
-		foreign key (user_id) references users (id)
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL,
+		FOREIGN KEY (user_id) REFERENCES users (id)
 	);
 
-	create table if not exists payments(
-		id integer auto_increment primary key,
-		name varchar(8),
+	CREATE TABLE IF NOT EXISTS payments(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(8),
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL
 	);
 	
 	-- made in local
-	create table if not exists payments_cashiers(
-		id integer auto_increment primary key,
-		payment_id integer not null,
-		cashier_id integer not null,
-		price real not null,
+	CREATE TABLE IF NOT EXISTS payments_cashiers(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		payment_id INTEGER NOT NULL,
+		cashier_id INTEGER NOT NULL,
+		price REAL NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null,
-		foreign key (payment_id) references payments (id),
-		foreign key (cashier_id) references cashiers (id)
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL,
+		FOREIGN KEY (payment_id) REFERENCES payments (id),
+		FOREIGN KEY (cashier_id) REFERENCES cashiers (id)
 	);
 	
 	
 	-- made in local
-	CREATE table if not exists order_types(
-		id integer auto_increment primary key,
-		name varchar(10),
+	CREATE TABLE IF NOT EXISTS order_types(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(10),
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL
 	);
 
 	-- made in local
-	CREATE table if not exists orders(
-		id integer auto_increment primary key,
-		cashier_id integer not null,
-		customer_id integer,
-		order_types_id integer not null,
+	CREATE TABLE IF NOT EXISTS orders(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		cashier_id INTEGER NOT NULL,
+		customer_id INTEGER,
+		order_types_id INTEGER NOT NULL,
 		is_open bool DEFAULT 1,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null,
-		foreign key (cashier_id) references cashiers (id),
-		foreign key (customer_id) references customers (id),
-		foreign key (order_types_id) references order_types (id)
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL,
+		FOREIGN KEY (cashier_id) REFERENCES cashiers (id),
+		FOREIGN KEY (customer_id) REFERENCES customers (id),
+		FOREIGN KEY (order_types_id) REFERENCES order_types (id)
 	);
 	
 	-- made in local
-	create table if not exists items(
-		id integer auto_increment primary key,
-		quantity integer not null,
-		product_id integer not null,
-		price real not null,
-		order_id integer not null,
+	CREATE TABLE IF NOT EXISTS items(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		quantity INTEGER NOT NULL,
+		product_id INTEGER NOT NULL,
+		price REAL NOT NULL,
+		order_id INTEGER NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null,
-		foreign key (order_id) references orders (id),
-		foreign key (product_id) references products (id)
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL,
+		FOREIGN KEY (order_id) REFERENCES orders (id),
+		FOREIGN KEY (product_id) REFERENCES products (id)
 	);
 
 
-	create table if not exists payments_orders(
-		id integer auto_increment primary key,
-		order_id integer not null,
-		payment_id integer not null,
-		price real not null,
+	CREATE TABLE IF NOT EXISTS payments_orders(
+		id INTEGER AUTO_INCREMENT PRIMARY KEY,
+		order_id INTEGER NOT NULL,
+		payment_id INTEGER NOT NULL,
+		price REAL NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null,
-		foreign key (payment_id) references payments (id),
-		foreign key (order_id) references orders (id)
-	);
-
-	create table if not exists updateds(
-		id integer auto_increment primary key,
-		table_name varchar(30) not null,
-		made_in varchar(5) not null,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at timestamp null,
-		deleted_at timestamp null
+		updated_at TIMESTAMP NULL,
+		deleted_at TIMESTAMP NULL,
+		FOREIGN KEY (payment_id) REFERENCES payments (id),
+		FOREIGN KEY (order_id) REFERENCES orders (id)
 	);
 commit;
