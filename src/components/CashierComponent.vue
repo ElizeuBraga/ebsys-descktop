@@ -106,7 +106,6 @@ export default {
       this.getCashiers();
     });
 
-    console.log(this.cashiers)
     if (this.cashiers.length > 0) {
       this.items = await new Cashier().getCashierInfo(this.cashiers[0].id);
     }

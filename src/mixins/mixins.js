@@ -33,7 +33,7 @@ export default {
 
         // this function is here, becouse it is used in two different components
         async closeCashier() {
-            let html = `<input style="margin-bottom: 2;" id="swal-input1" type="number" min="1" max="${this.paymentsFormats.length}" value="1" placeholder="Valor a receber" class="swal2-input"><br>`;
+            let html = `<input style="margin-bottom: 2;" id="swal-input1" type="text"  value="${this.paymentsFormats[0].id}" placeholder="Valor a receber" class="swal2-input"><br>`;
             this.paymentsFormats.forEach((element) => {
                 html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`;
             });
