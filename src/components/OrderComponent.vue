@@ -94,7 +94,7 @@ import { Customer } from "../models/Customer";
 import { PaymentOrder } from "../models/PaymentOrder";
 import { OrderType } from "../models/OrderType";
 import { PaymentCashier } from "../models/PaymentCashier";
-import { error } from 'console';
+import { error } from "console";
 
 export default {
   mixins: [mixins],
@@ -184,14 +184,14 @@ export default {
             html += "<option selected value disabled>Cidade</option>";
           }
 
-          if(!cities){
+          if (!cities) {
             Swal.fire({
-              icon:"warning",
-              title:"Ops!",
-              text:"Nenhuma cidade cadastrada, contate o administrador."
-            })
+              icon: "warning",
+              title: "Ops!",
+              text: "Nenhuma cidade cadastrada, contate o administrador.",
+            });
 
-            return
+            return;
           }
 
           cities.forEach((element) => {
@@ -324,33 +324,28 @@ export default {
     },
 
     async closeOrder() {
-      if(!this.paymentsFormats.length){
+      if (!this.paymentsFormats.length) {
         Swal.fire({
-          icon:"warning",
-          title:"Ops!",
-          text:"Nenhuma forma de pagamento cadastrada, contate o adiministrador."
-        })
+          icon: "warning",
+          title: "Ops!",
+          text:
+            "Nenhuma forma de pagamento cadastrada, contate o adiministrador.",
+        });
 
-        return
+        return;
       }
 
-      if(!this.paymentsFormats.length){
+      if (!this.paymentsFormats.length) {
         Swal.fire({
-          icon:"warning",
-          title:"Ops!",
-          text:"Nenhum tipo de pedido cadastrado, contate o administrador."
-        })
+          icon: "warning",
+          title: "Ops!",
+          text: "Nenhum tipo de pedido cadastrado, contate o administrador.",
+        });
 
-        return
+        return;
       }
-      let html = `<input style="margin-bottom: 2;" id="swal-input1" type="text" value="${this.paymentsFormats[0].id}" placeholder="Valor a receber" class="swal2-input"><br>`;
-      this.paymentsFormats.forEach((element) => {
-        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`;
-      });
-      html +=
-        '<input id="swal-input2" placeholder="Valor a receber" class="swal2-input">';
-
-      html += "<div class='row font-big text-success'>";
+      
+      let html = "<div class='row font-big text-success'>";
       html += "<div class='col-6 text-left'>";
       html += "Receber: ";
       html += "</div>";
@@ -360,7 +355,7 @@ export default {
       html += "</div>";
 
       html += "<hr>";
-      html += "<div class='row font-big'>";
+      html += "<div class='row'>";
       if (this.computedPaymentAmount > 0) {
         let paymentInfo = await new Payment().tratePayment(this.paymentInfo);
         for await (const iterator of paymentInfo) {
@@ -410,8 +405,16 @@ export default {
         html += "</div>";
         html += "</div>";
       }
+
+      html += `<input style="margin-bottom: 2;" id="swal-input1" min="1" type="number" value="${this.paymentsFormats[0].id}" placeholder="Valor a receber" class="swal2-input"><br>`;
+      this.paymentsFormats.forEach((element) => {
+        html += `<span style='font-size: 14'>${element.id}-${element.name} </span>`;
+      });
+      html +=
+        '<input id="swal-input2" placeholder="Valor a receber" class="swal2-input">';
+
       Swal.fire({
-        title: "Informações de pagamento",
+        title:"Encerrar pedido",
         showCancelButton: true,
         cancelButtonText: "Cancelar",
         confirmButtonText: "Finalizar",
@@ -440,24 +443,25 @@ export default {
                 customer_id = this.customer.id;
               }
 
-              let order_types_id = false
+              let order_types_id = false;
 
-              if(this.tabIndex == 0){
-                let response = await new OrderType().find('Balcão');
-                order_types_id = response.id
-              }else{
-                let response = await new OrderType().find('Balcão');
-                order_types_id = response.id
+              if (this.tabIndex == 0) {
+                let response = await new OrderType().find("Balcão");
+                order_types_id = response.id;
+              } else {
+                let response = await new OrderType().find("Balcão");
+                order_types_id = response.id;
               }
 
-              if(!order_types_id){
+              if (!order_types_id) {
                 Swal.fire({
-                  icon:"warning",
-                  title:"Ops!",
-                  text:"Nenhum dipo de pedido cadastrado, contate o administrador."
-                })
+                  icon: "warning",
+                  title: "Ops!",
+                  text:
+                    "Nenhum dipo de pedido cadastrado, contate o administrador.",
+                });
 
-                return
+                return;
               }
 
               let response_cashier = await new Cashier().detail();
@@ -516,7 +520,7 @@ export default {
       Swal.fire({
         icon: "question",
         title: "Remover item?",
-        text:"Esta ação não poderá ser desfeita.",
+        text: "Esta ação não poderá ser desfeita.",
         showCancelButton: true,
         cancelButtonText: "Cancelar",
       }).then((result) => {
@@ -543,10 +547,9 @@ export default {
     },
 
     async search(e) {
-
       // prevent childNodes error
-      if(this.tabIndex == 2){
-        return
+      if (this.tabIndex == 2) {
+        return;
       }
 
       if (this.tabIndex == 1 && this.customer.name == undefined) {
@@ -573,6 +576,24 @@ export default {
 
             if (e.key === "Enter") {
               if (swalInput1 === document.activeElement) {
+                let valid = false;
+
+                for(let p of this.paymentsFormats){
+                  if(parseInt(swalInput1.value) === parseInt(p.id)){
+                    valid = true
+                  }
+                }
+
+                if(!valid){
+                  Swal.showValidationMessage('Forma de pagamento inválida!')
+                  swalInput1.focus()
+                  
+                  setTimeout(()=>{
+                    Swal.resetValidationMessage()
+                  }, 2000)
+                  return
+                }
+
                 swalInput2.focus();
                 swalInput2.select();
                 return;
@@ -609,9 +630,7 @@ export default {
                     title: "Caixa fechado!",
                     text: "Abra o caixa",
                     icon: "error",
-                  }).then((result) => {
-                    
-                  });
+                  }).then((result) => {});
                   return;
                 }
                 await this.insertProdInCart(inputProd.value, inputQtd.value);
