@@ -76,7 +76,11 @@
     </b-row>
   </div>
 </template>
-
+<style scoped>
+.border-danger {
+  border-color: red;
+}
+</style>
 <script>
 import Swal from "sweetalert2";
 import { DB } from "../models/DB";
@@ -167,6 +171,10 @@ export default {
         preConfirm: (value) => {
           if (!value) {
             Swal.showValidationMessage("Digite o telefone do cliente");
+
+            setTimeout(() => {
+              Swal.resetValidationMessage();
+            }, 2000);
           } else {
             return value;
           }
@@ -176,7 +184,7 @@ export default {
           this.customer = await new Customer().find(result.value);
 
           let cities = await new City().all();
-          phone = result.value;
+          let customerPhone = result.value;
 
           let html = '<select id="swal2-select" class="swal2-select" name="">';
 
@@ -212,53 +220,78 @@ export default {
               html,
             showCancelButton: true,
             cancelButtonText: "Cancelar",
+            customClass: {
+              validationMessage: "teste",
+            },
             didOpen: () => {
+              name = document.getElementById("swal-input1");
+              phone = document.getElementById("swal-input2");
+              address = document.getElementById("swal-input3");
+              complement = document.getElementById("swal-input4");
+              city_id = document.getElementById("swal2-select");
               if (this.customer) {
-                name = document.getElementById(
-                  "swal-input1"
-                ).value = this.customer.name;
-                phone = document.getElementById(
-                  "swal-input2"
-                ).value = this.customer.phone;
-                address = document.getElementById(
-                  "swal-input3"
-                ).value = this.customer.address;
-                complement = document.getElementById(
-                  "swal-input4"
-                ).value = this.customer.complement;
-                city_id = document.getElementById(
-                  "swal2-select"
-                ).value = this.customer.city_id;
+                name.value = this.customer.name;
+                phone.value = this.customer.phone;
+                address.value = this.customer.address;
+                complement.value = this.customer.complement;
+                city_id.value = this.customer.city_id;
               } else {
-                document.getElementById("swal-input1").focus();
-                phone = document.getElementById("swal-input2").value = phone;
+                name.focus();
+                phone.value = customerPhone;
               }
             },
             preConfirm: async () => {
-              name = document.getElementById("swal-input1").value;
-              phone = document.getElementById("swal-input2").value;
-              address = document.getElementById("swal-input3").value;
-              complement = document.getElementById("swal-input4").value;
-              city_id = document.getElementById("swal2-select").value;
+              // name = document.getElementById("swal-input1").value;
+              // phone = document.getElementById("swal-input2").value;
+              // address = document.getElementById("swal-input3").value;
+              // complement = document.getElementById("swal-input4").value;
+              // city_id = document.getElementById("swal2-select").value;
+              if (name.value == "") {
+                name.classList.add("border-danger");
+                Swal.showValidationMessage("Preencha o campo nome");
 
-              if (name == "" || phone == "" || address == "") {
-                Swal.showValidationMessage("Preencha todos os campos");
-              } else if (city_id == "") {
+                setTimeout(()=>{
+                  name.classList.remove('border-danger')
+                  Swal.resetValidationMessage()
+                }, 3000)
+              } else if (phone.value == "") {
+                phone.classList.add("border-danger");
+                Swal.showValidationMessage("Preencha o campo telefone");
+
+                setTimeout(()=>{
+                  phone.classList.remove('border-danger')
+                  Swal.resetValidationMessage()
+                }, 3000)
+              }else if (address.value == "") {
+                address.classList.add("border-danger");
+                Swal.showValidationMessage("Preencha o campo endereço");
+                setTimeout(()=>{
+                  address.classList.remove('border-danger')
+                  Swal.resetValidationMessage()
+                }, 3000)
+              }else if (city_id.value == "") {
+                city_id.classList.add("border-danger");
                 Swal.showValidationMessage("Escolha uma localidade");
+
+                setTimeout(()=>{
+                  city_id.classList.remove('border-danger')
+                  Swal.resetValidationMessage()
+                }, 3000)
               }
 
               return {
-                name: name,
-                phone: phone,
-                address: address,
-                complement: complement,
-                city_id: city_id,
+                name: name.value,
+                phone: phone.value,
+                address: address.value,
+                complement: complement.value,
+                city_id: city_id.value,
                 address_id: this.customer.address_id,
                 customer_id: this.customer.id,
               };
             },
           }).then(async (result) => {
             if (result.isConfirmed) {
+              console.log(result.value)
               let response = false;
               let customer_obj = [
                 {
@@ -277,6 +310,8 @@ export default {
                   customer_id: this.customer ? this.customer.id : undefined,
                 },
               ];
+
+              console.log(address_obj)
               if (!this.customer) {
                 await new DB().execute("BEGIN;");
                 let customer_id = await new Customer().create(customer_obj);
@@ -344,7 +379,7 @@ export default {
 
         return;
       }
-      
+
       let html = "<div class='row font-big text-success'>";
       html += "<div class='col-6 text-left'>";
       html += "Receber: ";
@@ -414,7 +449,7 @@ export default {
         '<input id="swal-input2" placeholder="Valor a receber" class="swal2-input">';
 
       Swal.fire({
-        title:"Encerrar pedido",
+        title: "Encerrar pedido",
         showCancelButton: true,
         cancelButtonText: "Cancelar",
         confirmButtonText: "Finalizar",
@@ -578,20 +613,20 @@ export default {
               if (swalInput1 === document.activeElement) {
                 let valid = false;
 
-                for(let p of this.paymentsFormats){
-                  if(parseInt(swalInput1.value) === parseInt(p.id)){
-                    valid = true
+                for (let p of this.paymentsFormats) {
+                  if (parseInt(swalInput1.value) === parseInt(p.id)) {
+                    valid = true;
                   }
                 }
 
-                if(!valid){
-                  Swal.showValidationMessage('Forma de pagamento inválida!')
-                  swalInput1.focus()
-                  
-                  setTimeout(()=>{
-                    Swal.resetValidationMessage()
-                  }, 2000)
-                  return
+                if (!valid) {
+                  Swal.showValidationMessage("Forma de pagamento inválida!");
+                  swalInput1.focus();
+
+                  setTimeout(() => {
+                    Swal.resetValidationMessage();
+                  }, 2000);
+                  return;
                 }
 
                 swalInput2.focus();
