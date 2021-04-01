@@ -86,6 +86,7 @@ import EventBus from "../EventBus";
 import { Cashier } from "../models/Cashier";
 import { PaymentCashier } from "../models/PaymentCashier";
 import { PaymentOrder } from '../models/PaymentOrder';
+import { Console } from 'console';
 
 export default {
   props: ["orderType"],
@@ -98,13 +99,14 @@ export default {
   }),
 
   async mounted() {
-
+    this.getCashiers()
     EventBus.$on("change-tab", (e) => {});
 
     EventBus.$on("cashier-closed", async (e) => {
       this.getCashiers();
     });
 
+    console.log(this.cashiers)
     if (this.cashiers.length > 0) {
       this.items = await new Cashier().getCashierInfo(this.cashiers[0].id);
     }

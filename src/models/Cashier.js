@@ -26,19 +26,21 @@ export class Cashier {
             and = ` AND c.created_at BETWEEN '${dates[0]}' AND '${dates[1]}'`
         }
 
-        let sql = ` SELECT
-                        c.id,
-                        u.name as user_name,
-                        CASE WHEN (select sum(price) from payments_cashiers pc where cashier_id = c.id) > 0
-                        THEN (select sum(price) from payments_cashiers pc where cashier_id = c.id) ELSE 0 END as value,
-                        DATE_FORMAT(c.created_at, '%d-%m-%Y às %H:%i') as created_at,
-                        DATE_FORMAT(c.updated_at, '%d-%m-%Y às %H:%i') as updated_at
-                    FROM cashiers c 
-                    JOIN users u on u.id = c.user_id 
-                    where user_id = ${user.id} AND c.updated_at is not null ${and}
-                    GROUP by c.id
-                    order by c.created_at DESC`;
-
+        let sql = ` 
+                SELECT
+                c.id,
+                u.name as user_name,
+                pc.payment_id,
+                sum(pc.price) as value,
+                STRFTIME('%d/%m/%Y',c.created_at) || ' às ' || STRFTIME('%H:%M:%S',c.created_at) as created_at,
+                STRFTIME('%d/%m/%Y',c.updated_at) || ' às ' || STRFTIME('%H:%M:%S',c.updated_at) as updated_at
+            FROM cashiers c 
+            JOIN users u on u.id = c.user_id
+            join payments_cashiers pc on pc.cashier_id = c.id
+            where user_id = ${user.id} AND c.updated_at is not null ${and}
+            GROUP by c.id
+            order by c.created_at DESC
+        `;
 
         let cashiers = await db.selectMany(sql);
         
