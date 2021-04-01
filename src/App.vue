@@ -248,10 +248,10 @@ export default {
           if (message !== "") {
             Swal.showValidationMessage(message);
             message = ""
+            setTimeout(()=>{
+              Swal.resetValidationMessage();
+            }, 2000)
             return;
-            // setTimeout(() => {
-            //   document.getElementById("swal2-validation-message").remove();
-            // }, 3000);
           }
 
           return [value1, value2, value3.checked];
