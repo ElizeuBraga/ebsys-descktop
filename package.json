@@ -46,7 +46,7 @@
     "@fortawesome/vue-fontawesome": "^0.1.10",
     "@types/mousetrap": "^1.6.5",
     "@vue/cli-plugin-router": "~4.2.0",
-    "@vue/cli-service": "~4.2.0",
+    "@vue/cli-service": "~5.0.8",
     "babel-jest": "^26.6.3",
     "electron": "^6.1.9",
     "electron-rebuild": "^1.10.0",
